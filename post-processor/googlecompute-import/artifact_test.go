@@ -1,4 +1,4 @@
-package vagrantcloud
+package googlecomputeimport
 
 import (
 	"testing"
