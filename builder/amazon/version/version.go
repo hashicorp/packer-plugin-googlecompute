@@ -5,9 +5,9 @@ import (
 	packerVersion "github.com/hashicorp/packer/version"
 )
 
-var GCEPluginVersion *version.PluginVersion
+var AWSPluginVersion *version.PluginVersion
 
 func init() {
-	GCEPluginVersion = version.InitializePluginVersion(
+	AWSPluginVersion = version.InitializePluginVersion(
 		packerVersion.Version, packerVersion.VersionPrerelease)
 }
