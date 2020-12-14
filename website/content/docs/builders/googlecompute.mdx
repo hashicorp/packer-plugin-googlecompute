@@ -2,7 +2,6 @@
 description: |
   The googlecompute Packer builder is able to create images for use with Google
   Cloud Compute Engine (GCE) based on existing images.
-layout: docs
 page_title: Google Compute - Builders
 sidebar_title: Google Cloud
 ---
@@ -40,7 +39,6 @@ You don't need to specify an _account file_ if you are using this method. Your u
 must have at least `Compute Instance Admin (v1)` & `Service Account User` roles
 to use Packer succesfully.
 
-
 ### Running on Google Cloud
 
 If you run the `googlecompute` Packer builder on GCE or GKE, you can
@@ -50,9 +48,10 @@ Packer to authenticate to Google Cloud without having to bake in a separate
 credential/authentication file.
 
 It is recommended that you create a custom service account for Packer and assign it
- `Compute Instance Admin (v1)` & `Service Account User` roles.
+`Compute Instance Admin (v1)` & `Service Account User` roles.
 
 For `gcloud`, you can run the following commands:
+
 ```shell-session
 $ gcloud iam service-accounts create packer \
   --project YOUR_GCP_PROJECT \
@@ -98,7 +97,7 @@ straightforwarded, it is documented here.
 
 5.  Generate a JSON Key and save it in a secure location.
 
-5.  Set the Environment Variable `GOOGLE_APPLICATION_CREDENTIALS` to point to the path of the service account key.
+6.  Set the Environment Variable `GOOGLE_APPLICATION_CREDENTIALS` to point to the path of the service account key.
 
 ### Precedence of Authentication Methods
 
@@ -400,7 +399,6 @@ The GCS location must be writeable by the service account of the instance that P
 #### Optional:
 
 @include 'packer-plugin-sdk/communicator/SSHTemporaryKeyPair-not-required.mdx'
-
 
 ### Gotchas
 
