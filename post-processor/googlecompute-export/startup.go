@@ -3,7 +3,7 @@ package googlecomputeexport
 import (
 	"fmt"
 
-	"github.com/hashicorp/packer/builder/googlecompute"
+	"github.com/hashicorp/packer-plugin-googlecompute/builder/googlecompute"
 )
 
 var StartupScript string = fmt.Sprintf(`#!/bin/bash

@@ -17,10 +17,10 @@ import (
 	"google.golang.org/api/option"
 	oslogin "google.golang.org/api/oslogin/v1"
 
+	"github.com/hashicorp/packer-plugin-googlecompute/builder/googlecompute/version"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/hashicorp/packer-plugin-sdk/retry"
 	"github.com/hashicorp/packer-plugin-sdk/useragent"
-	"github.com/hashicorp/packer/builder/googlecompute/version"
 	vaultapi "github.com/hashicorp/vault/api"
 
 	"golang.org/x/oauth2"
