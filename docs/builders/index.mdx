@@ -1,0 +1,32 @@
+---
+description: |
+  The Google Compute Packer plugin offers the googlecompute builder, which can build
+  GCP images.
+page_title: googlecompute - Builders
+sidebar_title: Overview
+---
+
+# Builders
+
+The Google Compute Packer plugin offers the `googlecompute` builder, which can
+build GCP images.
+
+- [googlecompute](/docs/builders/googlecompute) - This builder starts an
+  instance from an image applies your provisioning steps and then saves another
+  image.
+
+## How to use this plugin
+
+From Packer v1.7.0, copy and paste this code into your Packer configuration to
+install this plugin. Then, run [`packer init`](/docs/commands/init).
+
+```hcl
+packer {
+  required_plugins {
+    vsphere = {
+      version = ">= 0.0.2"
+      source = "github.com/hashicorp/googlecompute"
+    }
+  }
+}
+```
