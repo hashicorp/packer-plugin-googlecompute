@@ -601,8 +601,6 @@ func (d *driverGCE) createWindowsPassword(errCh chan<- error, name, zone string,
 	err = errors.New("Could not retrieve password. Timed out.")
 
 	errCh <- err
-	return
-
 }
 
 func (d *driverGCE) getPasswordResponses(zone, instance string) ([]windowsPasswordResponse, error) {

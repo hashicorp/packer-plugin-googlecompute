@@ -46,7 +46,6 @@ func getNetworking(c *InstanceConfig) (string, string, error) {
 		// permission to that API. We'll proceed assuming they're correct in
 		// omitting the subnetwork and let the compute.insert API surface an
 		// error about an invalid network configuration if it exists.
-		break
 	default:
 		// If the value doesn't contain a slash, we assume it's not a full or
 		// partial URL. We will expand it into a partial URL here and avoid
