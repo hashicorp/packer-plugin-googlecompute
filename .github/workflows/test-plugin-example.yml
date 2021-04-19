@@ -45,3 +45,4 @@ jobs:
           command: build
         env:
           PACKER_LOG: ${{ github.event.inputs.logs }}
+          PKR_VAR_project_id: ${{ secrets.GCP_PROJECT_ID }}
