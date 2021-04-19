@@ -208,7 +208,10 @@ func (d *driverGCE) DeleteImage(name string) <-chan error {
 	if err != nil {
 		errCh <- err
 	} else {
-		go waitForState(errCh, "DONE", d.refreshGlobalOp(op))
+		go func() {
+			_ = waitForState(errCh, "DONE", d.refreshGlobalOp(op))
+		}()
+
 	}
 
 	return errCh
@@ -221,7 +224,9 @@ func (d *driverGCE) DeleteInstance(zone, name string) (<-chan error, error) {
 	}
 
 	errCh := make(chan error, 1)
-	go waitForState(errCh, "DONE", d.refreshZoneOp(zone, op))
+	go func() {
+		_ = waitForState(errCh, "DONE", d.refreshZoneOp(zone, op))
+	}()
 	return errCh, nil
 }
 
@@ -232,7 +237,9 @@ func (d *driverGCE) DeleteDisk(zone, name string) (<-chan error, error) {
 	}
 
 	errCh := make(chan error, 1)
-	go waitForState(errCh, "DONE", d.refreshZoneOp(zone, op))
+	go func() {
+		_ = waitForState(errCh, "DONE", d.refreshZoneOp(zone, op))
+	}()
 	return errCh, nil
 }
 func (d *driverGCE) GetImage(name string, fromFamily bool) (*Image, error) {
@@ -514,7 +521,9 @@ func (d *driverGCE) RunInstance(c *InstanceConfig) (<-chan error, error) {
 	}
 
 	errCh := make(chan error, 1)
-	go waitForState(errCh, "DONE", d.refreshZoneOp(zone.Name, op))
+	go func() {
+		_ = waitForState(errCh, "DONE", d.refreshZoneOp(zone.Name, op))
+	}()
 	return errCh, nil
 }
 
@@ -554,7 +563,9 @@ func (d *driverGCE) createWindowsPassword(errCh chan<- error, name, zone string,
 	}
 
 	newErrCh := make(chan error, 1)
-	go waitForState(newErrCh, "DONE", d.refreshZoneOp(zone, op))
+	go func() {
+		_ = waitForState(newErrCh, "DONE", d.refreshZoneOp(zone, op))
+	}()
 
 	select {
 	case err = <-newErrCh:
@@ -651,7 +662,9 @@ func (d *driverGCE) DeleteOSLoginSSHKey(user, fingerprint string) error {
 
 func (d *driverGCE) WaitForInstance(state, zone, name string) <-chan error {
 	errCh := make(chan error, 1)
-	go waitForState(errCh, state, d.refreshInstanceState(zone, name))
+	go func() {
+		_ = waitForState(errCh, state, d.refreshInstanceState(zone, name))
+	}()
 	return errCh
 }
 
