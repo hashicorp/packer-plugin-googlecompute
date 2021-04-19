@@ -23,6 +23,22 @@ and the [Google Compute Import
 Post-Processor](/docs/post-processors/googlecompute-import) for more
 information.
 
+## Plugin Installation
+
+From Packer v1.7.0, you can install this builder from its plugin; copy and paste
+this code into your Packer configuration to do so. Then, run `packer init`.
+
+```hcl
+packer {
+  required_plugins {
+    googlecompute = {
+      version = ">= 0.0.1"
+      source = "github.com/hashicorp/googlecompute"
+    }
+  }
+}
+```
+
 ## Authentication
 
 Authenticating with Google Cloud services requires either a User Application Default Credentials
