@@ -78,6 +78,4 @@ func (s *StepTeardownInstance) Cleanup(state multistep.StateBag) {
 	}
 
 	ui.Message("Disk has been deleted!")
-
-	return
 }

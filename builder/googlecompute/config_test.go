@@ -501,7 +501,10 @@ func TestImageName(t *testing.T) {
 	defer os.Remove(tempfile)
 
 	var c Config
-	c.Prepare(raw)
+	_, err := c.Prepare(raw)
+	if err != nil {
+		t.Fatal(err)
+	}
 	if !strings.HasPrefix(c.ImageName, "packer-") {
 		t.Fatalf("ImageName should have 'packer-' prefix, found %s", c.ImageName)
 	}
@@ -512,10 +515,17 @@ func TestImageName(t *testing.T) {
 
 func TestRegion(t *testing.T) {
 	raw, tempfile := testConfig(t)
-	defer os.Remove(tempfile)
-
+	defer func() {
+		err := os.Remove(tempfile)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}()
 	var c Config
-	c.Prepare(raw)
+	_, err := c.Prepare(raw)
+	if err != nil {
+		t.Fatal(err)
+	}
 	if c.Region != "us-east1" {
 		t.Fatalf("Region should be 'us-east1' given Zone of 'us-east1-a', but is %s", c.Region)
 	}

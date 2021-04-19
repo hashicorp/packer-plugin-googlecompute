@@ -1,40 +1,36 @@
 packer {
   required_plugins {
-    scaffolding = {
-      version = ">=v0.1.0"
-      source  = "github.com/hashicorp/scaffolding"
+    googlecompute = {
+      version = ">= v0.0.1"
+      source  = "github.com/hashicorp/googlecompute"
     }
   }
 }
 
-source "scaffolding-my-builder" "foo-example" {
-  mock = local.foo
+variable "zone" {
+  default = "europe-west4-a"
 }
 
-source "scaffolding-my-builder" "bar-example" {
-  mock = local.bar
+variable "project_id" {
+  type = string
+}
+
+source "googlecompute" "ex" {
+  image_name              = "test-packer-example"
+  machine_type            = "e2-small"
+  source_image            = "debian-10-buster-v20210316"
+  ssh_username            = "packer"
+  temporary_key_pair_type = "rsa"
+  temporary_key_pair_bits = 2048
+  zone                    = var.zone
+  project_id              = var.project_id
 }
 
 build {
-  sources = [
-    "source.scaffolding-my-builder.foo-example",
-  ]
-
-  source "source.scaffolding-my-builder.bar-example" {
-    name = "bar"
-  }
-
-  provisioner "scaffolding-my-provisioner" {
-    only = ["scaffolding-my-builder.foo-example"]
-    mock = "foo: ${local.foo}"
-  }
-
-  provisioner "scaffolding-my-provisioner" {
-    only = ["scaffolding-my-builder.bar"]
-    mock = "bar: ${local.bar}"
-  }
-
-  post-processor "scaffolding-my-post-processor" {
-    mock = "post-processor mock-config"
+  sources = ["source.googlecompute.ex"]
+  provisioner "shell" {
+    inline = [
+      "echo Hello From ${source.type} ${source.name}"
+    ]
   }
 }

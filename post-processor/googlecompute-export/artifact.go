@@ -2,6 +2,8 @@ package googlecomputeexport
 
 import (
 	"fmt"
+
+	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
 )
 
 const BuilderId = "packer.post-processor.googlecompute-export"
@@ -9,6 +11,8 @@ const BuilderId = "packer.post-processor.googlecompute-export"
 type Artifact struct {
 	paths []string
 }
+
+var _ packersdk.Artifact = new(Artifact)
 
 func (*Artifact) BuilderId() string {
 	return BuilderId

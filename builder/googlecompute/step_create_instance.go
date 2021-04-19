@@ -312,8 +312,6 @@ func (s *StepCreateInstance) Cleanup(state multistep.StateBag) {
 	}
 
 	ui.Message("Disk has been deleted!")
-
-	return
 }
 
 func addmap(a map[string]string, b map[string]string) {
