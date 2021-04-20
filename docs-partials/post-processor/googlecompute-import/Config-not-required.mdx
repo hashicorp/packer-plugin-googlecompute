@@ -1,5 +1,10 @@
 <!-- Code generated from the comments of the Config struct in post-processor/googlecompute-import/post-processor.go; DO NOT EDIT MANUALLY -->
 
+- `access_token` (string) - A temporary OAuth 2.0 access token
+
+- `account_file` (string) - The JSON file containing your account credentials.
+  If specified, the account file will take precedence over any `googlecompute` builder authentication method.
+
 - `impersonate_service_account` (string) - This allows service account impersonation as per the [docs](https://cloud.google.com/iam/docs/impersonating-service-accounts).
 
 - `gcs_object_name` (string) - The name of the GCS object in `bucket` where

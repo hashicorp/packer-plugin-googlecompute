@@ -24,9 +24,11 @@ import (
 type Config struct {
 	common.PackerConfig `mapstructure:",squash"`
 
+	//A temporary OAuth 2.0 access token
+	AccessToken string `mapstructure:"access_token" required:"false"`
 	//The JSON file containing your account credentials.
 	//If specified, the account file will take precedence over any `googlecompute` builder authentication method.
-	AccountFile string `mapstructure:"account_file"`
+	AccountFile string `mapstructure:"account_file" required:"false"`
 	// This allows service account impersonation as per the [docs](https://cloud.google.com/iam/docs/impersonating-service-accounts).
 	ImpersonateServiceAccount string `mapstructure:"impersonate_service_account" required:"false"`
 	//The size of the export instances disk.
@@ -109,6 +111,10 @@ func (p *PostProcessor) Configure(raws ...interface{}) error {
 		errs = packersdk.MultiErrorAppend(
 			errs, fmt.Errorf("May set either account_file or "+
 				"vault_gcp_oauth_engine, but not both."))
+	}
+	if p.config.AccountFile != "" && p.config.AccessToken != "" {
+		errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("You cannot "+
+			"specify access_token and account_file at the same time"))
 	}
 
 	if len(errs.Errors) > 0 {
@@ -193,6 +199,7 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packersdk.Ui, artifa
 		Ui:                            ui,
 		ProjectId:                     builderProjectId,
 		Account:                       p.config.account,
+		AccessToken:                   p.config.AccessToken,
 		ImpersonateServiceAccountName: p.config.ImpersonateServiceAccount,
 		VaultOauthEngineName:          p.config.VaultGCPOauthEngine,
 	}

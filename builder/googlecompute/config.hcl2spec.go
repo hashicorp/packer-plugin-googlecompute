@@ -67,6 +67,7 @@ type FlatConfig struct {
 	WinRMUseSSL                  *bool                      `mapstructure:"winrm_use_ssl" cty:"winrm_use_ssl" hcl:"winrm_use_ssl"`
 	WinRMInsecure                *bool                      `mapstructure:"winrm_insecure" cty:"winrm_insecure" hcl:"winrm_insecure"`
 	WinRMUseNTLM                 *bool                      `mapstructure:"winrm_use_ntlm" cty:"winrm_use_ntlm" hcl:"winrm_use_ntlm"`
+	AccessToken                  *string                    `mapstructure:"access_token" required:"false" cty:"access_token" hcl:"access_token"`
 	AccountFile                  *string                    `mapstructure:"account_file" required:"false" cty:"account_file" hcl:"account_file"`
 	ImpersonateServiceAccount    *string                    `mapstructure:"impersonate_service_account" required:"false" cty:"impersonate_service_account" hcl:"impersonate_service_account"`
 	ProjectId                    *string                    `mapstructure:"project_id" required:"true" cty:"project_id" hcl:"project_id"`
@@ -192,6 +193,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"winrm_use_ssl":                   &hcldec.AttrSpec{Name: "winrm_use_ssl", Type: cty.Bool, Required: false},
 		"winrm_insecure":                  &hcldec.AttrSpec{Name: "winrm_insecure", Type: cty.Bool, Required: false},
 		"winrm_use_ntlm":                  &hcldec.AttrSpec{Name: "winrm_use_ntlm", Type: cty.Bool, Required: false},
+		"access_token":                    &hcldec.AttrSpec{Name: "access_token", Type: cty.String, Required: false},
 		"account_file":                    &hcldec.AttrSpec{Name: "account_file", Type: cty.String, Required: false},
 		"impersonate_service_account":     &hcldec.AttrSpec{Name: "impersonate_service_account", Type: cty.String, Required: false},
 		"project_id":                      &hcldec.AttrSpec{Name: "project_id", Type: cty.String, Required: false},

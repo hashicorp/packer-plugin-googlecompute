@@ -40,6 +40,7 @@ func (b *Builder) Run(ctx context.Context, ui packersdk.Ui, hook packersdk.Hook)
 		Ui:                            ui,
 		ProjectId:                     b.config.ProjectId,
 		Account:                       b.config.account,
+		AccessToken:                   b.config.AccessToken,
 		ImpersonateServiceAccountName: b.config.ImpersonateServiceAccount,
 		VaultOauthEngineName:          b.config.VaultGCPOauthEngine,
 	}

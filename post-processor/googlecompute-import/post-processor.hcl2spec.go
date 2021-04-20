@@ -18,7 +18,8 @@ type FlatConfig struct {
 	PackerOnError              *string           `mapstructure:"packer_on_error" cty:"packer_on_error" hcl:"packer_on_error"`
 	PackerUserVars             map[string]string `mapstructure:"packer_user_variables" cty:"packer_user_variables" hcl:"packer_user_variables"`
 	PackerSensitiveVars        []string          `mapstructure:"packer_sensitive_variables" cty:"packer_sensitive_variables" hcl:"packer_sensitive_variables"`
-	AccountFile                *string           `mapstructure:"account_file" required:"true" cty:"account_file" hcl:"account_file"`
+	AccessToken                *string           `mapstructure:"access_token" required:"false" cty:"access_token" hcl:"access_token"`
+	AccountFile                *string           `mapstructure:"account_file" required:"false" cty:"account_file" hcl:"account_file"`
 	ImpersonateServiceAccount  *string           `mapstructure:"impersonate_service_account" required:"false" cty:"impersonate_service_account" hcl:"impersonate_service_account"`
 	ProjectId                  *string           `mapstructure:"project_id" required:"true" cty:"project_id" hcl:"project_id"`
 	IAP                        *bool             `mapstructure-to-hcl:",skip" cty:"iap" hcl:"iap"`
@@ -58,6 +59,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"packer_on_error":               &hcldec.AttrSpec{Name: "packer_on_error", Type: cty.String, Required: false},
 		"packer_user_variables":         &hcldec.AttrSpec{Name: "packer_user_variables", Type: cty.Map(cty.String), Required: false},
 		"packer_sensitive_variables":    &hcldec.AttrSpec{Name: "packer_sensitive_variables", Type: cty.List(cty.String), Required: false},
+		"access_token":                  &hcldec.AttrSpec{Name: "access_token", Type: cty.String, Required: false},
 		"account_file":                  &hcldec.AttrSpec{Name: "account_file", Type: cty.String, Required: false},
 		"impersonate_service_account":   &hcldec.AttrSpec{Name: "impersonate_service_account", Type: cty.String, Required: false},
 		"project_id":                    &hcldec.AttrSpec{Name: "project_id", Type: cty.String, Required: false},

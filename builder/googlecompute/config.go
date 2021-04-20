@@ -30,6 +30,16 @@ type Config struct {
 	common.PackerConfig `mapstructure:",squash"`
 	Comm                communicator.Config `mapstructure:",squash"`
 
+	// A temporary [OAuth 2.0 access token](https://developers.google.com/identity/protocols/oauth2)
+	// obtained from the Google Authorization server, i.e. the `Authorization: Bearer` token used to
+	// authenticate HTTP requests to GCP APIs.
+	// This is an alternative to `account_file`, and ignores the `scopes` field.
+	// If both are specified, `access_token` will be used over the `account_file` field.
+	//
+	// These access tokens cannot be renewed by Packer and thus will only work until they expire.
+	// If you anticipate Packer needing access for longer than a token's lifetime (default `1 hour`),
+	// please use a service account key with `account_file` instead.
+	AccessToken string `mapstructure:"access_token" required:"false"`
 	// The JSON file containing your account credentials. Not required if you
 	// run Packer on a GCE instance with a service account. Instructions for
 	// creating the file or using service accounts are above.
@@ -505,6 +515,10 @@ func (c *Config) Prepare(raws ...interface{}) ([]string, error) {
 		if c.VaultGCPOauthEngine != "" && c.ImpersonateServiceAccount != "" {
 			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("You cannot "+
 				"specify impersonate_service_account, account_file and vault_gcp_oauth_engine at the same time"))
+		}
+		if c.AccessToken != "" {
+			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("You cannot "+
+				"specify access_token and account_file"))
 		}
 		cfg, err := ProcessAccountFile(c.AccountFile)
 		if err != nil {
