@@ -31,9 +31,11 @@ import (
 type Config struct {
 	common.PackerConfig `mapstructure:",squash"`
 
+	//A temporary OAuth 2.0 access token
+	AccessToken string `mapstructure:"access_token" required:"false"`
 	//The JSON file containing your account credentials.
 	//If specified, the account file will take precedence over any `googlecompute` builder authentication method.
-	AccountFile string `mapstructure:"account_file" required:"true"`
+	AccountFile string `mapstructure:"account_file" required:"false"`
 	// This allows service account impersonation as per the [docs](https://cloud.google.com/iam/docs/impersonating-service-accounts).
 	ImpersonateServiceAccount string `mapstructure:"impersonate_service_account" required:"false"`
 	//The project ID where the GCS bucket exists and where the GCE image is stored.
@@ -119,6 +121,10 @@ func (p *PostProcessor) Configure(raws ...interface{}) error {
 			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("You cannot "+
 				"specify impersonate_service_account, account_file and vault_gcp_oauth_engine at the same time"))
 		}
+		if p.config.AccessToken != "" {
+			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("You cannot "+
+				"specify access_token and account_file at the same time"))
+		}
 		cfg, err := googlecompute.ProcessAccountFile(p.config.AccountFile)
 		if err != nil {
 			errs = packersdk.MultiErrorAppend(errs, err)
@@ -154,7 +160,7 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packersdk.Ui, artifa
 	p.config.ctx.Data = generatedData
 	var err error
 	var opts option.ClientOption
-	opts, err = googlecompute.NewClientOptionGoogle(p.config.account, p.config.VaultGCPOauthEngine, p.config.ImpersonateServiceAccount)
+	opts, err = googlecompute.NewClientOptionGoogle(p.config.account, p.config.VaultGCPOauthEngine, p.config.ImpersonateServiceAccount, p.config.AccessToken)
 	if err != nil {
 		return nil, false, false, err
 	}

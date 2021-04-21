@@ -1,4 +1,4 @@
-NAME=scaffolding
+NAME=googlecompute
 BINARY=packer-plugin-${NAME}
 
 COUNT?=1

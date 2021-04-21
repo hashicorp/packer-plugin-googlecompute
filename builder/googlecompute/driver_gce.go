@@ -41,6 +41,7 @@ type GCEDriverConfig struct {
 	ProjectId                     string
 	Account                       *ServiceAccount
 	ImpersonateServiceAccountName string
+	AccessToken                   string
 	VaultOauthEngineName          string
 }
 
@@ -79,7 +80,7 @@ func (ots OauthTokenSource) Token() (*oauth2.Token, error) {
 
 }
 
-func NewClientOptionGoogle(account *ServiceAccount, vaultOauth string, impersonatesa string) (option.ClientOption, error) {
+func NewClientOptionGoogle(account *ServiceAccount, vaultOauth string, impersonatesa string, accessToken string) (option.ClientOption, error) {
 	var err error
 
 	var opts option.ClientOption
@@ -92,6 +93,12 @@ func NewClientOptionGoogle(account *ServiceAccount, vaultOauth string, impersona
 
 	} else if impersonatesa != "" {
 		opts = option.ImpersonateCredentials(impersonatesa)
+	} else if accessToken != "" {
+		// Auth with static access token
+		log.Printf("[INFO] Using static Google Access Token")
+		token := &oauth2.Token{AccessToken: accessToken}
+		ts := oauth2.StaticTokenSource(token)
+		opts = option.WithTokenSource(ts)
 	} else if account != nil && account.jwt != nil && len(account.jwt.PrivateKey) > 0 {
 		// Auth with AccountFile if provided
 		log.Printf("[INFO] Requesting Google token via account_file...")
@@ -133,7 +140,7 @@ func NewClientOptionGoogle(account *ServiceAccount, vaultOauth string, impersona
 
 func NewDriverGCE(config GCEDriverConfig) (Driver, error) {
 
-	opts, err := NewClientOptionGoogle(config.Account, config.VaultOauthEngineName, config.ImpersonateServiceAccountName)
+	opts, err := NewClientOptionGoogle(config.Account, config.VaultOauthEngineName, config.ImpersonateServiceAccountName, config.AccessToken)
 	if err != nil {
 		return nil, err
 	}

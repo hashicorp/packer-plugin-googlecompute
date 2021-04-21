@@ -41,8 +41,8 @@ packer {
 
 ## Authentication
 
-Authenticating with Google Cloud services requires either a User Application Default Credentials
-or a JSON Service Account Key. These are **not** required if you are
+Authenticating with Google Cloud services requires either a User Application Default Credentials, 
+a JSON Service Account Key or an Access Token.  These are **not** required if you are
 running the `googlecompute` Packer builder on Google Cloud with a
 properly-configured [Google Service
 Account](https://cloud.google.com/compute/docs/authentication).
@@ -121,12 +121,14 @@ straightforwarded, it is documented here.
 Packer looks for credentials in the following places, preferring the first
 location found:
 
-1.  An `account_file` option in your packer file.
+1.  An `access_token` option in your packer file.
 
-2.  A JSON file (Service Account) whose path is specified by the
+2.  An `account_file` option in your packer file.
+
+3.  A JSON file (Service Account) whose path is specified by the
     `GOOGLE_APPLICATION_CREDENTIALS` environment variable.
 
-3.  A JSON file in a location known to the `gcloud` command-line tool.
+4.  A JSON file in a location known to the `gcloud` command-line tool.
     (`gcloud auth application-default login` creates it)
 
     On Windows, this is:
@@ -137,7 +139,7 @@ location found:
 
         $HOME/.config/gcloud/application_default_credentials.json
 
-4.  On Google Compute Engine and Google App Engine Managed VMs, it fetches
+5.  On Google Compute Engine and Google App Engine Managed VMs, it fetches
     credentials from the metadata server. (Needs a correct VM authentication
     scope configuration, see above.)
 
