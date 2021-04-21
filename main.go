@@ -29,8 +29,8 @@ var (
 func main() {
 	pps := plugin.NewSet()
 	pps.RegisterBuilder(plugin.DEFAULT_NAME, new(googlecompute.Builder))
-	pps.RegisterPostProcessor("googlecompute-import", new(googlecomputeimport.PostProcessor))
-	pps.RegisterPostProcessor("googlecompute-export", new(googlecomputeexport.PostProcessor))
+	pps.RegisterPostProcessor("import", new(googlecomputeimport.PostProcessor))
+	pps.RegisterPostProcessor("export", new(googlecomputeexport.PostProcessor))
 	pps.SetVersion(PluginVersion)
 	err := pps.Run()
 	if err != nil {
