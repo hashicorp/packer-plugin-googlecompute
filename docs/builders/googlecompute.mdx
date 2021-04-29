@@ -83,6 +83,10 @@ $ gcloud projects add-iam-policy-binding YOUR_GCP_PROJECT \
     --member=serviceAccount:packer@YOUR_GCP_PROJECT.iam.gserviceaccount.com \
     --role=roles/iam.serviceAccountUser
 
+$ gcloud projects add-iam-policy-binding YOUR_GCP_PROJECT \
+    --member=serviceAccount:packer@YOUR_GCP_PROJECT.iam.gserviceaccount.com \
+    --role=roles/iap.tunnelResourceAccessor
+
 $ gcloud compute instances create INSTANCE-NAME \
   --project YOUR_GCP_PROJECT \
   --image-family ubuntu-2004-lts \

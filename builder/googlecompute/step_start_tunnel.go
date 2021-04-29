@@ -15,7 +15,6 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
-	"text/template"
 	"time"
 
 	"github.com/hashicorp/packer-plugin-sdk/communicator"
@@ -32,11 +31,9 @@ type IAPConfig struct {
 	// Prerequisites and limitations for using IAP:
 	// - You must manually enable the IAP API in the Google Cloud console.
 	// - You must have the gcloud sdk installed on the computer running Packer.
-	// - You must be using a Service Account with a credentials file (using the
-	//	 account_file option in the Packer template)
-	// - You must add the given service account to project level IAP permissions
+	// - If you use a service account to project level IAP permissions
 	//   in https://console.cloud.google.com/security/iap. To do so, click
-	//   "project" > "SSH and TCP resoures" > "All Tunnel Resources" >
+	//   "project" > "SSH and TCP resources" > "All Tunnel Resources" >
 	//   "Add Member". Then add your service account and choose the role
 	//   "IAP-secured Tunnel User" and add any conditions you may care about.
 	IAP bool `mapstructure:"use_iap" required:"false"`
@@ -192,38 +189,34 @@ func (s *StepStartTunnel) createTempGcloudScript(args []string) (string, error) 
 		if err != nil {
 			return "", fmt.Errorf("Error preparing inline hashbang: %s", err)
 		}
-
 	}
 
-	launchTemplate := `
-gcloud auth activate-service-account --key-file='{{.AccountFile}}'
-{{.Args}}
-`
-	if runtime.GOOS == "windows" {
-		launchTemplate = `
-call gcloud auth activate-service-account --key-file "{{.AccountFile}}"
-call {{.Args}}
-`
-	}
 	// call command
 	args = append([]string{"gcloud"}, args...)
 	argString := strings.Join(args, " ")
 
-	var tpl = template.Must(template.New("createTunnel").Parse(launchTemplate))
-	var b bytes.Buffer
-
-	opts := map[string]string{
-		"AccountFile": s.AccountFile,
-		"Args":        argString,
+	if s.AccountFile == "" {
+		s.AccountFile = os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
 	}
 
-	err = tpl.Execute(&b, opts)
+	if s.AccountFile != "" {
+		if runtime.GOOS == "windows" {
+			_, err = fmt.Fprintf(writer, "set \"CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE=%s\"\n", s.AccountFile)
+		} else {
+			_, err = fmt.Fprintf(writer, "CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE='%s'\nexport CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE\n", s.AccountFile)
+		}
+		if err != nil {
+			return "", fmt.Errorf("error preparing shell script: %s", err)
+		}
+	}
+
+	if runtime.GOOS == "windows" {
+		_, err = fmt.Fprintf(writer, "call %s\n", argString)
+	} else {
+		_, err = fmt.Fprintf(writer, "%s\n", argString)
+	}
 	if err != nil {
-		fmt.Println(err)
-	}
-
-	if _, err := writer.WriteString(b.String()); err != nil {
-		return "", fmt.Errorf("Error preparing gcloud shell script: %s", err)
+		return "", fmt.Errorf("error preparing shell script: %s", err)
 	}
 
 	if err := writer.Flush(); err != nil {
