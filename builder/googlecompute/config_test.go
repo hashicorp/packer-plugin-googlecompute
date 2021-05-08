@@ -244,6 +244,21 @@ func TestConfigPrepare(t *testing.T) {
 			"NOT A BOOL",
 			true,
 		},
+		{
+			"disk_encryption_key",
+			map[string]string{"kmsKeyName": "foo"},
+			false,
+		},
+		{
+			"disk_encryption_key",
+			map[string]string{"No such key": "foo"},
+			true,
+		},
+		{
+			"disk_encryption_key",
+			map[string]string{"kmsKeyName": "foo", "RawKey": "foo"},
+			false,
+		},
 	}
 
 	for _, tc := range cases {

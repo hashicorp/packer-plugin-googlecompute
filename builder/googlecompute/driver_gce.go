@@ -176,7 +176,7 @@ func (d *driverGCE) CreateImage(name, description, family, zone, disk string, im
 		Labels:             image_labels,
 		Licenses:           image_licenses,
 		ImageEncryptionKey: image_encryption_key,
-		SourceDisk:         fmt.Sprintf("%s%s/zones/%s/disks/%s", d.service.BasePath, d.projectId, zone, disk),
+		SourceDisk:         fmt.Sprintf("%sprojects/%s/zones/%s/disks/%s", d.service.BasePath, d.projectId, zone, disk),
 		SourceType:         "RAW",
 		StorageLocations:   imageStorageLocations,
 	}
@@ -461,16 +461,26 @@ func (d *driverGCE) RunInstance(c *InstanceConfig) (<-chan error, error) {
 		serviceAccount.Scopes = c.Scopes
 	}
 
+	var diskEncryptionKey *compute.CustomerEncryptionKey
+	if c.DiskEncryptionKey != nil {
+		log.Printf("[DEBUG] using customer-managed encryption key for boot disk, KmsKeyName=%s, RawKey=%s",
+			c.DiskEncryptionKey.KmsKeyName, c.DiskEncryptionKey.RawKey)
+		diskEncryptionKey = c.DiskEncryptionKey.ComputeType()
+	} else {
+		log.Printf("[DEBUG] using google-managed encryption key for boot disk")
+	}
+
 	// Create the instance information
 	instance := compute.Instance{
 		Description: c.Description,
 		Disks: []*compute.AttachedDisk{
 			{
-				Type:       "PERSISTENT",
-				Mode:       "READ_WRITE",
-				Kind:       "compute#attachedDisk",
-				Boot:       true,
-				AutoDelete: false,
+				Type:              "PERSISTENT",
+				Mode:              "READ_WRITE",
+				Kind:              "compute#attachedDisk",
+				Boot:              true,
+				AutoDelete:        false,
+				DiskEncryptionKey: diskEncryptionKey,
 				InitializeParams: &compute.AttachedDiskInitializeParams{
 					SourceImage: c.Image.SelfLink,
 					DiskSizeGb:  c.DiskSizeGb,
