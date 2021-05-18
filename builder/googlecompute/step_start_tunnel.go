@@ -31,7 +31,7 @@ type IAPConfig struct {
 	// Prerequisites and limitations for using IAP:
 	// - You must manually enable the IAP API in the Google Cloud console.
 	// - You must have the gcloud sdk installed on the computer running Packer.
-	// - If you use a service account to project level IAP permissions
+	// - If you use a service account, you must add it to project level IAP permissions
 	//   in https://console.cloud.google.com/security/iap. To do so, click
 	//   "project" > "SSH and TCP resources" > "All Tunnel Resources" >
 	//   "Add Member". Then add your service account and choose the role
