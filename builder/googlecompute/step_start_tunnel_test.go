@@ -64,15 +64,14 @@ func TestStepStartTunnel_CreateTempScript(t *testing.T) {
 	}
 
 	expected := `#!/bin/bash
-
-gcloud auth activate-service-account --key-file='/path/to/account_file.json'
+CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE='/path/to/account_file.json'
+export CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE
 gcloud compute start-iap-tunnel fakeinstance-12345 1234 --local-host-port=localhost:8774 --zone us-central-b --project fake-project-123
 `
 	if runtime.GOOS == "windows" {
 		// in real life you'd not be passing a HashBang here, but GIGO.
 		expected = `#!/bin/bash
-
-call gcloud auth activate-service-account --key-file "/path/to/account_file.json"
+set "CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE=/path/to/account_file.json"
 call gcloud compute start-iap-tunnel fakeinstance-12345 1234 --local-host-port=localhost:8774 --zone us-central-b --project fake-project-123
 `
 	}
