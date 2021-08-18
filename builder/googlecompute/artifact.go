@@ -23,7 +23,7 @@ func (*Artifact) BuilderId() string {
 // Destroy destroys the GCE image represented by the artifact.
 func (a *Artifact) Destroy() error {
 	log.Printf("Destroying image: %s", a.image.Name)
-	errCh := a.driver.DeleteImage(a.image.Name)
+	errCh := a.driver.DeleteImage(a.config.ImageProjectId, a.image.Name)
 	return <-errCh
 }
 
@@ -39,7 +39,8 @@ func (a *Artifact) Id() string {
 
 // String returns the string representation of the artifact.
 func (a *Artifact) String() string {
-	return fmt.Sprintf("A disk image was created: %v", a.image.Name)
+	return fmt.Sprintf("A disk image was created in the '%v' project: %v",
+		a.config.ImageProjectId, a.image.Name)
 }
 
 func (a *Artifact) State(name string) interface{} {
