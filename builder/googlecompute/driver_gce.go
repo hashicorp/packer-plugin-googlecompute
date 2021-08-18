@@ -183,7 +183,7 @@ func NewDriverGCE(config GCEDriverConfig) (Driver, error) {
 	}, nil
 }
 
-func (d *driverGCE) CreateImage(name, description, family, zone, disk string, image_labels map[string]string, image_licenses []string, image_guest_os_features []string, image_encryption_key *compute.CustomerEncryptionKey, imageStorageLocations []string) (<-chan *Image, <-chan error) {
+func (d *driverGCE) CreateImage(project, name, description, family, zone, disk string, image_labels map[string]string, image_licenses []string, image_guest_os_features []string, image_encryption_key *compute.CustomerEncryptionKey, imageStorageLocations []string) (<-chan *Image, <-chan error) {
 
 	image_features := make([]*compute.GuestOsFeature, 0, len(image_guest_os_features))
 	for _, v := range image_guest_os_features {
@@ -206,19 +206,19 @@ func (d *driverGCE) CreateImage(name, description, family, zone, disk string, im
 
 	imageCh := make(chan *Image, 1)
 	errCh := make(chan error, 1)
-	op, err := d.service.Images.Insert(d.projectId, gce_image).Do()
+	op, err := d.service.Images.Insert(project, gce_image).Do()
 	if err != nil {
 		errCh <- err
 	} else {
 		go func() {
-			err = waitForState(errCh, "DONE", d.refreshGlobalOp(op))
+			err = waitForState(errCh, "DONE", d.refreshGlobalOp(project, op))
 			if err != nil {
 				close(imageCh)
 				errCh <- err
 				return
 			}
 			var image *Image
-			image, err = d.GetImageFromProject(d.projectId, name, false)
+			image, err = d.GetImageFromProject(project, name, false)
 			if err != nil {
 				close(imageCh)
 				errCh <- err
@@ -232,14 +232,14 @@ func (d *driverGCE) CreateImage(name, description, family, zone, disk string, im
 	return imageCh, errCh
 }
 
-func (d *driverGCE) DeleteImage(name string) <-chan error {
+func (d *driverGCE) DeleteImage(project, name string) <-chan error {
 	errCh := make(chan error, 1)
-	op, err := d.service.Images.Delete(d.projectId, name).Do()
+	op, err := d.service.Images.Delete(project, name).Do()
 	if err != nil {
 		errCh <- err
 	} else {
 		go func() {
-			_ = waitForState(errCh, "DONE", d.refreshGlobalOp(op))
+			_ = waitForState(errCh, "DONE", d.refreshGlobalOp(project, op))
 		}()
 
 	}
@@ -545,8 +545,8 @@ func (d *driverGCE) GetSerialPortOutput(zone, name string) (string, error) {
 	return output.Contents, nil
 }
 
-func (d *driverGCE) ImageExists(name string) bool {
-	_, err := d.GetImageFromProject(d.projectId, name, false)
+func (d *driverGCE) ImageExists(project, name string) bool {
+	_, err := d.GetImageFromProject(project, name, false)
 	// The API may return an error for reasons other than the image not
 	// existing, but this heuristic is sufficient for now.
 	return err == nil
@@ -880,9 +880,9 @@ func (d *driverGCE) refreshInstanceState(zone, name string) stateRefreshFunc {
 	}
 }
 
-func (d *driverGCE) refreshGlobalOp(op *compute.Operation) stateRefreshFunc {
+func (d *driverGCE) refreshGlobalOp(project string, op *compute.Operation) stateRefreshFunc {
 	return func() (string, error) {
-		newOp, err := d.service.GlobalOperations.Get(d.projectId, op.Name).Do()
+		newOp, err := d.service.GlobalOperations.Get(project, op.Name).Do()
 		if err != nil {
 			return "", err
 		}

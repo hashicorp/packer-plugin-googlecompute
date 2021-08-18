@@ -20,10 +20,10 @@ type Driver interface {
 
 	// CreateImage creates an image from the given disk in Google Compute
 	// Engine.
-	CreateImage(name, description, family, zone, disk string, image_labels map[string]string, image_licenses []string, image_guest_os_features []string, image_encryption_key *compute.CustomerEncryptionKey, imageStorageLocation []string) (<-chan *Image, <-chan error)
+	CreateImage(project, name, description, family, zone, disk string, image_labels map[string]string, image_licenses []string, image_guest_os_features []string, image_encryption_key *compute.CustomerEncryptionKey, imageStorageLocation []string) (<-chan *Image, <-chan error)
 
 	// DeleteImage deletes the image with the given name.
-	DeleteImage(name string) <-chan error
+	DeleteImage(project, name string) <-chan error
 
 	// DeleteInstance deletes the given instance, keeping the boot disk.
 	DeleteInstance(zone, name string) (<-chan error, error)
@@ -62,7 +62,7 @@ type Driver interface {
 
 	// ImageExists returns true if the specified image exists. If an error
 	// occurs calling the API, this method returns false.
-	ImageExists(name string) bool
+	ImageExists(project, name string) bool
 
 	// RunInstance takes the given config and launches an instance.
 	RunInstance(*InstanceConfig) (<-chan error, error)
