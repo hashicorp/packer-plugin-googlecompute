@@ -157,6 +157,8 @@ type Config struct {
 	ImageLicenses []string `mapstructure:"image_licenses" required:"false"`
 	// Guest OS features to apply to the created image.
 	ImageGuestOsFeatures []string `mapstructure:"image_guest_os_features" required:"false"`
+	// The project ID to push the build image into. Defaults to project_id.
+	ImageProjectId string `mapstructure:"image_project_id" required:"false"`
 	// Storage location, either regional or multi-regional, where snapshot
 	// content is to be stored and only accepts 1 value. Always defaults to a nearby regional or multi-regional
 	// location.
@@ -406,6 +408,10 @@ func (c *Config) Prepare(raws ...interface{}) ([]string, error) {
 
 	if c.DiskType == "" {
 		c.DiskType = "pd-standard"
+	}
+
+	if c.ImageProjectId == "" {
+		c.ImageProjectId = c.ProjectId
 	}
 
 	// Disabling the vTPM also disables integrity monitoring, because integrity
