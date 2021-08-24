@@ -165,7 +165,7 @@ func TestStepImportOSLoginSSHKey_withGCEAndAccount(t *testing.T) {
 	fakeGCEEmail := "testing@packer.io"
 	fakeAccountEmail := "raffi-compute@developer.gserviceaccount.com"
 	step := &StepImportOSLoginSSHKey{
-		GCEUserFunc: func() (string) {
+		GCEUserFunc: func() string {
 			return fakeGCEEmail
 		},
 	}
