@@ -4,6 +4,8 @@ import (
 	"testing"
 
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
+	"github.com/hashicorp/packer-plugin-sdk/packer/registryimage"
+	"github.com/mitchellh/mapstructure"
 )
 
 func TestArtifact_impl(t *testing.T) {
@@ -34,4 +36,32 @@ func TestArtifactState_StateData(t *testing.T) {
 	if result != nil {
 		t.Fatalf("Bad: State should be nil for nil StateData")
 	}
+}
+
+func TestArtifactState_RegistryImageMetadata(t *testing.T) {
+	artifact := &Artifact{
+		config: &Config{Zone: "us1"},
+		image:  &Image{Name: "test-image"},
+	}
+
+	// Valid state
+	result := artifact.State(registryimage.ArtifactStateURI)
+	if result == nil {
+		t.Fatalf("Bad: HCP Packer registry image data was nil")
+	}
+
+	var image registryimage.Image
+	err := mapstructure.Decode(result, &image)
+	if err != nil {
+		t.Errorf("Bad: unexpected error when trying to decode state into registryimage.Image %v", err)
+	}
+
+	if image.ImageID != artifact.image.Name {
+		t.Errorf("Bad: unexpected value for ImageID %q, expected %q", image.ImageID, artifact.image.Name)
+	}
+
+	if image.ProviderRegion != artifact.State("BuildZone").(string) {
+		t.Errorf("Bad: unexpected value for ImageID %q, expected %q", image.ProviderRegion, artifact.State("BuildZone").(string))
+	}
+
 }

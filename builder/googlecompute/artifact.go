@@ -3,6 +3,8 @@ package googlecompute
 import (
 	"fmt"
 	"log"
+
+	"github.com/hashicorp/packer-plugin-sdk/packer/registryimage"
 )
 
 // Artifact represents a GCE image as the result of a Packer build.
@@ -43,8 +45,11 @@ func (a *Artifact) String() string {
 }
 
 func (a *Artifact) State(name string) interface{} {
-	if _, ok := a.StateData[name]; ok {
-		return a.StateData[name]
+	if name == registryimage.ArtifactStateURI {
+		return registryimage.FromArtifact(a,
+			registryimage.WithID(a.Id()),
+			registryimage.WithRegion(a.config.Zone),
+		)
 	}
 
 	switch name {
@@ -59,5 +64,10 @@ func (a *Artifact) State(name string) interface{} {
 	case "BuildZone":
 		return a.config.Zone
 	}
+
+	if _, ok := a.StateData[name]; ok {
+		return a.StateData[name]
+	}
+
 	return nil
 }

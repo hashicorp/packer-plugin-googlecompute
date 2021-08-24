@@ -2,14 +2,19 @@ package googlecomputeexport
 
 import (
 	"fmt"
+	"strings"
 
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
+	"github.com/hashicorp/packer-plugin-sdk/packer/registryimage"
 )
 
 const BuilderId = "packer.post-processor.googlecompute-export"
 
 type Artifact struct {
 	paths []string
+	// StateData should store data such as GeneratedData
+	// to be shared with post-processors
+	StateData map[string]interface{}
 }
 
 var _ packersdk.Artifact = new(Artifact)
@@ -32,10 +37,31 @@ func (a *Artifact) String() string {
 	return fmt.Sprintf("Exported artifacts in: %s", a.paths)
 }
 
-func (*Artifact) State(name string) interface{} {
+func (a *Artifact) State(name string) interface{} {
+	if name == registryimage.ArtifactStateURI {
+		return a.hcpPackerRegistryMetadata()
+	}
 	return nil
 }
 
 func (a *Artifact) Destroy() error {
 	return nil
+}
+
+func (a *Artifact) hcpPackerRegistryMetadata() []*registryimage.Image {
+
+	var images []*registryimage.Image
+	for _, exportedPath := range a.Files() {
+		ep := exportedPath
+		images = append(images, registryimage.FromArtifact(a,
+			registryimage.WithID(ep),
+			func(i *registryimage.Image) error {
+				parts := strings.SplitN(ep, "/", 4)
+				i.ProviderRegion = parts[2]
+				return nil
+			},
+		))
+	}
+
+	return images
 }
