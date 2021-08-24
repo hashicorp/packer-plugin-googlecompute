@@ -43,7 +43,13 @@ func (s *StepImportOSLoginSSHKey) Run(ctx context.Context, state multistep.State
 	// Are we running packer on a GCE ?
 	s.accountEmail = getGCEUser()
 
-	if s.TokeninfoFunc == nil && s.accountEmail == "" {
+	// A configured account overrides the GCE accountEmail
+	if config.account != nil {
+		s.accountEmail = config.account.jwt.Email
+	}
+
+	// A configured token overrides GCE and account file
+	if s.TokeninfoFunc == nil {
 		s.TokeninfoFunc = tokeninfo
 	}
 
@@ -53,9 +59,6 @@ func (s *StepImportOSLoginSSHKey) Run(ctx context.Context, state multistep.State
 	sha256sum := sha256.Sum256(config.Comm.SSHPublicKey)
 	state.Put("ssh_key_public_sha256", hex.EncodeToString(sha256sum[:]))
 
-	if config.account != nil && s.accountEmail == "" {
-		s.accountEmail = config.account.jwt.Email
-	}
 
 	if s.accountEmail == "" {
 		info, err := s.TokeninfoFunc(ctx)
