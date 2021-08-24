@@ -20,7 +20,7 @@ type StepImportOSLoginSSHKey struct {
 	Debug         bool
 	TokeninfoFunc func(context.Context) (*oauth2.Tokeninfo, error)
 	accountEmail  string
-	GCEUserFunc   func() (string)
+	GCEUserFunc   func() string
 }
 
 // Run executes the Packer build step that generates SSH key pairs.
@@ -73,7 +73,6 @@ func (s *StepImportOSLoginSSHKey) Run(ctx context.Context, state multistep.State
 
 		s.accountEmail = info.Email
 	}
-
 
 	if s.accountEmail == "" {
 		err := fmt.Errorf("All options for deriving the OSLogin user have been exhausted")
