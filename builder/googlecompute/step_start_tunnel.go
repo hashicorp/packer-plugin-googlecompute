@@ -100,13 +100,15 @@ func RunTunnelCommand(cmd *exec.Cmd, timeout int) error {
 
 		if strings.Contains(lineStderr, "ERROR") {
 			// 4033: Either you don't have permission to access the instance,
-			// the instance doesn't exist, or the instance is stopped.
-			// The two sub-errors we may see while the permissions settle are
-			// "not authorized" and "failed to connect to backend," but after
-			// about a minute of retries this goes away and we're able to
-			// connect.
+			// the instance doesn't exist, or the instance is stopped. The two
+			// sub-errors we may see while the permissions settle are "not
+			// authorized" and "failed to connect to backend," but after about a
+			// minute of retries this goes away and we're able to connect.
 			// 4003: "failed to connect to backend". Network blip.
-			if strings.Contains(lineStderr, "4033") || strings.Contains(lineStderr, "4003") {
+			// 4047: "Either the instance doesn't exist, or the instance is
+			// stopped. Ensure that the VM is powered on and has completed its
+			// startup" — Let's wait a little more in this case.
+			if strings.Contains(lineStderr, "4033") || strings.Contains(lineStderr, "4003") || strings.Contains(lineStderr, "4047") {
 				return RetryableTunnelError{lineStderr}
 			} else {
 				log.Printf("NOT RETRYABLE: %s", lineStderr)
