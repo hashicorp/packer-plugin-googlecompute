@@ -50,14 +50,10 @@ func (a *Artifact) hcpPackerRegistryMetadata() []*registryimage.Image {
 	var images []*registryimage.Image
 	for _, exportedPath := range a.Files() {
 		ep := exportedPath
+		pathParts := strings.SplitN(exportedPath, "/", 4)
 		images = append(images, registryimage.FromArtifact(a,
 			registryimage.WithID(ep),
-			func(i *registryimage.Image) error {
-				parts := strings.SplitN(ep, "/", 4)
-				i.ProviderRegion = parts[2]
-				return nil
-			},
-		))
+			registryimage.WithRegion(pathParts[2])))
 	}
 
 	return images
