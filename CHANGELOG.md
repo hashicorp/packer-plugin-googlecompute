@@ -1,3 +1,7 @@
+## 1.0.2 (Aug 27, 2021)
+
+* Treat ERROR 4047 as retryable. [GH-34]
+
 ## 1.0.0 (June 14, 2021)
 The code base for this plugin has been stable since the Packer core split.
 We are marking this plugin as v1.0.0 to indicate that it is stable and ready for consumption via `packer init`.
