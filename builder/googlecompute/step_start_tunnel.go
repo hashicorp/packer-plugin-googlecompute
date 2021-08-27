@@ -106,7 +106,7 @@ func RunTunnelCommand(cmd *exec.Cmd, timeout int) error {
 			// about a minute of retries this goes away and we're able to
 			// connect.
 			// 4003: "failed to connect to backend". Network blip.
-			if strings.Contains(lineStderr, "4033") || strings.Contains(lineStderr, "4003") {
+			if strings.Contains(lineStderr, "4033") || strings.Contains(lineStderr, "4003") || strings.Contains(lineStderr, "4047") {
 				return RetryableTunnelError{lineStderr}
 			} else {
 				log.Printf("NOT RETRYABLE: %s", lineStderr)
