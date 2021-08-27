@@ -106,6 +106,9 @@ func RunTunnelCommand(cmd *exec.Cmd, timeout int) error {
 			// about a minute of retries this goes away and we're able to
 			// connect.
 			// 4003: "failed to connect to backend". Network blip.
+			// 4047: "Either the instance doesn't exist, or the instance
+			// is stopped. Ensure that the VM is powered on and has 
+			// completed its startup" — Let's wait a little more in this case.
 			if strings.Contains(lineStderr, "4033") || strings.Contains(lineStderr, "4003") || strings.Contains(lineStderr, "4047") {
 				return RetryableTunnelError{lineStderr}
 			} else {
