@@ -17,7 +17,7 @@ import (
 	"google.golang.org/api/option"
 	oslogin "google.golang.org/api/oslogin/v1"
 
-	"github.com/hashicorp/packer-plugin-googlecompute/builder/googlecompute/version"
+	"github.com/hashicorp/packer-plugin-googlecompute/version"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/hashicorp/packer-plugin-sdk/retry"
 	"github.com/hashicorp/packer-plugin-sdk/useragent"
@@ -158,7 +158,7 @@ func NewDriverGCE(config GCEDriverConfig) (Driver, error) {
 	}
 
 	// Set UserAgent
-	service.UserAgent = useragent.String(version.GCEPluginVersion.FormattedVersion())
+	service.UserAgent = useragent.String(version.PluginVersion.FormattedVersion())
 
 	return &driverGCE{
 		projectId:      config.ProjectId,
