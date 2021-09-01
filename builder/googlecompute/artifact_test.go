@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
-	"github.com/hashicorp/packer-plugin-sdk/packer/registryimage"
+	registryimage "github.com/hashicorp/packer-plugin-sdk/packer/registry/image"
 	"github.com/mitchellh/mapstructure"
 )
 

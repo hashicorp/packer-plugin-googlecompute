@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
-	"github.com/hashicorp/packer-plugin-sdk/packer/registryimage"
+	registryimage "github.com/hashicorp/packer-plugin-sdk/packer/registry/image"
 )
 
 const BuilderId = "packer.post-processor.googlecompute-export"
@@ -54,9 +54,12 @@ func (a *Artifact) hcpPackerRegistryMetadata() []*registryimage.Image {
 	for _, exportedPath := range a.Files() {
 		ep := exportedPath
 		pathParts := strings.SplitN(exportedPath, "/", 4)
-		images = append(images, registryimage.FromArtifact(a,
+		img, _ := registryimage.FromArtifact(a,
 			registryimage.WithID(ep),
-			registryimage.WithRegion(pathParts[2])))
+			registryimage.WithProvider("gce"),
+			registryimage.WithRegion(pathParts[2]))
+
+		images = append(images, img)
 	}
 
 	return images
