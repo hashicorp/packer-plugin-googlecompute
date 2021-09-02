@@ -8,7 +8,7 @@ require (
 	github.com/hashicorp/packer-plugin-sdk v0.2.3
 	github.com/hashicorp/vault/api v1.0.4
 	github.com/stretchr/testify v1.7.0
-	github.com/zclconf/go-cty v1.8.3
+	github.com/zclconf/go-cty v1.9.1
 	golang.org/x/oauth2 v0.0.0-20210313182246-cd4f82c27b84
 	google.golang.org/api v0.43.0
 )
