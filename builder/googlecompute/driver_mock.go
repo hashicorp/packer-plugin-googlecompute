@@ -16,6 +16,7 @@ type DriverMock struct {
 	CreateImageEncryptionKey    *compute.CustomerEncryptionKey
 	CreateImageLabels           map[string]string
 	CreateImageLicenses         []string
+	CreateImageFeatures         []string
 	CreateImageStorageLocations []string
 	CreateImageZone             string
 	CreateImageDisk             string
@@ -96,12 +97,13 @@ type DriverMock struct {
 	AddToInstanceMetadataErr     error
 }
 
-func (d *DriverMock) CreateImage(name, description, family, zone, disk string, image_labels map[string]string, image_licenses []string, image_encryption_key *compute.CustomerEncryptionKey, imageStorageLocations []string) (<-chan *Image, <-chan error) {
+func (d *DriverMock) CreateImage(name, description, family, zone, disk string, image_labels map[string]string, image_licenses []string, image_features []string, image_encryption_key *compute.CustomerEncryptionKey, imageStorageLocations []string) (<-chan *Image, <-chan error) {
 	d.CreateImageName = name
 	d.CreateImageDesc = description
 	d.CreateImageFamily = family
 	d.CreateImageLabels = image_labels
 	d.CreateImageLicenses = image_licenses
+	d.CreateImageFeatures = image_features
 	d.CreateImageStorageLocations = imageStorageLocations
 	d.CreateImageZone = zone
 	d.CreateImageDisk = disk
@@ -117,17 +119,23 @@ func (d *DriverMock) CreateImage(name, description, family, zone, disk string, i
 	if d.CreateImageResultSizeGb == 0 {
 		d.CreateImageResultSizeGb = 10
 	}
-
+	imageFeatures := make([]*compute.GuestOsFeature, len(image_features))
+	for _, v := range image_features {
+		imageFeatures = append(imageFeatures, &compute.GuestOsFeature{
+			Type: v,
+		})
+	}
 	resultCh := d.CreateImageResultCh
 	if resultCh == nil {
 		ch := make(chan *Image, 1)
 		ch <- &Image{
-			Labels:    d.CreateImageLabels,
-			Licenses:  d.CreateImageLicenses,
-			Name:      name,
-			ProjectId: d.CreateImageResultProjectId,
-			SelfLink:  d.CreateImageResultSelfLink,
-			SizeGb:    d.CreateImageResultSizeGb,
+			Labels:          d.CreateImageLabels,
+			Licenses:        d.CreateImageLicenses,
+			GuestOsFeatures: imageFeatures,
+			Name:            name,
+			ProjectId:       d.CreateImageResultProjectId,
+			SelfLink:        d.CreateImageResultSelfLink,
+			SizeGb:          d.CreateImageResultSizeGb,
 		}
 		close(ch)
 		resultCh = ch

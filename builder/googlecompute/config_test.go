@@ -596,6 +596,9 @@ func testConfig(t *testing.T) (config map[string]interface{}, tempAccountFile st
 		"image_licenses": []string{
 			"test-license",
 		},
+		"image_guest_os_features": []string{
+			"UEFI_COMPATIBLE",
+		},
 		"image_storage_locations": []string{
 			"us-east1",
 		},
