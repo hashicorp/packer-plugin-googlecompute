@@ -18,7 +18,6 @@ import (
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/hashicorp/packer-plugin-sdk/template/config"
 	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
-	"github.com/hashicorp/packer/post-processor/artifice"
 )
 
 type Config struct {
@@ -126,7 +125,9 @@ func (p *PostProcessor) Configure(raws ...interface{}) error {
 
 func (p *PostProcessor) PostProcess(ctx context.Context, ui packersdk.Ui, artifact packersdk.Artifact) (packersdk.Artifact, bool, bool, error) {
 	switch artifact.BuilderId() {
-	case googlecompute.BuilderId, artifice.BuilderId:
+	// TODO: uncomment when Packer core stops importing this plugin.
+	// case googlecompute.BuilderId, artifice.BuilderId:
+	case googlecompute.BuilderId, "packer.post-processor.artifice":
 		break
 	default:
 		err := fmt.Errorf(
