@@ -5,7 +5,6 @@ go 1.17
 require (
 	cloud.google.com/go v0.81.0
 	github.com/hashicorp/hcl/v2 v2.10.0
-	github.com/hashicorp/packer v1.7.1
 	github.com/hashicorp/packer-plugin-sdk v0.2.3
 	github.com/hashicorp/vault/api v1.0.4
 	github.com/stretchr/testify v1.7.0
@@ -23,7 +22,6 @@ require (
 	github.com/armon/go-metrics v0.0.0-20190430140413-ec5e00d3c878 // indirect
 	github.com/aws/aws-sdk-go v1.38.0 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
-	github.com/biogo/hts v0.0.0-20160420073057-50da7d4131a3 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dylanmei/iso8601 v0.1.0 // indirect
 	github.com/fatih/color v1.9.0 // indirect
@@ -56,9 +54,6 @@ require (
 	github.com/jehiah/go-strftime v0.0.0-20171201141054-1d33003b3869 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/jstemmer/go-junit-report v0.9.1 // indirect
-	github.com/klauspost/compress v1.11.7 // indirect
-	github.com/klauspost/crc32 v1.2.0 // indirect
-	github.com/klauspost/pgzip v0.0.0-20151221113845-47f36e165cec // indirect
 	github.com/kr/fs v0.1.0 // indirect
 	github.com/masterzen/simplexml v0.0.0-20190410153822-31eea3082786 // indirect
 	github.com/masterzen/winrm v0.0.0-20210504160029-28ed956f5227 // indirect

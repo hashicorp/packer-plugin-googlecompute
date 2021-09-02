@@ -24,8 +24,6 @@ import (
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/hashicorp/packer-plugin-sdk/template/config"
 	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
-	"github.com/hashicorp/packer/post-processor/artifice"
-	"github.com/hashicorp/packer/post-processor/compress"
 )
 
 type Config struct {
@@ -166,7 +164,9 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packersdk.Ui, artifa
 	}
 
 	switch artifact.BuilderId() {
-	case compress.BuilderId, artifice.BuilderId:
+	// TODO: uncomment when Packer core stops importing this plugin.
+	// case compress.BuilderId, artifice.BuilderId:
+	case "packer.post-processor.compress", "packer.post-processor.artifice":
 		break
 	default:
 		err := fmt.Errorf(
