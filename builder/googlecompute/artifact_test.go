@@ -41,7 +41,7 @@ func TestArtifactState_StateData(t *testing.T) {
 func TestArtifactState_RegistryImageMetadata(t *testing.T) {
 	artifact := &Artifact{
 		config: &Config{Zone: "us1"},
-		image:  &Image{Name: "test-image"},
+		image:  &Image{Name: "test-image", ProjectId: "5678"},
 	}
 
 	// Valid state
@@ -62,6 +62,10 @@ func TestArtifactState_RegistryImageMetadata(t *testing.T) {
 
 	if image.ProviderRegion != artifact.State("BuildZone").(string) {
 		t.Errorf("Bad: unexpected value for ImageID %q, expected %q", image.ProviderRegion, artifact.State("BuildZone").(string))
+	}
+
+	if image.Labels["project_id"] != artifact.image.ProjectId {
+		t.Errorf("Bad: unexpected value for Labels %q, expected %q", image.Labels["project_id"], artifact.image.ProjectId)
 	}
 
 }

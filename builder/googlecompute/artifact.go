@@ -3,6 +3,8 @@ package googlecompute
 import (
 	"fmt"
 	"log"
+	"strconv"
+	"strings"
 
 	registryimage "github.com/hashicorp/packer-plugin-sdk/packer/registry/image"
 )
@@ -52,6 +54,26 @@ func (a *Artifact) State(name string) interface{} {
 			registryimage.WithRegion(a.config.Zone),
 		)
 
+		labels := map[string]string{
+			"self_link":    a.image.SelfLink,
+			"project_id":   a.image.ProjectId,
+			"disk_size_gb": strconv.FormatInt(a.image.SizeGb, 10),
+			"machine_type": a.config.MachineType,
+			"licenses":     strings.Join(a.image.Licenses, ","),
+		}
+
+		if a.config.SourceImage != "" {
+			labels["source_image"] = a.config.SourceImage
+		}
+		if a.config.SourceImageFamily != "" {
+			labels["source_image_family"] = a.config.SourceImageFamily
+		}
+
+		for k, v := range a.image.Labels {
+			labels["tags"] = labels["tags"] + fmt.Sprintf("%s:%s", k, v)
+		}
+
+		img.Labels = labels
 		return img
 	}
 
