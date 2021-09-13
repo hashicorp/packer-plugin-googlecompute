@@ -1,9 +1,17 @@
-## 1.0.3 (September 13, 2021)
+## 1.0.5 (September 13, 2021)
 
 * Add HCP Packer registry image metadata to builder artifacts. [GH-32]
 * Bump Packer plugin SDK to version v0.2.5 [GH-32]
 * Update driver to use user-configured Service Account for public key import.
     [GH-33]
+
+## 1.0.4 (September 2, 2021)
+
+* Remove Packer core as dependency to plugin. [GH-36]
+
+## 1.0.3 (September 1, 2021)
+
+* Upgrade plugin to use Go 1.17.
 
 ## 1.0.2 (August 27, 2021)
 
