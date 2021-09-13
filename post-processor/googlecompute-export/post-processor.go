@@ -237,7 +237,10 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packersdk.Ui, artifa
 	p.runner = commonsteps.NewRunner(steps, p.config.PackerConfig, ui)
 	p.runner.Run(ctx, state)
 
-	result := &Artifact{paths: p.config.Paths}
+	result := &Artifact{
+		paths:     p.config.Paths,
+		StateData: map[string]interface{}{"generated_data": state.Get("generated_data")},
+	}
 
 	return result, false, false, nil
 }

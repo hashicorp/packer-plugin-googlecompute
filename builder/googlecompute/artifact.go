@@ -3,6 +3,10 @@ package googlecompute
 import (
 	"fmt"
 	"log"
+	"strconv"
+	"strings"
+
+	registryimage "github.com/hashicorp/packer-plugin-sdk/packer/registry/image"
 )
 
 // Artifact represents a GCE image as the result of a Packer build.
@@ -43,8 +47,34 @@ func (a *Artifact) String() string {
 }
 
 func (a *Artifact) State(name string) interface{} {
-	if _, ok := a.StateData[name]; ok {
-		return a.StateData[name]
+	if name == registryimage.ArtifactStateURI {
+		img, _ := registryimage.FromArtifact(a,
+			registryimage.WithID(a.Id()),
+			registryimage.WithProvider("gce"),
+			registryimage.WithRegion(a.config.Zone),
+		)
+
+		labels := map[string]string{
+			"self_link":    a.image.SelfLink,
+			"project_id":   a.image.ProjectId,
+			"disk_size_gb": strconv.FormatInt(a.image.SizeGb, 10),
+			"machine_type": a.config.MachineType,
+			"licenses":     strings.Join(a.image.Licenses, ","),
+		}
+
+		if a.config.SourceImage != "" {
+			labels["source_image"] = a.config.SourceImage
+		}
+		if a.config.SourceImageFamily != "" {
+			labels["source_image_family"] = a.config.SourceImageFamily
+		}
+
+		for k, v := range a.image.Labels {
+			labels["tags"] = labels["tags"] + fmt.Sprintf("%s:%s", k, v)
+		}
+
+		img.Labels = labels
+		return img
 	}
 
 	switch name {
@@ -59,5 +89,10 @@ func (a *Artifact) State(name string) interface{} {
 	case "BuildZone":
 		return a.config.Zone
 	}
+
+	if _, ok := a.StateData[name]; ok {
+		return a.StateData[name]
+	}
+
 	return nil
 }
