@@ -1,11 +1,11 @@
-## 1.0.3 (Upcoming)
+## 1.0.3 (September 13, 2021)
 
-* Bump Packer plugin SDK to version v0.2.5 [GH-32]
 * Add HCP Packer registry image metadata to builder artifacts. [GH-32]
+* Bump Packer plugin SDK to version v0.2.5 [GH-32]
 * Update driver to use user-configured Service Account for public key import.
     [GH-33]
 
-## 1.0.2 (Aug 27, 2021)
+## 1.0.2 (August 27, 2021)
 
 * Treat ERROR 4047 as retryable. [GH-34]
 
