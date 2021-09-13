@@ -1,7 +1,12 @@
 ## 1.0.5 (September 13, 2021)
+### NOTES:
+HCP Packer registry is currently in private beta.
 
+### FEATURES: 
 * Add HCP Packer registry image metadata to builder artifacts. [GH-32]
 * Bump Packer plugin SDK to version v0.2.5 [GH-32]
+
+### IMPROVEMENTS:
 * Update driver to use user-configured Service Account for public key import.
     [GH-33]
 
