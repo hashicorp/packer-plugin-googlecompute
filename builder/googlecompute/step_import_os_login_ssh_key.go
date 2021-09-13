@@ -20,6 +20,7 @@ type StepImportOSLoginSSHKey struct {
 	Debug         bool
 	TokeninfoFunc func(context.Context) (*oauth2.Tokeninfo, error)
 	accountEmail  string
+	GCEUserFunc   func() string
 }
 
 // Run executes the Packer build step that generates SSH key pairs.
@@ -40,13 +41,6 @@ func (s *StepImportOSLoginSSHKey) Run(ctx context.Context, state multistep.State
 		return multistep.ActionContinue
 	}
 
-	// Are we running packer on a GCE ?
-	s.accountEmail = getGCEUser()
-
-	if s.TokeninfoFunc == nil && s.accountEmail == "" {
-		s.TokeninfoFunc = tokeninfo
-	}
-
 	ui.Say("Importing SSH public key for OSLogin...")
 	// Generate SHA256 fingerprint of SSH public key
 	// Put it into state to clean up later
@@ -55,6 +49,17 @@ func (s *StepImportOSLoginSSHKey) Run(ctx context.Context, state multistep.State
 
 	if config.account != nil && s.accountEmail == "" {
 		s.accountEmail = config.account.jwt.Email
+	}
+
+	if s.GCEUserFunc == nil {
+		s.GCEUserFunc = getGCEUser
+	}
+	if s.accountEmail == "" {
+		s.accountEmail = s.GCEUserFunc()
+	}
+
+	if s.TokeninfoFunc == nil && s.accountEmail == "" {
+		s.TokeninfoFunc = tokeninfo
 	}
 
 	if s.accountEmail == "" {

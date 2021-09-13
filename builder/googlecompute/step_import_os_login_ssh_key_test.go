@@ -126,6 +126,74 @@ func TestStepImportOSLoginSSHKey_withNoAccountFile(t *testing.T) {
 	}
 }
 
+func TestStepImportOSLoginSSHKey_withGCEAndNoAccount(t *testing.T) {
+	state := testState(t)
+	fakeGCEEmail := "testing@packer.io"
+	step := &StepImportOSLoginSSHKey{
+		GCEUserFunc: func() string {
+			return fakeGCEEmail
+		},
+	}
+	defer step.Cleanup(state)
+
+	config := state.Get("config").(*Config)
+	config.account = nil
+	config.UseOSLogin = true
+	config.Comm.SSHPublicKey = []byte{'k', 'e', 'y'}
+
+	if action := step.Run(context.Background(), state); action != multistep.ActionContinue {
+		t.Fatalf("bad action: %#v", action)
+	}
+
+	if step.accountEmail != fakeGCEEmail {
+		t.Fatalf("expected accountEmail to be %q but got %q", fakeGCEEmail, step.accountEmail)
+	}
+
+	pubKey, ok := state.GetOk("ssh_key_public_sha256")
+	if !ok {
+		t.Fatal("expected to see a public key")
+	}
+
+	sha256sum := sha256.Sum256(config.Comm.SSHPublicKey)
+	if pubKey != hex.EncodeToString(sha256sum[:]) {
+		t.Errorf("expected to see a matching public key, but got %q", pubKey)
+	}
+}
+
+func TestStepImportOSLoginSSHKey_withGCEAndAccount(t *testing.T) {
+	state := testState(t)
+	fakeGCEEmail := "testing@packer.io"
+	fakeAccountEmail := "raffi-compute@developer.gserviceaccount.com"
+	step := &StepImportOSLoginSSHKey{
+		GCEUserFunc: func() string {
+			return fakeGCEEmail
+		},
+	}
+	defer step.Cleanup(state)
+
+	config := state.Get("config").(*Config)
+	config.UseOSLogin = true
+	config.Comm.SSHPublicKey = []byte{'k', 'e', 'y'}
+
+	if action := step.Run(context.Background(), state); action != multistep.ActionContinue {
+		t.Fatalf("bad action: %#v", action)
+	}
+
+	if step.accountEmail != fakeAccountEmail {
+		t.Fatalf("expected accountEmail to be %q but got %q", fakeAccountEmail, step.accountEmail)
+	}
+
+	pubKey, ok := state.GetOk("ssh_key_public_sha256")
+	if !ok {
+		t.Fatal("expected to see a public key")
+	}
+
+	sha256sum := sha256.Sum256(config.Comm.SSHPublicKey)
+	if pubKey != hex.EncodeToString(sha256sum[:]) {
+		t.Errorf("expected to see a matching public key, but got %q", pubKey)
+	}
+}
+
 func TestStepImportOSLoginSSHKey_withPrivateSSHKey(t *testing.T) {
 	// default teststate contains an account file
 	state := testState(t)
