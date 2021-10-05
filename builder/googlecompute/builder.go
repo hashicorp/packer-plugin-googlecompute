@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/multistep/commonsteps"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
+	"github.com/hashicorp/packer-plugin-sdk/packerbuilderdata"
 )
 
 // The unique ID for this builder.
@@ -30,7 +31,13 @@ func (b *Builder) Prepare(raws ...interface{}) ([]string, []string, error) {
 	if errs != nil {
 		return nil, warnings, errs
 	}
-	return nil, warnings, nil
+	generatedDataKeys := []string{
+		// This will be set with the source image name even if the config
+		// uses source image family instead of source image id.
+		"SourceImageName",
+	}
+
+	return generatedDataKeys, warnings, nil
 }
 
 // Run executes a googlecompute Packer build and returns a packersdk.Artifact
@@ -56,6 +63,7 @@ func (b *Builder) Run(ctx context.Context, ui packersdk.Ui, hook packersdk.Hook)
 	state.Put("driver", driver)
 	state.Put("hook", hook)
 	state.Put("ui", ui)
+	generatedData := &packerbuilderdata.GeneratedData{State: state}
 
 	// Build the steps.
 	steps := []multistep.Step{
@@ -74,7 +82,8 @@ func (b *Builder) Run(ctx context.Context, ui packersdk.Ui, hook packersdk.Hook)
 			Debug: b.config.PackerDebug,
 		},
 		&StepCreateInstance{
-			Debug: b.config.PackerDebug,
+			Debug:         b.config.PackerDebug,
+			GeneratedData: generatedData,
 		},
 		&StepCreateWindowsPassword{
 			Debug:        b.config.PackerDebug,

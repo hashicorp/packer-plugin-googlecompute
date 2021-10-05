@@ -11,11 +11,13 @@ import (
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
+	"github.com/hashicorp/packer-plugin-sdk/packerbuilderdata"
 )
 
 // StepCreateInstance represents a Packer build step that creates GCE instances.
 type StepCreateInstance struct {
-	Debug bool
+	Debug         bool
+	GeneratedData *packerbuilderdata.GeneratedData
 }
 
 func (c *Config) createInstanceMetadata(sourceImage *Image, sshPublicKey string) (map[string]string, map[string]string, error) {
@@ -123,6 +125,9 @@ func (s *StepCreateInstance) Run(ctx context.Context, state multistep.StateBag) 
 		ui.Error(err.Error())
 		return multistep.ActionHalt
 	}
+
+	// Store source image name for use in PARtifact.
+	s.GeneratedData.Put("SourceImageName", sourceImage.Name)
 
 	if c.EnableSecureBoot && !sourceImage.IsSecureBootCompatible() {
 		err := fmt.Errorf("Image: %s is not secure boot compatible. Please set 'enable_secure_boot' to false or choose another source image.", sourceImage.Name)
