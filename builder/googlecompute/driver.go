@@ -82,6 +82,7 @@ type InstanceConfig struct {
 	DisableDefaultServiceAccount bool
 	DiskSizeGb                   int64
 	DiskType                     string
+	DiskEncryptionKey            string
 	EnableSecureBoot             bool
 	EnableVtpm                   bool
 	EnableIntegrityMonitoring    bool

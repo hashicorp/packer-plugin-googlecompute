@@ -461,22 +461,30 @@ func (d *driverGCE) RunInstance(c *InstanceConfig) (<-chan error, error) {
 		serviceAccount.Scopes = c.Scopes
 	}
 
+	disk := &compute.AttachedDisk{
+		Type:       "PERSISTENT",
+		Mode:       "READ_WRITE",
+		Kind:       "compute#attachedDisk",
+		Boot:       true,
+		AutoDelete: false,
+		InitializeParams: &compute.AttachedDiskInitializeParams{
+			SourceImage: c.Image.SelfLink,
+			DiskSizeGb:  c.DiskSizeGb,
+			DiskType:    fmt.Sprintf("zones/%s/diskTypes/%s", zone.Name, c.DiskType),
+		},
+	}
+
+	if c.DiskEncryptionKey != "" {
+		disk.DiskEncryptionKey = &compute.CustomerEncryptionKey{
+			KmsKeyName: c.DiskEncryptionKey,
+		}
+	}
+
 	// Create the instance information
 	instance := compute.Instance{
 		Description: c.Description,
 		Disks: []*compute.AttachedDisk{
-			{
-				Type:       "PERSISTENT",
-				Mode:       "READ_WRITE",
-				Kind:       "compute#attachedDisk",
-				Boot:       true,
-				AutoDelete: false,
-				InitializeParams: &compute.AttachedDiskInitializeParams{
-					SourceImage: c.Image.SelfLink,
-					DiskSizeGb:  c.DiskSizeGb,
-					DiskType:    fmt.Sprintf("zones/%s/diskTypes/%s", zone.Name, c.DiskType),
-				},
-			},
+			disk,
 		},
 		GuestAccelerators: guestAccelerators,
 		Labels:            c.Labels,
