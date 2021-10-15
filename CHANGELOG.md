@@ -1,3 +1,8 @@
+## 1.0.6 (Upcoming)
+
+### BUG FIXES:
+* Pass DiskName configuration argument when creating instance. [GH-51]
+
 ## 1.0.5 (September 13, 2021)
 ### NOTES:
 HCP Packer registry is currently in private beta.
