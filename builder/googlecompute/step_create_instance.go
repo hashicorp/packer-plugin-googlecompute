@@ -169,6 +169,7 @@ func (s *StepCreateInstance) Run(ctx context.Context, state multistep.StateBag) 
 		Address:                      c.Address,
 		Description:                  "New instance created by Packer",
 		DisableDefaultServiceAccount: c.DisableDefaultServiceAccount,
+		DiskName:                     c.DiskName,
 		DiskSizeGb:                   c.DiskSizeGb,
 		DiskType:                     c.DiskType,
 		EnableSecureBoot:             c.EnableSecureBoot,
