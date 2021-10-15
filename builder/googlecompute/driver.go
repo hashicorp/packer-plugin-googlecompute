@@ -80,6 +80,7 @@ type InstanceConfig struct {
 	Address                      string
 	Description                  string
 	DisableDefaultServiceAccount bool
+	DiskName                     string
 	DiskSizeGb                   int64
 	DiskType                     string
 	EnableSecureBoot             bool
