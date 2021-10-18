@@ -1,13 +1,16 @@
-## 1.0.6 (Upcoming)
+## 1.0.6 (October 18, 2021)
+
+### Improvements:
+* Add `SourceImageName` as shared builder information variable. [GH-47].
+* Add `SourceImageName` to HCP Packer registry image metadata. [GH-47]
+* Update Packer plugin SDK to version v0.2.7 [GH-48]
+
 
 ### BUG FIXES:
 * Pass DiskName configuration argument when creating instance. [GH-51]
 
 ## 1.0.5 (September 13, 2021)
-### NOTES:
-HCP Packer registry is currently in private beta.
-
-### FEATURES: 
+### FEATURES:
 * Add HCP Packer registry image metadata to builder artifacts. [GH-32]
 * Bump Packer plugin SDK to version v0.2.5 [GH-32]
 
