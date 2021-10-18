@@ -77,6 +77,48 @@ func (a *Artifact) State(name string) interface{} {
 		return img
 	}
 
+	if name == registryimage.ArtifactStateURI {
+		img, _ := registryimage.FromArtifact(a,
+			registryimage.WithID(a.Id()),
+			registryimage.WithProvider("gce"),
+			registryimage.WithRegion(a.config.Zone),
+		)
+
+		labels := map[string]string{
+			"self_link":    a.image.SelfLink,
+			"project_id":   a.image.ProjectId,
+			"disk_size_gb": strconv.FormatInt(a.image.SizeGb, 10),
+			"machine_type": a.config.MachineType,
+			"licenses":     strings.Join(a.image.Licenses, ","),
+		}
+
+		// Set source image and/or family as labels
+		if a.config.SourceImage != "" {
+			labels["source_image"] = a.config.SourceImage
+		}
+		if a.config.SourceImageFamily != "" {
+			labels["source_image_family"] = a.config.SourceImageFamily
+		}
+
+		// Set PARtifact's source image name from state; this is set regardless
+		// of whether image or image family were used:
+		data, ok := a.StateData["generated_data"].(map[string]interface{})
+		if ok {
+			img.SourceImageID = data["SourceImageName"].(string)
+		}
+
+		if len(a.config.SourceImageProjectId) > 0 {
+			labels["source_image_project_ids"] = strings.Join(a.config.SourceImageProjectId, ",")
+		}
+
+		for k, v := range a.image.Labels {
+			labels["tags"] = labels["tags"] + fmt.Sprintf("%s:%s", k, v)
+		}
+
+		img.Labels = labels
+		return img
+	}
+
 	switch name {
 	case "ImageName":
 		return a.image.Name
@@ -95,4 +137,5 @@ func (a *Artifact) State(name string) interface{} {
 	}
 
 	return nil
+
 }

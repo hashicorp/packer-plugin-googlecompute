@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
+	"github.com/hashicorp/packer-plugin-sdk/packerbuilderdata"
 	"github.com/hashicorp/packer-plugin-sdk/template/config"
 	"github.com/stretchr/testify/assert"
 )
@@ -23,6 +24,8 @@ func TestStepCreateInstance(t *testing.T) {
 	defer step.Cleanup(state)
 
 	state.Put("ssh_public_key", "key")
+	generatedData := &packerbuilderdata.GeneratedData{State: state}
+	step.GeneratedData = generatedData
 
 	c := state.Get("config").(*Config)
 	d := state.Get("driver").(*DriverMock)
@@ -62,6 +65,8 @@ func TestStepCreateInstance_fromFamily(t *testing.T) {
 		defer step.Cleanup(state)
 
 		state.Put("ssh_public_key", "key")
+		generatedData := &packerbuilderdata.GeneratedData{State: state}
+		step.GeneratedData = generatedData
 
 		c := state.Get("config").(*Config)
 		c.SourceImage = tc.Name
@@ -91,6 +96,9 @@ func TestStepCreateInstance_windowsNeedsPassword(t *testing.T) {
 	defer step.Cleanup(state)
 
 	state.Put("ssh_public_key", "key")
+	generatedData := &packerbuilderdata.GeneratedData{State: state}
+	step.GeneratedData = generatedData
+
 	c := state.Get("config").(*Config)
 	d := state.Get("driver").(*DriverMock)
 	d.GetImageResult = StubImage("test-image", "test-project", []string{"windows"}, 100)
@@ -137,6 +145,8 @@ func TestStepCreateInstance_windowsPasswordSet(t *testing.T) {
 	defer step.Cleanup(state)
 
 	state.Put("ssh_public_key", "key")
+	generatedData := &packerbuilderdata.GeneratedData{State: state}
+	step.GeneratedData = generatedData
 
 	config := state.Get("config").(*Config)
 	driver := state.Get("driver").(*DriverMock)
@@ -185,6 +195,8 @@ func TestStepCreateInstance_error(t *testing.T) {
 	defer step.Cleanup(state)
 
 	state.Put("ssh_public_key", "key")
+	generatedData := &packerbuilderdata.GeneratedData{State: state}
+	step.GeneratedData = generatedData
 
 	d := state.Get("driver").(*DriverMock)
 	d.RunInstanceErr = errors.New("error")
@@ -206,6 +218,8 @@ func TestStepCreateInstance_errorOnChannel(t *testing.T) {
 	defer step.Cleanup(state)
 
 	state.Put("ssh_public_key", "key")
+	generatedData := &packerbuilderdata.GeneratedData{State: state}
+	step.GeneratedData = generatedData
 
 	errCh := make(chan error, 1)
 	errCh <- errors.New("error")
@@ -230,6 +244,9 @@ func TestStepCreateInstance_errorTimeout(t *testing.T) {
 	defer step.Cleanup(state)
 
 	state.Put("ssh_public_key", "key")
+
+	generatedData := &packerbuilderdata.GeneratedData{State: state}
+	step.GeneratedData = generatedData
 
 	errCh := make(chan error, 1)
 
@@ -256,6 +273,8 @@ func TestStepCreateInstance_noServiceAccount(t *testing.T) {
 	defer step.Cleanup(state)
 
 	state.Put("ssh_public_key", "key")
+	generatedData := &packerbuilderdata.GeneratedData{State: state}
+	step.GeneratedData = generatedData
 
 	c := state.Get("config").(*Config)
 	c.DisableDefaultServiceAccount = true
@@ -280,6 +299,8 @@ func TestStepCreateInstance_customServiceAccount(t *testing.T) {
 	defer step.Cleanup(state)
 
 	state.Put("ssh_public_key", "key")
+	generatedData := &packerbuilderdata.GeneratedData{State: state}
+	step.GeneratedData = generatedData
 
 	c := state.Get("config").(*Config)
 	c.DisableDefaultServiceAccount = true
@@ -416,6 +437,8 @@ func TestStepCreateInstanceWaitToAddSSHKeys(t *testing.T) {
 	defer step.Cleanup(state)
 
 	state.Put("ssh_public_key", "key")
+	generatedData := &packerbuilderdata.GeneratedData{State: state}
+	step.GeneratedData = generatedData
 
 	c := state.Get("config").(*Config)
 	d := state.Get("driver").(*DriverMock)
@@ -449,6 +472,8 @@ func TestStepCreateInstanceNoWaitToAddSSHKeys(t *testing.T) {
 	defer step.Cleanup(state)
 
 	state.Put("ssh_public_key", "key")
+	generatedData := &packerbuilderdata.GeneratedData{State: state}
+	step.GeneratedData = generatedData
 
 	c := state.Get("config").(*Config)
 	d := state.Get("driver").(*DriverMock)
