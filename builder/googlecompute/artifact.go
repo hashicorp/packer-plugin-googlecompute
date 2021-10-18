@@ -62,11 +62,23 @@ func (a *Artifact) State(name string) interface{} {
 			"licenses":     strings.Join(a.image.Licenses, ","),
 		}
 
+		// Set source image and/or family as labels
 		if a.config.SourceImage != "" {
 			labels["source_image"] = a.config.SourceImage
 		}
 		if a.config.SourceImageFamily != "" {
 			labels["source_image_family"] = a.config.SourceImageFamily
+		}
+
+		// Set PARtifact's source image name from state; this is set regardless
+		// of whether image or image family were used:
+		data, ok := a.StateData["generated_data"].(map[string]interface{})
+		if ok {
+			img.SourceImageID = data["SourceImageName"].(string)
+		}
+
+		if len(a.config.SourceImageProjectId) > 0 {
+			labels["source_image_project_ids"] = strings.Join(a.config.SourceImageProjectId, ",")
 		}
 
 		for k, v := range a.image.Labels {
