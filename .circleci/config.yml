@@ -5,8 +5,7 @@ version: 2.1
 
 executors:
   golang:
-    docker:
-      - image: docker.mirror.hashicorp.services/circleci/golang:1.16
+    docker: - image: docker.mirror.hashicorp.services/circleci/golang:1.17
     resource_class: medium+
   darwin:
     macos:
