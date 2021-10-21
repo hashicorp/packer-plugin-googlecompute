@@ -64,7 +64,7 @@ type Config struct {
 	DisableDefaultServiceAccount bool `mapstructure:"disable_default_service_account" required:"false"`
 	// The name of the disk, if unset the instance name will be used.
 	DiskName string `mapstructure:"disk_name" required:"false"`
-	// The size of the disk in GB. This defaults to 10, which is 10GB.
+	// The size of the disk in GB. This defaults to 20, which is 20GB.
 	DiskSizeGb int64 `mapstructure:"disk_size" required:"false"`
 	// Type of disk used to back your instance, like pd-ssd or pd-standard.
 	// Defaults to pd-standard.
