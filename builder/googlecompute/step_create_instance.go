@@ -126,8 +126,12 @@ func (s *StepCreateInstance) Run(ctx context.Context, state multistep.StateBag) 
 		return multistep.ActionHalt
 	}
 
-	// Store source image name for use in PARtifact.
-	s.GeneratedData.Put("SourceImageName", sourceImage.Name)
+	// The export post processor uses the `StepCreateInstance`, but with this we
+	// avoid overwritting the SourceImageName.
+	if s.GeneratedData != nil {
+		// Store source image name for use in PARtifact.
+		s.GeneratedData.Put("SourceImageName", sourceImage.Name)
+	}
 
 	if c.EnableSecureBoot && !sourceImage.IsSecureBootCompatible() {
 		err := fmt.Errorf("Image: %s is not secure boot compatible. Please set 'enable_secure_boot' to false or choose another source image.", sourceImage.Name)
