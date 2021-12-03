@@ -83,6 +83,7 @@ type InstanceConfig struct {
 	DiskName                     string
 	DiskSizeGb                   int64
 	DiskType                     string
+	DiskEncryptionKey            *CustomerEncryptionKey
 	EnableSecureBoot             bool
 	EnableVtpm                   bool
 	EnableIntegrityMonitoring    bool

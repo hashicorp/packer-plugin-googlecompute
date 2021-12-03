@@ -69,6 +69,24 @@ type Config struct {
 	// Type of disk used to back your instance, like pd-ssd or pd-standard.
 	// Defaults to pd-standard.
 	DiskType string `mapstructure:"disk_type" required:"false"`
+	// Disk encryption key to apply to the created boot disk. Possible values:
+	// * kmsKeyName -  The name of the encryption key that is stored in Google Cloud KMS.
+	// * RawKey: - A 256-bit customer-supplied encryption key, encodes in RFC 4648 base64.
+	//
+	// examples:
+	//
+	//  ```json
+	//  {
+	//     "kmsKeyName": "projects/${project}/locations/${region}/keyRings/computeEngine/cryptoKeys/computeEngine/cryptoKeyVersions/4"
+	//  }
+	//  ```
+	//
+	//  ```hcl
+	//   disk_encryption_key {
+	//     kmsKeyName = "projects/${var.project}/locations/${var.region}/keyRings/computeEngine/cryptoKeys/computeEngine/cryptoKeyVersions/4"
+	//   }
+	//  ```
+	DiskEncryptionKey *CustomerEncryptionKey `mapstructure:"disk_encryption_key" required:"false"`
 	// Create a Shielded VM image with Secure Boot enabled. It helps ensure that
 	// the system only runs authentic software by verifying the digital signature
 	// of all boot components, and halting the boot process if signature verification
