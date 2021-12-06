@@ -1,3 +1,10 @@
+## 1.0.8 (December 6, 2021)
+
+### Exciting New Features 🎉
+* Customer-managed Encryption Key for Remote VM's Boot Disk #20 by @wilsonfv in https://github.com/hashicorp/packer-plugin-googlecompute/pull/21
+### Doc improvements 📚
+* update ansible example by @lmayorga1980 in https://github.com/hashicorp/packer-plugin-googlecompute/pull/65
+
 ## 1.0.6 (October 18, 2021)
 
 ### NOTES:
