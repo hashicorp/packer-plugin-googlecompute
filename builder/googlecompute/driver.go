@@ -1,10 +1,12 @@
 package googlecompute
 
 import (
+	"context"
 	"crypto/rsa"
 	"time"
 
 	compute "google.golang.org/api/compute/v1"
+	goauth2 "google.golang.org/api/oauth2/v2"
 	oslogin "google.golang.org/api/oslogin/v1"
 )
 
@@ -72,6 +74,9 @@ type Driver interface {
 
 	// Add to the instance metadata for the existing instance
 	AddToInstanceMetadata(zone string, name string, metadata map[string]string) error
+
+	// Get tokenfine from https://oauth2.googleapis.com/tokeninfo
+	GetTokenInfo(ctx context.Context) (*goauth2.Tokeninfo, error)
 }
 
 type InstanceConfig struct {

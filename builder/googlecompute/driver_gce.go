@@ -14,6 +14,7 @@ import (
 	"time"
 
 	compute "google.golang.org/api/compute/v1"
+	goauth2 "google.golang.org/api/oauth2/v2"
 	"google.golang.org/api/option"
 	oslogin "google.golang.org/api/oslogin/v1"
 
@@ -33,6 +34,7 @@ type driverGCE struct {
 	projectId      string
 	service        *compute.Service
 	osLoginService *oslogin.Service
+	oauth2Service  *goauth2.Service
 	ui             packersdk.Ui
 }
 
@@ -80,25 +82,25 @@ func (ots OauthTokenSource) Token() (*oauth2.Token, error) {
 
 }
 
-func NewClientOptionGoogle(account *ServiceAccount, vaultOauth string, impersonatesa string, accessToken string) (option.ClientOption, error) {
+func NewClientOptionGoogle(account *ServiceAccount, vaultOauth string, impersonatesa string, accessToken string) ([]option.ClientOption, error) {
 	var err error
 
-	var opts option.ClientOption
+	var opts []option.ClientOption
 
 	if vaultOauth != "" {
 		// Auth with Vault Oauth
 		log.Printf("Using Vault to generate Oauth token.")
 		ts := OauthTokenSource{vaultOauth}
-		opts = option.WithTokenSource(ts)
+		opts = append(opts, option.WithTokenSource(ts))
 
 	} else if impersonatesa != "" {
-		opts = option.ImpersonateCredentials(impersonatesa)
+		opts = append(opts, option.ImpersonateCredentials(impersonatesa))
 	} else if accessToken != "" {
 		// Auth with static access token
 		log.Printf("[INFO] Using static Google Access Token")
 		token := &oauth2.Token{AccessToken: accessToken}
 		ts := oauth2.StaticTokenSource(token)
-		opts = option.WithTokenSource(ts)
+		opts = append(opts, option.WithTokenSource(ts))
 	} else if account != nil && account.jwt != nil && len(account.jwt.PrivateKey) > 0 {
 		// Auth with AccountFile if provided
 		log.Printf("[INFO] Requesting Google token via account_file...")
@@ -106,14 +108,14 @@ func NewClientOptionGoogle(account *ServiceAccount, vaultOauth string, impersona
 		log.Printf("[INFO]   -- Scopes: %s", DriverScopes)
 		log.Printf("[INFO]   -- Private Key Length: %d", len(account.jwt.PrivateKey))
 
-		opts = option.WithCredentialsJSON(account.jsonKey)
+		opts = append(opts, option.WithCredentialsJSON(account.jsonKey))
 	} else {
 		log.Printf("[INFO] Requesting Google token via GCE API Default Client Token Source...")
 		ts, err := google.DefaultTokenSource(context.TODO(), "https://www.googleapis.com/auth/cloud-platform")
 		if err != nil {
 			return nil, err
 		}
-		opts = option.WithTokenSource(ts)
+		opts = append(opts, option.WithTokenSource(ts))
 		// The DefaultClient uses the DefaultTokenSource of the google lib.
 		// The DefaultTokenSource uses the "Application Default Credentials"
 		// It looks for credentials in the following places, preferring the first location found:
@@ -126,10 +128,10 @@ func NewClientOptionGoogle(account *ServiceAccount, vaultOauth string, impersona
 		// 4. On Google Compute Engine and Google App Engine Managed VMs, it fetches
 		//    credentials from the metadata server.
 		//    (In this final case any provided scopes are ignored.)
-		//
-		//    Note: (4) is not usable with OSLogin on Google Compute Engine (GCE).
-		//    The GCE service account is derived separately and used instead.
 	}
+
+	// Insert UserAgents
+	opts = append(opts, option.WithUserAgent(useragent.String(version.PluginVersion.FormattedVersion())))
 
 	if err != nil {
 		return nil, err
@@ -146,26 +148,34 @@ func NewDriverGCE(config GCEDriverConfig) (Driver, error) {
 	}
 
 	log.Printf("[INFO] Instantiating GCE client...")
-	service, err := compute.NewService(context.TODO(), opts)
+	service, err := compute.NewService(context.TODO(), opts...)
 	if err != nil {
 		return nil, err
 	}
 
 	log.Printf("[INFO] Instantiating OS Login client...")
-	osLoginService, err := oslogin.NewService(context.TODO(), opts)
+	osLoginService, err := oslogin.NewService(context.TODO(), opts...)
 	if err != nil {
 		return nil, err
 	}
 
-	// Set UserAgent
-	service.UserAgent = useragent.String(version.PluginVersion.FormattedVersion())
+	log.Printf("[INFO] Instantiating OAuth client...")
+	oauth2Service, err := goauth2.NewService(context.TODO(), opts...)
+	if err != nil {
+		return nil, err
+	}
 
 	return &driverGCE{
 		projectId:      config.ProjectId,
 		service:        service,
 		osLoginService: osLoginService,
+		oauth2Service:  oauth2Service,
 		ui:             config.Ui,
 	}, nil
+}
+
+func (d *driverGCE) GetTokenInfo(ctx context.Context) (*goauth2.Tokeninfo, error) {
+	return d.oauth2Service.Tokeninfo().Context(ctx).Do()
 }
 
 func (d *driverGCE) CreateImage(name, description, family, zone, disk string, image_labels map[string]string, image_licenses []string, image_encryption_key *compute.CustomerEncryptionKey, imageStorageLocations []string) (<-chan *Image, <-chan error) {
