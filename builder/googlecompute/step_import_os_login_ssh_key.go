@@ -5,15 +5,25 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"log"
+	"net/http"
+	"time"
 
+	metadata "cloud.google.com/go/compute/metadata"
+	"github.com/hashicorp/packer-plugin-googlecompute/version"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
+	"github.com/hashicorp/packer-plugin-sdk/useragent"
+	"google.golang.org/api/oauth2/v2"
+	"google.golang.org/api/option"
 )
 
 // StepImportOSLoginSSHKey imports a temporary SSH key pair into a GCE login profile.
 type StepImportOSLoginSSHKey struct {
-	Debug        bool
-	accountEmail string
+	Debug         bool
+	TokeninfoFunc func(context.Context, string) (*oauth2.Tokeninfo, error)
+	accountEmail  string
+	GCEUserFunc   func() string
 }
 
 // Run executes the Packer build step that generates SSH key pairs.
@@ -44,8 +54,20 @@ func (s *StepImportOSLoginSSHKey) Run(ctx context.Context, state multistep.State
 		s.accountEmail = config.account.jwt.Email
 	}
 
+	if s.GCEUserFunc == nil {
+		s.GCEUserFunc = getGCEUser
+	}
+
+	if s.accountEmail == "" && config.ImpersonateServiceAccount == "" {
+		s.accountEmail = s.GCEUserFunc()
+	}
+
+	if s.TokeninfoFunc == nil && s.accountEmail == "" {
+		s.TokeninfoFunc = tokeninfo
+	}
+
 	if s.accountEmail == "" {
-		info, err := driver.GetTokenInfo(ctx)
+		info, err := s.TokeninfoFunc(ctx, config.ImpersonateServiceAccount)
 		if err != nil {
 			err := fmt.Errorf("Error obtaining token information needed for OSLogin: %s", err)
 			state.Put("error", err)
@@ -120,4 +142,46 @@ func (s *StepImportOSLoginSSHKey) Cleanup(state multistep.StateBag) {
 	}
 
 	ui.Message("SSH public key for OSLogin has been deleted!")
+}
+
+func tokeninfo(ctx context.Context, impersonatesa string) (*oauth2.Tokeninfo, error) {
+	var opts []option.ClientOption
+
+	opts = append(opts, option.WithUserAgent(useragent.String(version.PluginVersion.FormattedVersion())))
+
+	if impersonatesa != "" {
+		opts = append(opts, option.ImpersonateCredentials(impersonatesa))
+	}
+	svc, err := oauth2.NewService(ctx, opts...)
+	if err != nil {
+		err := fmt.Errorf("Error initializing oauth service needed for OSLogin: %s", err)
+		return nil, err
+	}
+
+	return svc.Tokeninfo().Context(ctx).Do()
+}
+
+// getGCEUser determines if we're running packer on a GCE, and if we are, gets the associated service account email for subsequent use with OSLogin.
+// There are cases where we are running on a GCE, but the GCP metadata server isn't accessible. GitLab docker-engine runners are an edge case example of this.
+// It makes little sense to run packer on GCP in this way, however, we defensively timeout in those cases, rather than abort.
+func getGCEUser() string {
+
+	metadataCheckTimeout := 5 * time.Second
+	metadataCheckChl := make(chan string, 1)
+
+	go func() {
+		if metadata.OnGCE() {
+			GCEUser, _ := metadata.NewClient(&http.Client{}).Email("")
+			metadataCheckChl <- GCEUser
+		}
+	}()
+
+	select {
+	case thisGCEUser := <-metadataCheckChl:
+		log.Printf("[INFO] OSLogin: GCE service account %s will be used for identity", thisGCEUser)
+		return thisGCEUser
+	case <-time.After(metadataCheckTimeout):
+		log.Printf("[INFO] OSLogin: Could not derive a GCE service account from google metadata server after %s", metadataCheckTimeout)
+		return ""
+	}
 }

@@ -14,7 +14,6 @@ import (
 	"time"
 
 	compute "google.golang.org/api/compute/v1"
-	goauth2 "google.golang.org/api/oauth2/v2"
 	"google.golang.org/api/option"
 	oslogin "google.golang.org/api/oslogin/v1"
 
@@ -34,7 +33,6 @@ type driverGCE struct {
 	projectId      string
 	service        *compute.Service
 	osLoginService *oslogin.Service
-	oauth2Service  *goauth2.Service
 	ui             packersdk.Ui
 }
 
@@ -159,23 +157,12 @@ func NewDriverGCE(config GCEDriverConfig) (Driver, error) {
 		return nil, err
 	}
 
-	log.Printf("[INFO] Instantiating OAuth client...")
-	oauth2Service, err := goauth2.NewService(context.TODO(), opts...)
-	if err != nil {
-		return nil, err
-	}
-
 	return &driverGCE{
 		projectId:      config.ProjectId,
 		service:        service,
 		osLoginService: osLoginService,
-		oauth2Service:  oauth2Service,
 		ui:             config.Ui,
 	}, nil
-}
-
-func (d *driverGCE) GetTokenInfo(ctx context.Context) (*goauth2.Tokeninfo, error) {
-	return d.oauth2Service.Tokeninfo().Context(ctx).Do()
 }
 
 func (d *driverGCE) CreateImage(name, description, family, zone, disk string, image_labels map[string]string, image_licenses []string, image_encryption_key *compute.CustomerEncryptionKey, imageStorageLocations []string) (<-chan *Image, <-chan error) {

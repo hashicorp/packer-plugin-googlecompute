@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
+	"google.golang.org/api/oauth2/v2"
 )
 
 func TestStepImportOSLoginSSHKey_impl(t *testing.T) {
@@ -94,11 +95,83 @@ func TestStepImportOSLoginSSHKey_withAccountFile(t *testing.T) {
 func TestStepImportOSLoginSSHKey_withNoAccountFile(t *testing.T) {
 	state := testState(t)
 	fakeAccountEmail := "testing@packer.io"
-	step := &StepImportOSLoginSSHKey{}
+	step := &StepImportOSLoginSSHKey{
+		TokeninfoFunc: func(ctx context.Context, impersonatedsa string) (*oauth2.Tokeninfo, error) {
+			return &oauth2.Tokeninfo{Email: fakeAccountEmail}, nil
+		},
+	}
 	defer step.Cleanup(state)
 
 	config := state.Get("config").(*Config)
 	config.account = nil
+	config.UseOSLogin = true
+	config.Comm.SSHPublicKey = []byte{'k', 'e', 'y'}
+
+	if action := step.Run(context.Background(), state); action != multistep.ActionContinue {
+		t.Fatalf("bad action: %#v", action)
+	}
+
+	if step.accountEmail != fakeAccountEmail {
+		t.Fatalf("expected accountEmail to be %q but got %q", fakeAccountEmail, step.accountEmail)
+	}
+
+	pubKey, ok := state.GetOk("ssh_key_public_sha256")
+	if !ok {
+		t.Fatal("expected to see a public key")
+	}
+
+	sha256sum := sha256.Sum256(config.Comm.SSHPublicKey)
+	if pubKey != hex.EncodeToString(sha256sum[:]) {
+		t.Errorf("expected to see a matching public key, but got %q", pubKey)
+	}
+}
+
+func TestStepImportOSLoginSSHKey_withGCEAndNoAccount(t *testing.T) {
+	state := testState(t)
+	fakeGCEEmail := "testing@packer.io"
+	step := &StepImportOSLoginSSHKey{
+		GCEUserFunc: func() string {
+			return fakeGCEEmail
+		},
+	}
+	defer step.Cleanup(state)
+
+	config := state.Get("config").(*Config)
+	config.account = nil
+	config.UseOSLogin = true
+	config.Comm.SSHPublicKey = []byte{'k', 'e', 'y'}
+
+	if action := step.Run(context.Background(), state); action != multistep.ActionContinue {
+		t.Fatalf("bad action: %#v", action)
+	}
+
+	if step.accountEmail != fakeGCEEmail {
+		t.Fatalf("expected accountEmail to be %q but got %q", fakeGCEEmail, step.accountEmail)
+	}
+
+	pubKey, ok := state.GetOk("ssh_key_public_sha256")
+	if !ok {
+		t.Fatal("expected to see a public key")
+	}
+
+	sha256sum := sha256.Sum256(config.Comm.SSHPublicKey)
+	if pubKey != hex.EncodeToString(sha256sum[:]) {
+		t.Errorf("expected to see a matching public key, but got %q", pubKey)
+	}
+}
+
+func TestStepImportOSLoginSSHKey_withGCEAndAccount(t *testing.T) {
+	state := testState(t)
+	fakeGCEEmail := "testing@packer.io"
+	fakeAccountEmail := "raffi-compute@developer.gserviceaccount.com"
+	step := &StepImportOSLoginSSHKey{
+		GCEUserFunc: func() string {
+			return fakeGCEEmail
+		},
+	}
+	defer step.Cleanup(state)
+
+	config := state.Get("config").(*Config)
 	config.UseOSLogin = true
 	config.Comm.SSHPublicKey = []byte{'k', 'e', 'y'}
 
