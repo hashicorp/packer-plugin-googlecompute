@@ -170,9 +170,9 @@ func NewDriverGCE(config GCEDriverConfig) (Driver, error) {
 
 func (d *driverGCE) CreateImage(name, description, family, zone, disk string, image_labels map[string]string, image_licenses []string, image_guest_os_features []string, image_encryption_key *compute.CustomerEncryptionKey, imageStorageLocations []string) (<-chan *Image, <-chan error) {
 
-	imageFeatures := make([]*compute.GuestOsFeature, len(image_guest_os_features))
+	image_features := make([]*compute.GuestOsFeature, 0, len(image_guest_os_features))
 	for _, v := range image_guest_os_features {
-		imageFeatures = append(imageFeatures, &compute.GuestOsFeature{
+		image_features = append(image_features, &compute.GuestOsFeature{
 			Type: v,
 		})
 	}
@@ -182,7 +182,7 @@ func (d *driverGCE) CreateImage(name, description, family, zone, disk string, im
 		Family:             family,
 		Labels:             image_labels,
 		Licenses:           image_licenses,
-		GuestOsFeatures:    imageFeatures,
+		GuestOsFeatures:    image_features,
 		ImageEncryptionKey: image_encryption_key,
 		SourceDisk:         fmt.Sprintf("%sprojects/%s/zones/%s/disks/%s", d.service.BasePath, d.projectId, zone, disk),
 		SourceType:         "RAW",

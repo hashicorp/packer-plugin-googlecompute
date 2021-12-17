@@ -119,7 +119,7 @@ func (d *DriverMock) CreateImage(name, description, family, zone, disk string, i
 	if d.CreateImageResultSizeGb == 0 {
 		d.CreateImageResultSizeGb = 10
 	}
-	imageFeatures := make([]*compute.GuestOsFeature, len(image_features))
+	imageFeatures := make([]*compute.GuestOsFeature, 0, len(image_features))
 	for _, v := range image_features {
 		imageFeatures = append(imageFeatures, &compute.GuestOsFeature{
 			Type: v,
@@ -129,9 +129,9 @@ func (d *DriverMock) CreateImage(name, description, family, zone, disk string, i
 	if resultCh == nil {
 		ch := make(chan *Image, 1)
 		ch <- &Image{
+			GuestOsFeatures: imageFeatures,
 			Labels:          d.CreateImageLabels,
 			Licenses:        d.CreateImageLicenses,
-			GuestOsFeatures: imageFeatures,
 			Name:            name,
 			ProjectId:       d.CreateImageResultProjectId,
 			SelfLink:        d.CreateImageResultSelfLink,
