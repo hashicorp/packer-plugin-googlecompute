@@ -31,7 +31,7 @@ func (s *StepCreateImage) Run(ctx context.Context, state multistep.StateBag) mul
 	if config.PackerForce && config.imageAlreadyExists {
 		ui.Say("Deleting previous image...")
 
-		errCh := driver.DeleteImage(config.ImageName)
+		errCh := driver.DeleteImage(config.ImageProjectId, config.ImageName)
 		err := <-errCh
 		if err != nil {
 			err := fmt.Errorf("Error deleting image: %s", err)
@@ -44,7 +44,7 @@ func (s *StepCreateImage) Run(ctx context.Context, state multistep.StateBag) mul
 	ui.Say("Creating image...")
 
 	imageCh, errCh := driver.CreateImage(
-		config.ImageName, config.ImageDescription, config.ImageFamily, config.Zone,
+		config.ImageProjectId, config.ImageName, config.ImageDescription, config.ImageFamily, config.Zone,
 		config.DiskName, config.ImageLabels, config.ImageLicenses, config.ImageEncryptionKey.ComputeType(),
 		config.ImageStorageLocations)
 	var err error
@@ -55,7 +55,7 @@ func (s *StepCreateImage) Run(ctx context.Context, state multistep.StateBag) mul
 	}
 
 	if err != nil {
-		err := fmt.Errorf("Error waiting for image: %s", err)
+		err := fmt.Errorf("Error waiting for image: %s in", err)
 		state.Put("error", err)
 		ui.Error(err.Error())
 		return multistep.ActionHalt

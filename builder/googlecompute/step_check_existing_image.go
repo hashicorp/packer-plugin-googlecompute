@@ -19,10 +19,10 @@ func (s *StepCheckExistingImage) Run(ctx context.Context, state multistep.StateB
 	ui := state.Get("ui").(packersdk.Ui)
 
 	ui.Say("Checking image does not exist...")
-	c.imageAlreadyExists = d.ImageExists(c.ImageName)
+	c.imageAlreadyExists = d.ImageExists(c.ImageProjectId, c.ImageName)
 	if !c.PackerForce && c.imageAlreadyExists {
-		err := fmt.Errorf("Image %s already exists.\n"+
-			"Use the force flag to delete it prior to building.", c.ImageName)
+		err := fmt.Errorf("Image %s already exists in project %s.\n"+
+			"Use the force flag to delete it prior to building.", c.ImageName, c.ImageProjectId)
 		state.Put("error", err)
 		ui.Error(err.Error())
 		return multistep.ActionHalt
