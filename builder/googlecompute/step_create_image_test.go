@@ -24,6 +24,9 @@ func TestStepCreateImage(t *testing.T) {
 	// These are the values of the image the driver will return.
 	d.CreateImageResultProjectId = "test-project"
 	d.CreateImageResultSizeGb = 100
+	d.CreateImageFeatures = []string{
+		"UEFI_COMPATIBLE",
+	}
 
 	// run the step
 	action := step.Run(context.Background(), state)
@@ -38,6 +41,7 @@ func TestStepCreateImage(t *testing.T) {
 	assert.Equal(t, image.Name, c.ImageName, "Created image does not match config name.")
 	assert.Equal(t, image.ProjectId, d.CreateImageResultProjectId, "Created image project does not match driver project.")
 	assert.Equal(t, image.SizeGb, d.CreateImageResultSizeGb, "Created image size does not match the size returned by the driver.")
+	assert.Equal(t, len(image.GuestOsFeatures), len(d.CreateImageFeatures), "Created image features does not match config features.")
 
 	// Verify proper args passed to driver.CreateImage.
 	assert.Equal(t, d.CreateImageName, c.ImageName, "Incorrect image name passed to driver.")

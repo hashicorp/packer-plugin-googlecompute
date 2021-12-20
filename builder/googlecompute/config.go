@@ -138,6 +138,8 @@ type Config struct {
 	ImageLabels map[string]string `mapstructure:"image_labels" required:"false"`
 	// Licenses to apply to the created image.
 	ImageLicenses []string `mapstructure:"image_licenses" required:"false"`
+	// Guest OS features to apply to the created image.
+	ImageGuestOsFeatures []string `mapstructure:"image_guest_os_features" required:"false"`
 	// Storage location, either regional or multi-regional, where snapshot
 	// content is to be stored and only accepts 1 value. Always defaults to a nearby regional or multi-regional
 	// location.
