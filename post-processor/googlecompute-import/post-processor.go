@@ -157,7 +157,7 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packersdk.Ui, artifa
 	}
 	p.config.ctx.Data = generatedData
 	var err error
-	var opts option.ClientOption
+	var opts []option.ClientOption
 	opts, err = googlecompute.NewClientOptionGoogle(p.config.account, p.config.VaultGCPOauthEngine, p.config.ImpersonateServiceAccount, p.config.AccessToken)
 	if err != nil {
 		return nil, false, false, err
@@ -267,8 +267,8 @@ func CreateShieldedVMStateConfig(imageGuestOsFeatures []string, imagePlatformKey
 	return shieldedVMStateConfig, nil
 }
 
-func UploadToBucket(opts option.ClientOption, ui packersdk.Ui, artifact packersdk.Artifact, bucket string, gcsObjectName string) (string, error) {
-	service, err := storage.NewService(context.TODO(), opts)
+func UploadToBucket(opts []option.ClientOption, ui packersdk.Ui, artifact packersdk.Artifact, bucket string, gcsObjectName string) (string, error) {
+	service, err := storage.NewService(context.TODO(), opts...)
 	if err != nil {
 		return "", err
 	}
@@ -303,8 +303,8 @@ func UploadToBucket(opts option.ClientOption, ui packersdk.Ui, artifact packersd
 	return storageObject.SelfLink, nil
 }
 
-func CreateGceImage(opts option.ClientOption, ui packersdk.Ui, project string, rawImageURL string, imageName string, imageDescription string, imageFamily string, imageLabels map[string]string, imageGuestOsFeatures []string, shieldedVMStateConfig *compute.InitialStateConfig, imageStorageLocations []string) (packersdk.Artifact, error) {
-	service, err := compute.NewService(context.TODO(), opts)
+func CreateGceImage(opts []option.ClientOption, ui packersdk.Ui, project string, rawImageURL string, imageName string, imageDescription string, imageFamily string, imageLabels map[string]string, imageGuestOsFeatures []string, shieldedVMStateConfig *compute.InitialStateConfig, imageStorageLocations []string) (packersdk.Artifact, error) {
+	service, err := compute.NewService(context.TODO(), opts...)
 
 	if err != nil {
 		return nil, err
@@ -360,8 +360,8 @@ func CreateGceImage(opts option.ClientOption, ui packersdk.Ui, project string, r
 	return &Artifact{paths: []string{op.TargetLink}}, nil
 }
 
-func DeleteFromBucket(opts option.ClientOption, ui packersdk.Ui, bucket string, gcsObjectName string) error {
-	service, err := storage.NewService(context.TODO(), opts)
+func DeleteFromBucket(opts []option.ClientOption, ui packersdk.Ui, bucket string, gcsObjectName string) error {
+	service, err := storage.NewService(context.TODO(), opts...)
 
 	if err != nil {
 		return err
