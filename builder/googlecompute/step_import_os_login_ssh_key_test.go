@@ -96,7 +96,7 @@ func TestStepImportOSLoginSSHKey_withNoAccountFile(t *testing.T) {
 	state := testState(t)
 	fakeAccountEmail := "testing@packer.io"
 	step := &StepImportOSLoginSSHKey{
-		TokeninfoFunc: func(ctx context.Context, impersonatedsa string) (*oauth2.Tokeninfo, error) {
+		TokeninfoFunc: func(_ context.Context, _ string) (*oauth2.Tokeninfo, error) {
 			return &oauth2.Tokeninfo{Email: fakeAccountEmail}, nil
 		},
 	}
