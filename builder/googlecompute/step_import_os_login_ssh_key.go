@@ -10,10 +10,8 @@ import (
 	"time"
 
 	metadata "cloud.google.com/go/compute/metadata"
-	"github.com/hashicorp/packer-plugin-googlecompute/version"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
-	"github.com/hashicorp/packer-plugin-sdk/useragent"
 	"google.golang.org/api/oauth2/v2"
 	"google.golang.org/api/option"
 )
@@ -21,7 +19,7 @@ import (
 // StepImportOSLoginSSHKey imports a temporary SSH key pair into a GCE login profile.
 type StepImportOSLoginSSHKey struct {
 	Debug         bool
-	TokeninfoFunc func(context.Context, string) (*oauth2.Tokeninfo, error)
+	TokeninfoFunc func(context.Context, *Config) (*oauth2.Tokeninfo, error)
 	accountEmail  string
 	GCEUserFunc   func() string
 }
@@ -67,7 +65,7 @@ func (s *StepImportOSLoginSSHKey) Run(ctx context.Context, state multistep.State
 	}
 
 	if s.accountEmail == "" {
-		info, err := s.TokeninfoFunc(ctx, config.ImpersonateServiceAccount)
+		info, err := s.TokeninfoFunc(ctx, config)
 		if err != nil {
 			err := fmt.Errorf("Error obtaining token information needed for OSLogin: %s", err)
 			state.Put("error", err)
@@ -144,14 +142,14 @@ func (s *StepImportOSLoginSSHKey) Cleanup(state multistep.StateBag) {
 	ui.Message("SSH public key for OSLogin has been deleted!")
 }
 
-func tokeninfo(ctx context.Context, impersonatesa string) (*oauth2.Tokeninfo, error) {
+func tokeninfo(ctx context.Context, config *Config) (*oauth2.Tokeninfo, error) {
+	var err error
 	var opts []option.ClientOption
-
-	opts = append(opts, option.WithUserAgent(useragent.String(version.PluginVersion.FormattedVersion())))
-
-	if impersonatesa != "" {
-		opts = append(opts, option.ImpersonateCredentials(impersonatesa))
+	opts, err = NewClientOptionGoogle(config.account, config.VaultGCPOauthEngine, config.ImpersonateServiceAccount, config.AccessToken)
+	if err != nil {
+		return nil, err
 	}
+
 	svc, err := oauth2.NewService(ctx, opts...)
 	if err != nil {
 		err := fmt.Errorf("Error initializing oauth service needed for OSLogin: %s", err)
