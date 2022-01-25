@@ -264,6 +264,7 @@ func (d *driverGCE) GetImage(name string, fromFamily bool) (*Image, error) {
 		"cos-cloud",
 		"coreos-cloud",
 		"debian-cloud",
+		"fedora-cloud",
 		"rhel-cloud",
 		"rhel-sap-cloud",
 		"rocky-linux-cloud",
