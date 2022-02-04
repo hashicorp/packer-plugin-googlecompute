@@ -18,6 +18,7 @@ import (
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/hashicorp/packer-plugin-sdk/template/config"
 	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
+	"google.golang.org/api/storage/v1"
 )
 
 type Config struct {
@@ -30,6 +31,15 @@ type Config struct {
 	AccountFile string `mapstructure:"account_file" required:"false"`
 	// This allows service account impersonation as per the [docs](https://cloud.google.com/iam/docs/impersonating-service-accounts).
 	ImpersonateServiceAccount string `mapstructure:"impersonate_service_account" required:"false"`
+	// The service account scopes for launched exporter post-processor instance.
+	// Defaults to:
+	//
+	// ```json
+	// [
+	//   "https://www.googleapis.com/auth/cloud-platform"
+	// ]
+	// ```
+	Scopes []string `mapstructure:"scopes" required:"false"`
 	//The size of the export instances disk.
 	//The disk is unused for the export but a larger size will increase `pd-ssd` read speed.
 	//This defaults to `200`, which is 200GB.
@@ -116,6 +126,12 @@ func (p *PostProcessor) Configure(raws ...interface{}) error {
 			"specify access_token and account_file at the same time"))
 	}
 
+	if len(p.config.Scopes) == 0 {
+		p.config.Scopes = []string{
+			storage.CloudPlatformScope,
+		}
+	}
+
 	if len(errs.Errors) > 0 {
 		return errs
 	}
@@ -171,7 +187,10 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packersdk.Ui, artifa
 		"paths":          strings.Join(p.config.Paths, " "),
 		"startup-script": StartupScript,
 		"zone":           p.config.Zone,
+		// Pre-fill the startup script status with "notdone" status
+		googlecompute.StartupScriptStatusKey: googlecompute.StartupScriptStatusNotDone,
 	}
+
 	exporterConfig := googlecompute.Config{
 		DiskName:             exporterName,
 		DiskSizeGb:           p.config.DiskSizeGb,
@@ -202,11 +221,13 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packersdk.Ui, artifa
 		Account:                       p.config.account,
 		AccessToken:                   p.config.AccessToken,
 		ImpersonateServiceAccountName: p.config.ImpersonateServiceAccount,
+		Scopes:                        p.config.Scopes,
 		VaultOauthEngineName:          p.config.VaultGCPOauthEngine,
 	}
 
 	driver, err := googlecompute.NewDriverGCE(cfg)
 	if err != nil {
+		ui.Error(fmt.Sprintf("Error creating GCE driver: %s", err.Error()))
 		return nil, false, false, err
 	}
 

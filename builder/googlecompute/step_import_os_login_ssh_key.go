@@ -145,7 +145,7 @@ func (s *StepImportOSLoginSSHKey) Cleanup(state multistep.StateBag) {
 func tokeninfo(ctx context.Context, config *Config) (*oauth2.Tokeninfo, error) {
 	var err error
 	var opts []option.ClientOption
-	opts, err = NewClientOptionGoogle(config.account, config.VaultGCPOauthEngine, config.ImpersonateServiceAccount, config.AccessToken)
+	opts, err = NewClientOptionGoogle(config.account, config.VaultGCPOauthEngine, config.ImpersonateServiceAccount, config.AccessToken, config.Scopes)
 	if err != nil {
 		return nil, err
 	}

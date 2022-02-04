@@ -14,6 +14,7 @@ import (
 	"time"
 
 	compute "google.golang.org/api/compute/v1"
+	impersonate "google.golang.org/api/impersonate"
 	"google.golang.org/api/option"
 	oslogin "google.golang.org/api/oslogin/v1"
 
@@ -41,6 +42,7 @@ type GCEDriverConfig struct {
 	ProjectId                     string
 	Account                       *ServiceAccount
 	ImpersonateServiceAccountName string
+	Scopes                        []string
 	AccessToken                   string
 	VaultOauthEngineName          string
 }
@@ -80,7 +82,7 @@ func (ots OauthTokenSource) Token() (*oauth2.Token, error) {
 
 }
 
-func NewClientOptionGoogle(account *ServiceAccount, vaultOauth string, impersonatesa string, accessToken string) ([]option.ClientOption, error) {
+func NewClientOptionGoogle(account *ServiceAccount, vaultOauth string, impersonatesa string, accessToken string, scopes []string) ([]option.ClientOption, error) {
 	var err error
 
 	var opts []option.ClientOption
@@ -92,7 +94,15 @@ func NewClientOptionGoogle(account *ServiceAccount, vaultOauth string, impersona
 		opts = append(opts, option.WithTokenSource(ts))
 
 	} else if impersonatesa != "" {
-		opts = append(opts, option.ImpersonateCredentials(impersonatesa))
+		log.Printf("[INFO] Using Google Cloud impersonation mechanism")
+		ts, err := impersonate.CredentialsTokenSource(context.Background(), impersonate.CredentialsConfig{
+			TargetPrincipal: impersonatesa,
+			Scopes:          scopes,
+		})
+		if err != nil {
+			return nil, err
+		}
+		opts = append(opts, option.WithTokenSource(ts))
 	} else if accessToken != "" {
 		// Auth with static access token
 		log.Printf("[INFO] Using static Google Access Token")
@@ -140,7 +150,7 @@ func NewClientOptionGoogle(account *ServiceAccount, vaultOauth string, impersona
 
 func NewDriverGCE(config GCEDriverConfig) (Driver, error) {
 
-	opts, err := NewClientOptionGoogle(config.Account, config.VaultOauthEngineName, config.ImpersonateServiceAccountName, config.AccessToken)
+	opts, err := NewClientOptionGoogle(config.Account, config.VaultOauthEngineName, config.ImpersonateServiceAccountName, config.AccessToken, config.Scopes)
 	if err != nil {
 		return nil, err
 	}
