@@ -540,6 +540,15 @@ func (d *driverGCE) RunInstance(c *InstanceConfig) (<-chan error, error) {
 		shieldedUiMessage = " Shielded VM"
 	}
 
+	// Node affinity configuration. For example, if you want to build on sole
+	// tenancy nodes.
+	if len(c.NodeAffinities) > 0 {
+		instance.Scheduling.NodeAffinities = make([]*compute.SchedulingNodeAffinity, 0, len(c.NodeAffinities))
+		for _, nodeAffinity := range c.NodeAffinities {
+			instance.Scheduling.NodeAffinities = append(instance.Scheduling.NodeAffinities, nodeAffinity.ComputeType())
+		}
+	}
+
 	d.ui.Message(fmt.Sprintf("Requesting%s instance creation...", shieldedUiMessage))
 	op, err := d.service.Instances.Insert(d.projectId, zone.Name, &instance).Do()
 	if err != nil {
@@ -758,6 +767,12 @@ func waitForState(errCh chan<- error, target string, refresh stateRefreshFunc) e
 	}.Run(ctx, func(ctx context.Context) error {
 		state, err := refresh()
 		if err != nil {
+			// If there is an error, but the state is done, the function will spin
+			// until timeout. Instead, emit the error immediately and return.
+			if state == target {
+				errCh <- err
+				return nil
+			}
 			return err
 		}
 		if state == target {

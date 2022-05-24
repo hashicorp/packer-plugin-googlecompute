@@ -151,6 +151,16 @@ func TestConfigPrepare(t *testing.T) {
 			true,
 		},
 		{
+			"node_affinity",
+			nil,
+			false,
+		},
+		{
+			"node_affinity",
+			map[string]interface{}{"key": "workload", "operator": "IN", "values": []string{"packer"}},
+			false,
+		},
+		{
 			"image_family",
 			nil,
 			false,

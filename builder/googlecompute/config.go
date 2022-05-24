@@ -1,5 +1,5 @@
 //go:generate packer-sdc struct-markdown
-//go:generate packer-sdc mapstructure-to-hcl2 -type Config,CustomerEncryptionKey
+//go:generate packer-sdc mapstructure-to-hcl2 -type Config,CustomerEncryptionKey,NodeAffinity
 
 package googlecompute
 
@@ -199,6 +199,17 @@ type Config struct {
 	OnHostMaintenance string `mapstructure:"on_host_maintenance" required:"false"`
 	// If true, launch a preemptible instance.
 	Preemptible bool `mapstructure:"preemptible" required:"false"`
+	// Sets a node affinity label for the launched instance (eg. for sole tenancy).
+	// Please see [Provisioning VMs on
+	// sole-tenant nodes](https://cloud.google.com/compute/docs/nodes/provisioning-sole-tenant-vms)
+	// for more information.
+	//
+	// ```hcl
+	//   key = "workload"
+	//   operator = "IN"
+	//   values = ["packer"]
+	// ```
+	NodeAffinities []NodeAffinity `mapstructure:"node_affinity" required:"false"`
 	// The time to wait for instance state changes. Defaults to "5m".
 	StateTimeout time.Duration `mapstructure:"state_timeout" required:"false"`
 	// The region in which to launch the instance. Defaults to the region
@@ -630,5 +641,29 @@ func ApplyIAPTunnel(c *communicator.Config, port int) error {
 		return nil
 	default:
 		return fmt.Errorf("IAP tunnel is not implemented for %s communicator", c.Type)
+	}
+}
+
+// Node affinity label configuration
+type NodeAffinity struct {
+	// Key: Corresponds to the label key of Node resource.
+	Key string `mapstructure:"key" json:"key"`
+
+	// Operator: Defines the operation of node selection. Valid operators are IN for affinity and
+	// NOT_IN for anti-affinity.
+	Operator string `mapstructure:"operator" json:"operator"`
+
+	// Values: Corresponds to the label values of Node resource.
+	Values []string `mapstructure:"values" json:"values"`
+}
+
+func (a *NodeAffinity) ComputeType() *compute.SchedulingNodeAffinity {
+	if a == nil {
+		return nil
+	}
+	return &compute.SchedulingNodeAffinity{
+		Key:      a.Key,
+		Operator: a.Operator,
+		Values:   a.Values,
 	}
 }
