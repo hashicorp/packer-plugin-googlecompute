@@ -2,7 +2,6 @@ package googlecompute
 
 import (
 	"context"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"runtime"
@@ -75,7 +74,7 @@ set "CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE=/path/to/account_file.json"
 call gcloud compute start-iap-tunnel fakeinstance-12345 1234 --local-host-port=localhost:8774 --zone us-central-b --project fake-project-123
 `
 	}
-	if fmt.Sprintf("%s", f) != expected {
+	if string(f) != expected {
 		t.Fatalf("script didn't match expected:\n\n expected: \n%s\n; recieved: \n%s\n", expected, f)
 	}
 }
