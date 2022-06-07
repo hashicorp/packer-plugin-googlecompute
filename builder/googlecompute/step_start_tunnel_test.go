@@ -2,7 +2,6 @@ package googlecompute
 
 import (
 	"context"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"runtime"
