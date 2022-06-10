@@ -21,6 +21,7 @@ type FlatConfig struct {
 	AccessToken               *string           `mapstructure:"access_token" required:"false" cty:"access_token" hcl:"access_token"`
 	AccountFile               *string           `mapstructure:"account_file" required:"false" cty:"account_file" hcl:"account_file"`
 	ImpersonateServiceAccount *string           `mapstructure:"impersonate_service_account" required:"false" cty:"impersonate_service_account" hcl:"impersonate_service_account"`
+	Scopes                    []string          `mapstructure:"scopes" required:"false" cty:"scopes" hcl:"scopes"`
 	DiskSizeGb                *int64            `mapstructure:"disk_size" cty:"disk_size" hcl:"disk_size"`
 	DiskType                  *string           `mapstructure:"disk_type" cty:"disk_type" hcl:"disk_type"`
 	MachineType               *string           `mapstructure:"machine_type" cty:"machine_type" hcl:"machine_type"`
@@ -55,6 +56,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"access_token":                &hcldec.AttrSpec{Name: "access_token", Type: cty.String, Required: false},
 		"account_file":                &hcldec.AttrSpec{Name: "account_file", Type: cty.String, Required: false},
 		"impersonate_service_account": &hcldec.AttrSpec{Name: "impersonate_service_account", Type: cty.String, Required: false},
+		"scopes":                      &hcldec.AttrSpec{Name: "scopes", Type: cty.List(cty.String), Required: false},
 		"disk_size":                   &hcldec.AttrSpec{Name: "disk_size", Type: cty.Number, Required: false},
 		"disk_type":                   &hcldec.AttrSpec{Name: "disk_type", Type: cty.String, Required: false},
 		"machine_type":                &hcldec.AttrSpec{Name: "machine_type", Type: cty.String, Required: false},

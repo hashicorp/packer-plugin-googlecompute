@@ -36,6 +36,15 @@ type Config struct {
 	AccountFile string `mapstructure:"account_file" required:"false"`
 	// This allows service account impersonation as per the [docs](https://cloud.google.com/iam/docs/impersonating-service-accounts).
 	ImpersonateServiceAccount string `mapstructure:"impersonate_service_account" required:"false"`
+	// The service account scopes for launched importer post-processor instance.
+	// Defaults to:
+	//
+	// ```json
+	// [
+	//   "https://www.googleapis.com/auth/cloud-platform"
+	// ]
+	// ```
+	Scopes []string `mapstructure:"scopes" required:"false"`
 	//The project ID where the GCS bucket exists and where the GCE image is stored.
 	ProjectId string `mapstructure:"project_id" required:"true"`
 	IAP       bool   `mapstructure-to-hcl:",skip"`
@@ -130,6 +139,12 @@ func (p *PostProcessor) Configure(raws ...interface{}) error {
 		p.config.account = cfg
 	}
 
+	if len(p.config.Scopes) == 0 {
+		p.config.Scopes = []string{
+			storage.CloudPlatformScope,
+		}
+	}
+
 	templates := map[string]*string{
 		"bucket":     &p.config.Bucket,
 		"image_name": &p.config.ImageName,
@@ -158,7 +173,7 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packersdk.Ui, artifa
 	p.config.ctx.Data = generatedData
 	var err error
 	var opts []option.ClientOption
-	opts, err = googlecompute.NewClientOptionGoogle(p.config.account, p.config.VaultGCPOauthEngine, p.config.ImpersonateServiceAccount, p.config.AccessToken)
+	opts, err = googlecompute.NewClientOptionGoogle(p.config.account, p.config.VaultGCPOauthEngine, p.config.ImpersonateServiceAccount, p.config.AccessToken, p.config.Scopes)
 	if err != nil {
 		return nil, false, false, err
 	}

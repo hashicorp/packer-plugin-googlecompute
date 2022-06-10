@@ -7,6 +7,15 @@
 
 - `impersonate_service_account` (string) - This allows service account impersonation as per the [docs](https://cloud.google.com/iam/docs/impersonating-service-accounts).
 
+- `scopes` ([]string) - The service account scopes for launched exporter post-processor instance.
+  Defaults to:
+  
+  ```json
+  [
+    "https://www.googleapis.com/auth/cloud-platform"
+  ]
+  ```
+
 - `disk_size` (int64) - The size of the export instances disk.
   The disk is unused for the export but a larger size will increase `pd-ssd` read speed.
   This defaults to `200`, which is 200GB.

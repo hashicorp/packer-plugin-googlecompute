@@ -507,7 +507,7 @@ func (c *Config) Prepare(raws ...interface{}) ([]string, error) {
 			errs, errors.New("a project_id must be specified"))
 	}
 
-	if c.Scopes == nil {
+	if len(c.Scopes) == 0 {
 		c.Scopes = []string{
 			"https://www.googleapis.com/auth/userinfo.email",
 			"https://www.googleapis.com/auth/compute",
