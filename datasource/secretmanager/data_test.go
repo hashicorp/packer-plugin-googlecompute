@@ -57,7 +57,6 @@ func TestSecretManagerDataSource_Mock(t *testing.T) {
 		project         string
 		version         string
 		shouldConfigErr bool
-		shouldExecErr   bool
 	}
 
 	for name, testcase := range map[string]TestCase{
