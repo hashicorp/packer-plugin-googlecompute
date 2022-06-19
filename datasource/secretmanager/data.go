@@ -1,4 +1,6 @@
+//go:generate packer-sdc struct-markdown
 //go:generate packer-sdc mapstructure-to-hcl2 -type Config,DatasourceOutput
+
 package secretmanager
 
 import (
@@ -19,10 +21,13 @@ import (
 )
 
 type Config struct {
-	MockOption []interface{} `mapstructure:"mock" cty:"mock" hcl:"mock"`
+	MockOption []interface{} `mapstructure:"mock" required:"false"`
 
-	Project string `mapstructure:"project"`
-	Name    string `mapstructure:"name"`
+	// The project where the secret manager entry is stored.
+	Project string `mapstructure:"project" required:"true"`
+	// The name fo the secret manager entry.
+	Name string `mapstructure:"name" required:"true"`
+	// The secret manager version to fetch. Defaults to latest.
 	Version string `mapstructure:"version"`
 }
 
@@ -31,8 +36,10 @@ type Datasource struct {
 }
 
 type DatasourceOutput struct {
-	Payload  string `mapstructure:"payload"`
-	Checksum int64  `mapstructure:"checksum"`
+	// String payload of the secret manager version.
+	Payload string `mapstructure:"payload"`
+	// The crc32c checksum for the payload.
+	Checksum int64 `mapstructure:"checksum"`
 }
 
 func (d *Datasource) ConfigSpec() hcldec.ObjectSpec {

@@ -10,9 +10,9 @@ import (
 // FlatConfig is an auto-generated flat version of Config.
 // Where the contents of a field with a `mapstructure:,squash` tag are bubbled up.
 type FlatConfig struct {
-	MockOption []interface{} `mapstructure:"mock" cty:"mock" hcl:"mock"`
-	Project    *string       `mapstructure:"project" cty:"project" hcl:"project"`
-	Name       *string       `mapstructure:"name" cty:"name" hcl:"name"`
+	MockOption []interface{} `mapstructure:"mock" required:"false" cty:"mock" hcl:"mock"`
+	Project    *string       `mapstructure:"project" required:"true" cty:"project" hcl:"project"`
+	Name       *string       `mapstructure:"name" required:"true" cty:"name" hcl:"name"`
 	Version    *string       `mapstructure:"version" cty:"version" hcl:"version"`
 }
 
