@@ -1,6 +1,6 @@
 data "google-compute-secret-manager" "test" {
-  project = ""
-  name = ""
+  project = "my-secret"
+  name = "my-project"
   version = "1"
 }
 

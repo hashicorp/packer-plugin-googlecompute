@@ -22,7 +22,7 @@ type Config struct {
 	MockOption []interface{} `mapstructure:"mock" cty:"mock" hcl:"mock"`
 
 	Project string `mapstructure:"project"`
-	Name    string `mapstructure:"secret"`
+	Name    string `mapstructure:"name"`
 	Version string `mapstructure:"version"`
 }
 

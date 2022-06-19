@@ -12,7 +12,7 @@ import (
 type FlatConfig struct {
 	MockOption []interface{} `mapstructure:"mock" cty:"mock" hcl:"mock"`
 	Project    *string       `mapstructure:"project" cty:"project" hcl:"project"`
-	Name       *string       `mapstructure:"secret" cty:"secret" hcl:"secret"`
+	Name       *string       `mapstructure:"name" cty:"name" hcl:"name"`
 	Version    *string       `mapstructure:"version" cty:"version" hcl:"version"`
 }
 
@@ -30,7 +30,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 	s := map[string]hcldec.Spec{
 		"mock":    &hcldec.AttrSpec{Name: "mock", Type: cty.Bool, Required: false}, /* TODO(azr): could not find type */
 		"project": &hcldec.AttrSpec{Name: "project", Type: cty.String, Required: false},
-		"secret":  &hcldec.AttrSpec{Name: "secret", Type: cty.String, Required: false},
+		"name":    &hcldec.AttrSpec{Name: "name", Type: cty.String, Required: false},
 		"version": &hcldec.AttrSpec{Name: "version", Type: cty.String, Required: false},
 	}
 	return s
