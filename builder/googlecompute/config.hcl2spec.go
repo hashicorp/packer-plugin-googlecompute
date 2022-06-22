@@ -107,6 +107,7 @@ type FlatConfig struct {
 	OmitExternalIP               *bool                      `mapstructure:"omit_external_ip" required:"false" cty:"omit_external_ip" hcl:"omit_external_ip"`
 	OnHostMaintenance            *string                    `mapstructure:"on_host_maintenance" required:"false" cty:"on_host_maintenance" hcl:"on_host_maintenance"`
 	Preemptible                  *bool                      `mapstructure:"preemptible" required:"false" cty:"preemptible" hcl:"preemptible"`
+	NodeAffinities               []FlatNodeAffinity         `mapstructure:"node_affinity" required:"false" cty:"node_affinity" hcl:"node_affinity"`
 	StateTimeout                 *string                    `mapstructure:"state_timeout" required:"false" cty:"state_timeout" hcl:"state_timeout"`
 	Region                       *string                    `mapstructure:"region" required:"false" cty:"region" hcl:"region"`
 	Scopes                       []string                   `mapstructure:"scopes" required:"false" cty:"scopes" hcl:"scopes"`
@@ -235,6 +236,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"omit_external_ip":                &hcldec.AttrSpec{Name: "omit_external_ip", Type: cty.Bool, Required: false},
 		"on_host_maintenance":             &hcldec.AttrSpec{Name: "on_host_maintenance", Type: cty.String, Required: false},
 		"preemptible":                     &hcldec.AttrSpec{Name: "preemptible", Type: cty.Bool, Required: false},
+		"node_affinity":                   &hcldec.BlockListSpec{TypeName: "node_affinity", Nested: hcldec.ObjectSpec((*FlatNodeAffinity)(nil).HCL2Spec())},
 		"state_timeout":                   &hcldec.AttrSpec{Name: "state_timeout", Type: cty.String, Required: false},
 		"region":                          &hcldec.AttrSpec{Name: "region", Type: cty.String, Required: false},
 		"scopes":                          &hcldec.AttrSpec{Name: "scopes", Type: cty.List(cty.String), Required: false},
@@ -277,6 +279,33 @@ func (*FlatCustomerEncryptionKey) HCL2Spec() map[string]hcldec.Spec {
 	s := map[string]hcldec.Spec{
 		"kmsKeyName": &hcldec.AttrSpec{Name: "kmsKeyName", Type: cty.String, Required: false},
 		"rawKey":     &hcldec.AttrSpec{Name: "rawKey", Type: cty.String, Required: false},
+	}
+	return s
+}
+
+// FlatNodeAffinity is an auto-generated flat version of NodeAffinity.
+// Where the contents of a field with a `mapstructure:,squash` tag are bubbled up.
+type FlatNodeAffinity struct {
+	Key      *string  `mapstructure:"key" json:"key" cty:"key" hcl:"key"`
+	Operator *string  `mapstructure:"operator" json:"operator" cty:"operator" hcl:"operator"`
+	Values   []string `mapstructure:"values" json:"values" cty:"values" hcl:"values"`
+}
+
+// FlatMapstructure returns a new FlatNodeAffinity.
+// FlatNodeAffinity is an auto-generated flat version of NodeAffinity.
+// Where the contents a fields with a `mapstructure:,squash` tag are bubbled up.
+func (*NodeAffinity) FlatMapstructure() interface{ HCL2Spec() map[string]hcldec.Spec } {
+	return new(FlatNodeAffinity)
+}
+
+// HCL2Spec returns the hcl spec of a NodeAffinity.
+// This spec is used by HCL to read the fields of NodeAffinity.
+// The decoded values from this spec will then be applied to a FlatNodeAffinity.
+func (*FlatNodeAffinity) HCL2Spec() map[string]hcldec.Spec {
+	s := map[string]hcldec.Spec{
+		"key":      &hcldec.AttrSpec{Name: "key", Type: cty.String, Required: false},
+		"operator": &hcldec.AttrSpec{Name: "operator", Type: cty.String, Required: false},
+		"values":   &hcldec.AttrSpec{Name: "values", Type: cty.List(cty.String), Required: false},
 	}
 	return s
 }

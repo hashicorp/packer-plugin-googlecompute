@@ -165,6 +165,17 @@
 
 - `preemptible` (bool) - If true, launch a preemptible instance.
 
+- `node_affinity` ([]NodeAffinity) - Sets a node affinity label for the launched instance (eg. for sole tenancy).
+  Please see [Provisioning VMs on
+  sole-tenant nodes](https://cloud.google.com/compute/docs/nodes/provisioning-sole-tenant-vms)
+  for more information.
+  
+  ```hcl
+    key = "workload"
+    operator = "IN"
+    values = ["packer"]
+  ```
+
 - `state_timeout` (duration string | ex: "1h5m2s") - The time to wait for instance state changes. Defaults to "5m".
 
 - `region` (string) - The region in which to launch the instance. Defaults to the region
