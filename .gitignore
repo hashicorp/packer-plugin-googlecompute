@@ -2,3 +2,5 @@ main
 .docs
 packer-plugin-googlecompute
 
+**/packer_log*.txt
+
