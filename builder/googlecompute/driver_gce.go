@@ -45,7 +45,11 @@ type GCEDriverConfig struct {
 	VaultOauthEngineName          string
 }
 
-var DriverScopes = []string{"https://www.googleapis.com/auth/compute", "https://www.googleapis.com/auth/devstorage.full_control"}
+var DriverScopes = []string{
+	"https://www.googleapis.com/auth/userinfo.email",
+	"https://www.googleapis.com/auth/compute",
+	"https://www.googleapis.com/auth/devstorage.full_control",
+}
 
 // Define a TokenSource that gets tokens from Vault
 type OauthTokenSource struct {
