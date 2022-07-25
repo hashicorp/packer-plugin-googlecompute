@@ -46,9 +46,9 @@ type GCEDriverConfig struct {
 }
 
 var DriverScopes = []string{
-	"https://www.googleapis.com/auth/userinfo.email",
 	"https://www.googleapis.com/auth/compute",
 	"https://www.googleapis.com/auth/devstorage.full_control",
+	"https://www.googleapis.com/auth/userinfo.email",
 }
 
 // Define a TokenSource that gets tokens from Vault
@@ -113,7 +113,8 @@ func NewClientOptionGoogle(account *ServiceAccount, vaultOauth string, impersona
 		opts = append(opts, option.WithCredentialsJSON(account.jsonKey))
 	} else {
 		log.Printf("[INFO] Requesting Google token via GCE API Default Client Token Source...")
-		ts, err := google.DefaultTokenSource(context.TODO(), "https://www.googleapis.com/auth/cloud-platform")
+		scopes := append(DriverScopes, "https://www.googleapis.com/auth/cloud-platform")
+		ts, err := google.DefaultTokenSource(context.TODO(), scopes...)
 		if err != nil {
 			return nil, err
 		}
