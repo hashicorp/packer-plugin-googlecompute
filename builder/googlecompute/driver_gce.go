@@ -294,6 +294,7 @@ func (d *driverGCE) GetImage(name string, fromFamily bool) (*Image, error) {
 		"google-containers",
 		"opensuse-cloud",
 		"ubuntu-os-pro-cloud",
+		"ml-images",
 	}
 	return d.GetImageFromProjects(projects, name, fromFamily)
 }
