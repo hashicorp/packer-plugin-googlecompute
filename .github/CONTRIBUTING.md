@@ -1,4 +1,4 @@
-# Contributing to Googlecompute Plugin
+# Contributing to Google Compute Plugin
 
 **First:** if you're unsure or afraid of _anything_, just ask or submit the
 issue or pull request anyway. You won't be yelled at for giving your best
@@ -62,30 +62,30 @@ when addressing our team. For more reading on our code of conduct, please see th
 ## Setting up Go
 
 If you have never worked with Go before, you will have to install its
-runtime in order to build packer with the Googlecompute plugin.
+runtime in order to build packer with the Google Compute plugin.
 
 1. This project always releases from the latest version of golang.
 [Install go](https://golang.org/doc/install#install) To properly build from
-source, you need to have golang >= v1.17
+source, you need to have golang >= 1.17
 
-## Setting up Googlecompute plugin for dev
+## Setting up Google Compute plugin for dev
 
-With Go installed, you can already `go get` the Googlecompute plugin and `make dev` in
+With Go installed, you can already `go get` the Google Compute plugin and `make dev` in
 order to compile and test it. These instructions target
 POSIX-like environments (macOS, Linux, Cygwin, etc.) so you may need to
 adjust them for Windows or other shells.
 
-1. Download the Googlecompute plugin source (and its dependencies) by running
+1. Download the Google Compute plugin source (and its dependencies) by running
    `go get github.com/hashicorp/packer-plugin-googlecompute`. This will download the source to
    `$GOPATH/src/github.com/hashicorp/packer-plugin-googlecompute`.
 
-2. When working on the Googlecompute plugin, first `cd $GOPATH/src/github.com/hashicorp/packer-plugin-googlecompute`
+2. When working on the Google Compute plugin, first `cd $GOPATH/src/github.com/hashicorp/packer-plugin-googlecompute`
    so you can run `make dev` and easily access other files. `make dev` will build the packer-plugin-googlecompute binary and install it under `$HOME/.packer.d/plugins/`.
 
-3. Make your changes to the Googlecompute plugin source. You can run `make dev` to build and install locally, and `make test` to run unit tests.
+3. Make your changes to the Google Compute plugin source. You can run `make dev` to build and install locally, and `make test` to run unit tests.
    Any compilation errors will be shown when the binaries are rebuilding. If you don't have `make` you can simply run `go build -o packer-plugin-googlecompute` from the project root, and `mv packer-plugin-googlecompute ~/.packer.d/plugins/packer-plugin-googlecompute` to install the plugin.
 
-4. After building the Googlecompute plugin successfully, use the latest version of Packer to build a machine and verify your changes. In the [example folder](https://github.com/hashicorp/packer-plugin-googlecompute/blob/main/example) we provide a basic template. Comment out the `packer {}` block to force Packer use the development binary installed in the previous step.
+4. After building the Google Compute plugin successfully, use the latest version of Packer to build a machine and verify your changes. In the [example folder](https://github.com/hashicorp/packer-plugin-googlecompute/blob/main/example) we provide a basic template. Comment out the `packer {}` block to force Packer use the development binary installed in the previous step.
 
 5. If everything works well and the tests pass, run `go fmt ./...` on your code before
    submitting a pull-request.
@@ -94,7 +94,7 @@ adjust them for Windows or other shells.
 ### Opening a Pull Request
 
 Thank you for contributing! When you are ready to open a pull-request, you will
-need to [fork the Googlecompute plugin](https://github.com/hashicorp/packer-plugin-googlecompute#fork-destination-box), push your
+need to [fork the Google Compute plugin](https://github.com/hashicorp/packer-plugin-googlecompute#fork-destination-box), push your
 changes to your fork, and then open a pull-request.
 
 For example, my github username is `myuser`, so I would do the following:
@@ -117,7 +117,7 @@ From there, open your fork in your browser to open a new pull-request.
 2. Once you believe your pull request is ready to be merged, you can remove any
    "[WIP]" prefix from the title and a core team member will review.
 
-3. One of Googlecompute plugin's core team members will look over your contribution and
+3. One of Google Compute plugin's core team members will look over your contribution and
    either merge, or provide comments letting you know if there is anything left
    to do. We do our best to provide feedback in a timely manner, but it may take
    some time for us to respond. We may also have questions that we need answered
@@ -180,8 +180,8 @@ into the project.
 
 #### Working on forks
 
-The easiest way to work on a fork is to set it as a remote of the the Googlecompute plugin
-project. After following the steps in "Setting up Go to work on the Googlecompute plugin":
+The easiest way to work on a fork is to set it as a remote of the the Google Compute plugin
+project. After following the steps in "Setting up Go to work on the Google Compute plugin":
 
 1. Navigate to the code:
 
@@ -220,7 +220,7 @@ recommended but not required.
 Use `go get <project>` to add dependencies to the project. See [go mod quick
 start](https://github.com/golang/go/wiki/Modules#quick-start) for examples.
 
-Please only apply the minimal vendor changes to get your PR to work. The Googlecompute plugin
+Please only apply the minimal vendor changes to get your PR to work. The Google Compute plugin
 does not attempt to track the latest version for each dependency.
 
 #### HCL2 Spec code generation
@@ -240,7 +240,7 @@ from the plugin's project root.
 
 #### Running Builder Acceptance Tests
 
-If the Googlecompute Plugin has [acceptance tests](https://en.wikipedia.org/wiki/Acceptance_testing), these probably have some requirements such as environment variables to be set for API tokens and keys. Each test should error and tell you what are missing, so those are not documented here.
+If the Google Compute Plugin has [acceptance tests](https://en.wikipedia.org/wiki/Acceptance_testing), these probably have some requirements such as environment variables to be set for API tokens and keys. Each test should error and tell you what are missing, so those are not documented here.
 
 If you're working on a feature and want to verify it is functioning (and also hasn't broken anything else), we recommend creating or running the acceptance tests.
 
