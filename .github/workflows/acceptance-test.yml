@@ -1,0 +1,61 @@
+#
+# This GitHub action runs acceptance tests every night.
+#
+name: "Acceptance Test"
+
+on:
+  schedule:
+    # Runs against the default branch every day at midnight
+    - cron: "0 0 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  get-go-version:
+    runs-on: ubuntu-latest
+    outputs:
+      go-version: ${{ steps.get-go-version.outputs.go-version }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: 'Determine Go version'
+        id: get-go-version
+        # We use .go-version as our source of truth for current Go
+        # version, because "goenv" can react to it automatically.
+        run: |
+          echo "Building with Go $(cat .go-version)"
+          echo "::set-output name=go-version::$(cat .go-version)"
+  acceptance-test:
+    runs-on: ubuntu-latest
+    name: Acceptance Test
+    needs: get-go-version
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: ${{ needs.get-go-version.outputs.go-version }}
+      - name: Install gotestsum
+        run: go install gotest.tools/gotestsum@latest
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v0.6.0
+      - name: Install Packer
+        uses: sudomateo/setup-packer@v1
+        with:
+          packer-version: latest
+      - name: 'Authenticate to Google Cloud'
+        uses: 'google-github-actions/auth@v0.7.3'
+        id:   'gcp-auth'
+        with:
+         credentials_json: '${{ secrets.GOOGLE_CREDENTIALS }}'
+         access_token_lifetime: '7200s'
+         export_environment_variables: false
+         create_credentials_file: true
+         cleanup_credentials: true
+      - name: Run Acceptance Tests
+        run: |
+          mkdir -p /tmp/test-results
+          make dev
+          PACKER_ACC=1 gotestsum --format=short-verbose -- -count=1 -timeout=120m -p 2 ./...
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.gcp-auth.outputs.credentials_file_path }}
+          GOOGLE_PROJECT_ID: ${{ secrets.GOOGLE_PROJECT_ID }}
