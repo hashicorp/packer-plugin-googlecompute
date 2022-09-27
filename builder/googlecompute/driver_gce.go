@@ -275,11 +275,14 @@ func (d *driverGCE) GetImage(name string, fromFamily bool) (*Image, error) {
 		d.projectId,
 		// Public projects, drawn from
 		// https://cloud.google.com/compute/docs/images
+		"almalinux-cloud",
 		"centos-cloud",
+		"cloud-hpc-image-public",
 		"cos-cloud",
 		"coreos-cloud",
 		"debian-cloud",
 		"fedora-cloud",
+		"freebsd-org-cloud-dev",
 		"rhel-cloud",
 		"rhel-sap-cloud",
 		"rocky-linux-cloud",
