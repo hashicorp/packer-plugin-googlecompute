@@ -37,7 +37,7 @@ func (s *StepWaitStartupScript) Run(ctx context.Context, state multistep.StateBa
 			instanceName, StartupScriptStatusKey)
 
 		if err != nil {
-			ui.Message(fmt.Sprintf("Metadatada %s on instance %s not available. Waiting...", StartupScriptStatusKey, instanceName))
+			ui.Message(fmt.Sprintf("Metadata %s on instance %s not available. Waiting...", StartupScriptStatusKey, instanceName))
 			err := fmt.Errorf("Error getting startup script status: %s", err)
 			return err
 		}
