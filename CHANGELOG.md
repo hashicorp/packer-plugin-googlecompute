@@ -1,6 +1,6 @@
 # Latest Release
 
-Please refer to [releases](https://github.com/hashicorp/packer-plugin-vsphere/releases) for the latest CHANGELOG information.
+Please refer to [releases](https://github.com/hashicorp/packer-plugin-googlecompute/releases) for the latest CHANGELOG information.
 
 ---
 ## 1.0.8 (December 6, 2021)
