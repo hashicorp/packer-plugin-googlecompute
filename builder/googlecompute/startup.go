@@ -28,7 +28,7 @@ SetMetadata () {
   gcloud compute instances add-metadata ${HOSTNAME} --metadata ${1}=${2} --zone ${ZONE}
 }
 
-STARTUPSCRIPT=$(GetMetadata attributes/%s)
+STARTUPSCRIPT=$(GetMetadata attributes/%[1]s)
 STARTUPSCRIPTPATH=/packer-wrapped-startup-script
 if [ -f "/var/log/startupscript.log" ]; then
   STARTUPSCRIPTLOGPATH=/var/log/startupscript.log
@@ -52,9 +52,15 @@ if [[ ! -z $STARTUPSCRIPT ]]; then
   rm ${STARTUPSCRIPTPATH}
 fi
 
-echo "Packer startup script done."
-SetMetadata %s %s
+if [ $RETVAL -ne 0  ]; then
+  echo "Packer startup script exited with exit code: ${RETVAL}"
+  SetMetadata %[2]s %[4]s
+else
+  echo "Packer startup script done."
+  SetMetadata %[2]s %[3]s
+fi
+
 exit $RETVAL
-`, StartupWrappedScriptKey, StartupScriptStatusKey, StartupScriptStatusDone)
+`, StartupWrappedScriptKey, StartupScriptStatusKey, StartupScriptStatusDone, StartupScriptStatusError)
 
 var StartupScriptWindows string = ""
