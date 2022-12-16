@@ -11,6 +11,12 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/retry"
 )
 
+// ErrStartupScriptMetadata means that the user provided startup script resulted in
+// setting the set-startup-script metadata status to error.
+var ErrStartupScriptMetadata = errors.New("Startup script exited with error.")
+
+// StepWaitStartupScript is a trivial implementation of a Packer multistep
+// It can be used for tracking the set-startup-script metadata status.
 type StepWaitStartupScript int
 
 // Run reads the instance metadata and looks for the log entry
@@ -28,7 +34,10 @@ func (s *StepWaitStartupScript) Run(ctx context.Context, state multistep.StateBa
 	ui.Say("Waiting for any running startup script to finish...")
 	// Keep checking the serial port output to see if the startup script is done.
 	err := retry.Config{
-		ShouldRetry: func(error) bool {
+		ShouldRetry: func(err error) bool {
+			if errors.Is(err, ErrStartupScriptMetadata) {
+				return false
+			}
 			return true
 		},
 		RetryDelay: (&retry.Backoff{InitialBackoff: 10 * time.Second, MaxBackoff: 60 * time.Second, Multiplier: 2}).Linear,
@@ -44,8 +53,8 @@ func (s *StepWaitStartupScript) Run(ctx context.Context, state multistep.StateBa
 
 		switch status {
 		case StartupScriptStatusError:
-			ui.Message("Startup script in error. Waiting...")
-			return errors.New("Startup script error.")
+			ui.Message("Startup script in error. Exiting...")
+			return ErrStartupScriptMetadata
 
 		case StartupScriptStatusDone:
 			ui.Message("Startup script successfully finished.")

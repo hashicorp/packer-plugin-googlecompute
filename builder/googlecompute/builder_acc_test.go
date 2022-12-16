@@ -56,3 +56,43 @@ func TestAccBuilder_DefaultTokenSource(t *testing.T) {
 	}
 	acctest.TestPlugin(t, testCase)
 }
+
+func TestAccBuilder_WrappedStartupScriptSuccess(t *testing.T) {
+	tmpl, err := testDataFs.ReadFile("testdata/wrapped-startup-scripts/successful.pkr.hcl")
+	if err != nil {
+		t.Fatalf("failed to read testdata file %s", err)
+	}
+	testCase := &acctest.PluginTestCase{
+		Name:     "googlecompute-packer-good-startup-metadata",
+		Template: string(tmpl),
+		Check: func(buildCommand *exec.Cmd, logfile string) error {
+			if buildCommand.ProcessState != nil {
+				if buildCommand.ProcessState.ExitCode() != 0 {
+					return fmt.Errorf("Bad exit code. Logfile: %s", logfile)
+				}
+			}
+			return nil
+		},
+	}
+	acctest.TestPlugin(t, testCase)
+}
+
+func TestAccBuilder_WrappedStartupScriptError(t *testing.T) {
+	tmpl, err := testDataFs.ReadFile("testdata/wrapped-startup-scripts/errored.pkr.hcl")
+	if err != nil {
+		t.Fatalf("failed to read testdata file %s", err)
+	}
+	testCase := &acctest.PluginTestCase{
+		Name:     "googlecompute-packer-bad-startup-metadata",
+		Template: string(tmpl),
+		Check: func(buildCommand *exec.Cmd, logfile string) error {
+			if buildCommand.ProcessState != nil {
+				if buildCommand.ProcessState.ExitCode() != 1 {
+					return fmt.Errorf("Bad exit code. Logfile: %s", logfile)
+				}
+			}
+			return nil
+		},
+	}
+	acctest.TestPlugin(t, testCase)
+}

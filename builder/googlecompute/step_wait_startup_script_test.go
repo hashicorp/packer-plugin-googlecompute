@@ -34,33 +34,45 @@ func TestStepWaitStartupScript(t *testing.T) {
 
 func TestStepWaitStartupScript_withWrapStartupScript(t *testing.T) {
 	tt := []struct {
-		WrapStartup                config.Trilean
-		Result, Zone, MetadataName string
+		Name                               string
+		WrapStartup                        config.Trilean
+		MetadataResult, Zone, MetadataName string
+		StepResult                         multistep.StepAction //Zero value for StepAction is StepContinue; this is expected for all passing test cases.
 	}{
-		{WrapStartup: config.TriTrue, Result: StartupScriptStatusDone, Zone: "test-zone", MetadataName: "test-instance-name"},
-		{WrapStartup: config.TriFalse},
+		{Name: "no- wrapped startup script", WrapStartup: config.TriFalse},
+		{Name: "good - wrapped startup script", WrapStartup: config.TriTrue, MetadataResult: StartupScriptStatusDone, Zone: "test-zone", MetadataName: "test-instance-name"},
+		{
+			Name:           "failed - wrapped startup script",
+			WrapStartup:    config.TriTrue,
+			MetadataResult: StartupScriptStatusError,
+			Zone:           "test-zone",
+			MetadataName:   "failed-instance-name",
+			StepResult:     multistep.ActionHalt,
+		},
 	}
 
 	for _, tc := range tt {
 		tc := tc
-		state := testState(t)
-		step := new(StepWaitStartupScript)
-		c := state.Get("config").(*Config)
-		d := state.Get("driver").(*DriverMock)
+		t.Run(tc.Name, func(t *testing.T) {
+			state := testState(t)
+			step := new(StepWaitStartupScript)
+			c := state.Get("config").(*Config)
+			d := state.Get("driver").(*DriverMock)
 
-		c.StartupScriptFile = "startup.sh"
-		c.WrapStartupScriptFile = tc.WrapStartup
-		c.Zone = "test-zone"
-		state.Put("instance_name", "test-instance-name")
+			c.StartupScriptFile = "startup.sh"
+			c.WrapStartupScriptFile = tc.WrapStartup
+			c.Zone = tc.Zone
+			state.Put("instance_name", tc.MetadataName)
 
-		// This step stops when it gets Done back from the metadata.
-		d.GetInstanceMetadataResult = tc.Result
+			// This step stops when it gets Done back from the metadata.
+			d.GetInstanceMetadataResult = tc.MetadataResult
 
-		// Run the step.
-		assert.Equal(t, step.Run(context.Background(), state), multistep.ActionContinue, "Step should have continued.")
+			// Run the step.
+			assert.Equal(t, step.Run(context.Background(), state), tc.StepResult, "Step should have continued.")
 
-		assert.Equal(t, d.GetInstanceMetadataResult, tc.Result, "MetadataResult was not the expected value.")
-		assert.Equal(t, d.GetInstanceMetadataZone, tc.Zone, "Zone was not the expected value.")
-		assert.Equal(t, d.GetInstanceMetadataName, tc.MetadataName, "Instance name was not the expected value.")
+			assert.Equal(t, d.GetInstanceMetadataResult, tc.MetadataResult, "MetadataResult was not the expected value.")
+			assert.Equal(t, d.GetInstanceMetadataZone, tc.Zone, "Zone was not the expected value.")
+			assert.Equal(t, d.GetInstanceMetadataName, tc.MetadataName, "Instance name was not the expected value.")
+		})
 	}
 }
