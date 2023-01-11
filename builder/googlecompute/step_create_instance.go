@@ -182,6 +182,7 @@ func (s *StepCreateInstance) Run(ctx context.Context, state multistep.StateBag) 
 		DiskSizeGb:                   c.DiskSizeGb,
 		DiskType:                     c.DiskType,
 		DiskEncryptionKey:            c.DiskEncryptionKey,
+		EnableNestedVirtualization:   c.EnableNestedVirtualization,
 		EnableSecureBoot:             c.EnableSecureBoot,
 		EnableVtpm:                   c.EnableVtpm,
 		EnableIntegrityMonitoring:    c.EnableIntegrityMonitoring,

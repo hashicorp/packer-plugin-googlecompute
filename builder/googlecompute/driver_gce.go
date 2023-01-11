@@ -499,6 +499,9 @@ func (d *driverGCE) RunInstance(c *InstanceConfig) (<-chan error, error) {
 
 	// Create the instance information
 	instance := compute.Instance{
+		AdvancedMachineFeatures: &compute.AdvancedMachineFeatures{
+			EnableNestedVirtualization: c.EnableNestedVirtualization,
+		},
 		Description: c.Description,
 		Disks: []*compute.AttachedDisk{
 			{

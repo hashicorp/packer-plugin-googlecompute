@@ -79,6 +79,7 @@ type FlatConfig struct {
 	DiskSizeGb                   *int64                     `mapstructure:"disk_size" required:"false" cty:"disk_size" hcl:"disk_size"`
 	DiskType                     *string                    `mapstructure:"disk_type" required:"false" cty:"disk_type" hcl:"disk_type"`
 	DiskEncryptionKey            *FlatCustomerEncryptionKey `mapstructure:"disk_encryption_key" required:"false" cty:"disk_encryption_key" hcl:"disk_encryption_key"`
+	EnableNestedVirtualization   *bool                      `mapstructure:"enable_nested_virtualization" required:"false" cty:"enable_nested_virtualization" hcl:"enable_nested_virtualization"`
 	EnableSecureBoot             *bool                      `mapstructure:"enable_secure_boot" required:"false" cty:"enable_secure_boot" hcl:"enable_secure_boot"`
 	EnableVtpm                   *bool                      `mapstructure:"enable_vtpm" required:"false" cty:"enable_vtpm" hcl:"enable_vtpm"`
 	EnableIntegrityMonitoring    *bool                      `mapstructure:"enable_integrity_monitoring" required:"false" cty:"enable_integrity_monitoring" hcl:"enable_integrity_monitoring"`
@@ -208,6 +209,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"disk_size":                       &hcldec.AttrSpec{Name: "disk_size", Type: cty.Number, Required: false},
 		"disk_type":                       &hcldec.AttrSpec{Name: "disk_type", Type: cty.String, Required: false},
 		"disk_encryption_key":             &hcldec.BlockSpec{TypeName: "disk_encryption_key", Nested: hcldec.ObjectSpec((*FlatCustomerEncryptionKey)(nil).HCL2Spec())},
+		"enable_nested_virtualization":    &hcldec.AttrSpec{Name: "enable_nested_virtualization", Type: cty.Bool, Required: false},
 		"enable_secure_boot":              &hcldec.AttrSpec{Name: "enable_secure_boot", Type: cty.Bool, Required: false},
 		"enable_vtpm":                     &hcldec.AttrSpec{Name: "enable_vtpm", Type: cty.Bool, Required: false},
 		"enable_integrity_monitoring":     &hcldec.AttrSpec{Name: "enable_integrity_monitoring", Type: cty.Bool, Required: false},
