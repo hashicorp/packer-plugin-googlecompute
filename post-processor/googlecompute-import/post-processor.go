@@ -59,13 +59,15 @@ type Config struct {
 	//may use user variables and template functions in this field. Defaults to
 	//`packer-import-{{timestamp}}.tar.gz`.
 	GCSObjectName string `mapstructure:"gcs_object_name"`
+	// Specifies the architecture or processor type that this image can support. Must be one of: `arm64` or `x86_64`. Defaults to `ARCHITECTURE_UNSPECIFIED`.
+	ImageArchitecture string `mapstructure:"image_architecture"`
 	//The description of the resulting image.
 	ImageDescription string `mapstructure:"image_description"`
 	//The name of the image family to which the resulting image belongs.
 	ImageFamily string `mapstructure:"image_family"`
 	//A list of features to enable on the guest operating system. Applicable only for bootable images. Valid
 	//values are `MULTI_IP_SUBNET`, `UEFI_COMPATIBLE`,
-	//`VIRTIO_SCSI_MULTIQUEUE` and `WINDOWS` currently.
+	//`VIRTIO_SCSI_MULTIQUEUE`, `GVNIC` and `WINDOWS` currently.
 	ImageGuestOsFeatures []string `mapstructure:"image_guest_os_features"`
 	//Key/value pair labels to apply to the created image.
 	ImageLabels map[string]string `mapstructure:"image_labels"`
@@ -124,6 +126,13 @@ func (p *PostProcessor) Configure(raws ...interface{}) error {
 	if err = interpolate.Validate(p.config.GCSObjectName, &p.config.ctx); err != nil {
 		errs = packersdk.MultiErrorAppend(
 			errs, fmt.Errorf("Error parsing gcs_object_name template: %s", err))
+	}
+
+	if p.config.ImageArchitecture == "" {
+		p.config.ImageArchitecture = "ARCHITECTURE_UNSPECIFIED"
+	} else if p.config.ImageArchitecture != "x86_64" && p.config.ImageArchitecture != "arm64" {
+		errs = packersdk.MultiErrorAppend(errs,
+			fmt.Errorf("Invalid image architecture: Must be one of x86_64 or arm64"))
 	}
 
 	if p.config.AccountFile != "" {
@@ -208,7 +217,7 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packersdk.Ui, artifa
 		return nil, false, false, err
 	}
 
-	gceImageArtifact, err := CreateGceImage(opts, ui, p.config.ProjectId, rawImageGcsPath, p.config.ImageName, p.config.ImageDescription, p.config.ImageFamily, p.config.ImageLabels, p.config.ImageGuestOsFeatures, shieldedVMStateConfig, p.config.ImageStorageLocations)
+	gceImageArtifact, err := CreateGceImage(opts, ui, p.config.ProjectId, rawImageGcsPath, p.config.ImageName, p.config.ImageDescription, p.config.ImageFamily, p.config.ImageLabels, p.config.ImageGuestOsFeatures, shieldedVMStateConfig, p.config.ImageStorageLocations, p.config.ImageArchitecture)
 	if err != nil {
 		return nil, false, false, err
 	}
@@ -321,7 +330,7 @@ func UploadToBucket(opts []option.ClientOption, ui packersdk.Ui, artifact packer
 	return storageObject.SelfLink, nil
 }
 
-func CreateGceImage(opts []option.ClientOption, ui packersdk.Ui, project string, rawImageURL string, imageName string, imageDescription string, imageFamily string, imageLabels map[string]string, imageGuestOsFeatures []string, shieldedVMStateConfig *compute.InitialStateConfig, imageStorageLocations []string) (packersdk.Artifact, error) {
+func CreateGceImage(opts []option.ClientOption, ui packersdk.Ui, project string, rawImageURL string, imageName string, imageDescription string, imageFamily string, imageLabels map[string]string, imageGuestOsFeatures []string, shieldedVMStateConfig *compute.InitialStateConfig, imageStorageLocations []string, imageArchitecture string) (packersdk.Artifact, error) {
 	service, err := compute.NewService(context.TODO(), opts...)
 
 	if err != nil {
@@ -337,6 +346,7 @@ func CreateGceImage(opts []option.ClientOption, ui packersdk.Ui, project string,
 	}
 
 	gceImage := &compute.Image{
+		Architecture:                 imageArchitecture,
 		Description:                  imageDescription,
 		Family:                       imageFamily,
 		GuestOsFeatures:              imageFeatures,

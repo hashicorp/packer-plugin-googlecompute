@@ -22,13 +22,15 @@
   may use user variables and template functions in this field. Defaults to
   `packer-import-{{timestamp}}.tar.gz`.
 
+- `image_architecture` (string) - Specifies the architecture or processor type that this image can support. Must be one of: `arm64` or `x86_64`. Defaults to `ARCHITECTURE_UNSPECIFIED`.
+
 - `image_description` (string) - The description of the resulting image.
 
 - `image_family` (string) - The name of the image family to which the resulting image belongs.
 
 - `image_guest_os_features` ([]string) - A list of features to enable on the guest operating system. Applicable only for bootable images. Valid
   values are `MULTI_IP_SUBNET`, `UEFI_COMPATIBLE`,
-  `VIRTIO_SCSI_MULTIQUEUE` and `WINDOWS` currently.
+  `VIRTIO_SCSI_MULTIQUEUE`, `GVNIC` and `WINDOWS` currently.
 
 - `image_labels` (map[string]string) - Key/value pair labels to apply to the created image.
 
