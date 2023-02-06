@@ -26,6 +26,7 @@ type FlatConfig struct {
 	IAP                        *bool             `mapstructure-to-hcl:",skip" cty:"iap" hcl:"iap"`
 	Bucket                     *string           `mapstructure:"bucket" required:"true" cty:"bucket" hcl:"bucket"`
 	GCSObjectName              *string           `mapstructure:"gcs_object_name" cty:"gcs_object_name" hcl:"gcs_object_name"`
+	ImageArchitecture          *string           `mapstructure:"image_architecture" cty:"image_architecture" hcl:"image_architecture"`
 	ImageDescription           *string           `mapstructure:"image_description" cty:"image_description" hcl:"image_description"`
 	ImageFamily                *string           `mapstructure:"image_family" cty:"image_family" hcl:"image_family"`
 	ImageGuestOsFeatures       []string          `mapstructure:"image_guest_os_features" cty:"image_guest_os_features" hcl:"image_guest_os_features"`
@@ -68,6 +69,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"iap":                           &hcldec.AttrSpec{Name: "iap", Type: cty.Bool, Required: false},
 		"bucket":                        &hcldec.AttrSpec{Name: "bucket", Type: cty.String, Required: false},
 		"gcs_object_name":               &hcldec.AttrSpec{Name: "gcs_object_name", Type: cty.String, Required: false},
+		"image_architecture":            &hcldec.AttrSpec{Name: "image_architecture", Type: cty.String, Required: false},
 		"image_description":             &hcldec.AttrSpec{Name: "image_description", Type: cty.String, Required: false},
 		"image_family":                  &hcldec.AttrSpec{Name: "image_family", Type: cty.String, Required: false},
 		"image_guest_os_features":       &hcldec.AttrSpec{Name: "image_guest_os_features", Type: cty.List(cty.String), Required: false},
