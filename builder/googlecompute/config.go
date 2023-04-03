@@ -104,6 +104,15 @@ type Config struct {
 	// state of your VM instances. Note: integrity monitoring relies on having
 	// vTPM enabled. [Details](https://cloud.google.com/security/shielded-cloud/shielded-vm)
 	EnableIntegrityMonitoring bool `mapstructure:"enable_integrity_monitoring" required:"false"`
+	// Extra disks to attach to the instance that will build the final image.
+	//
+	// You may reference an existing external persistent disk, or you can configure
+	// a set of disks to be created before the instance is created, and will
+	// be deleted upon build completion.
+	//
+	// Scratch (ephemeral) SSDs are always created at launch, and deleted when the
+	// instance is torn-down.
+	ExtraBlockDevices []BlockDevice `mapstructure:"disk_attachment" required:"false"`
 	// Whether to use an IAP proxy.
 	IAPConfig `mapstructure:",squash"`
 	// Skip creating the image. Useful for setting to `true` during a build test stage. Defaults to `false`.
@@ -365,6 +374,16 @@ func (c *Config) Prepare(raws ...interface{}) ([]string, error) {
 	}
 
 	var errs *packersdk.MultiError
+
+	for i, bd := range c.ExtraBlockDevices {
+		err := bd.Prepare()
+		if err != nil {
+			errs = packersdk.MultiErrorAppend(errs, err...)
+			continue
+		}
+		bd.zone = c.Zone
+		c.ExtraBlockDevices[i] = bd
+	}
 
 	// Set defaults.
 	if c.Network == "" && c.Subnetwork == "" {

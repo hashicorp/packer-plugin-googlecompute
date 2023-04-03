@@ -83,6 +83,7 @@ type FlatConfig struct {
 	EnableSecureBoot             *bool                      `mapstructure:"enable_secure_boot" required:"false" cty:"enable_secure_boot" hcl:"enable_secure_boot"`
 	EnableVtpm                   *bool                      `mapstructure:"enable_vtpm" required:"false" cty:"enable_vtpm" hcl:"enable_vtpm"`
 	EnableIntegrityMonitoring    *bool                      `mapstructure:"enable_integrity_monitoring" required:"false" cty:"enable_integrity_monitoring" hcl:"enable_integrity_monitoring"`
+	ExtraBlockDevices            []FlatBlockDevice          `mapstructure:"disk_attachment" required:"false" cty:"disk_attachment" hcl:"disk_attachment"`
 	IAP                          *bool                      `mapstructure:"use_iap" required:"false" cty:"use_iap" hcl:"use_iap"`
 	IAPLocalhostPort             *int                       `mapstructure:"iap_localhost_port" cty:"iap_localhost_port" hcl:"iap_localhost_port"`
 	IAPHashBang                  *string                    `mapstructure:"iap_hashbang" required:"false" cty:"iap_hashbang" hcl:"iap_hashbang"`
@@ -213,6 +214,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"enable_secure_boot":              &hcldec.AttrSpec{Name: "enable_secure_boot", Type: cty.Bool, Required: false},
 		"enable_vtpm":                     &hcldec.AttrSpec{Name: "enable_vtpm", Type: cty.Bool, Required: false},
 		"enable_integrity_monitoring":     &hcldec.AttrSpec{Name: "enable_integrity_monitoring", Type: cty.Bool, Required: false},
+		"disk_attachment":                 &hcldec.BlockListSpec{TypeName: "disk_attachment", Nested: hcldec.ObjectSpec((*FlatBlockDevice)(nil).HCL2Spec())},
 		"use_iap":                         &hcldec.AttrSpec{Name: "use_iap", Type: cty.Bool, Required: false},
 		"iap_localhost_port":              &hcldec.AttrSpec{Name: "iap_localhost_port", Type: cty.Number, Required: false},
 		"iap_hashbang":                    &hcldec.AttrSpec{Name: "iap_hashbang", Type: cty.String, Required: false},

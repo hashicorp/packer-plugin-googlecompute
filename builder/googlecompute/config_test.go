@@ -603,6 +603,33 @@ func TestApplyIAPTunnel_none(t *testing.T) {
 	}
 }
 
+func TestConfigExtraBlockDevice_zone_forwarded(t *testing.T) {
+	c, _ := testConfig(t)
+	c["disk_attachment"] = []map[string]interface{}{
+		{
+			"volume_type": "scratch",
+			"volume_size": 375,
+		},
+	}
+
+	var config Config
+	_, err := config.Prepare(c)
+	if err != nil {
+		t.Fatalf("failed to prepare config: %#s", err)
+	}
+
+	ebd := config.ExtraBlockDevices
+	if len(ebd) != 1 {
+		t.Fatalf("expected 1 block device, got %d", len(ebd))
+	}
+
+	blockDevice := ebd[0]
+
+	if blockDevice.zone != config.Zone {
+		t.Errorf("Expected block device zone (%q) to match config's (%q)", blockDevice.zone, config.Zone)
+	}
+}
+
 // Helper stuff below
 
 func testConfig(t *testing.T) (config map[string]interface{}, tempAccountFile string) {

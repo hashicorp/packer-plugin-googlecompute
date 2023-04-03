@@ -186,6 +186,7 @@ func (s *StepCreateInstance) Run(ctx context.Context, state multistep.StateBag) 
 		EnableSecureBoot:             c.EnableSecureBoot,
 		EnableVtpm:                   c.EnableVtpm,
 		EnableIntegrityMonitoring:    c.EnableIntegrityMonitoring,
+		ExtraBlockDevices:            c.ExtraBlockDevices,
 		Image:                        sourceImage,
 		Labels:                       c.Labels,
 		MachineType:                  c.MachineType,
@@ -308,13 +309,11 @@ func (s *StepCreateInstance) Cleanup(state multistep.StateBag) {
 	// Deleting the instance does not remove the boot disk. This cleanup removes
 	// the disk.
 	ui.Say("Deleting disk...")
-	errCh, err = driver.DeleteDisk(config.Zone, config.DiskName)
-	if err == nil {
-		select {
-		case err = <-errCh:
-		case <-time.After(config.StateTimeout):
-			err = errors.New("time out while waiting for disk to delete")
-		}
+	errCh = driver.DeleteDisk(config.Zone, config.DiskName)
+	select {
+	case err = <-errCh:
+	case <-time.After(config.StateTimeout):
+		err = errors.New("time out while waiting for disk to delete")
 	}
 
 	if err != nil {

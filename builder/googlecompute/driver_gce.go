@@ -257,18 +257,146 @@ func (d *driverGCE) DeleteInstance(zone, name string) (<-chan error, error) {
 	return errCh, nil
 }
 
-func (d *driverGCE) DeleteDisk(zone, name string) (<-chan error, error) {
-	op, err := d.service.Disks.Delete(d.projectId, zone, name).Do()
-	if err != nil {
-		return nil, err
+func (d *driverGCE) CreateDisk(diskConfig BlockDevice) (<-chan *compute.Disk, <-chan error) {
+	if len(diskConfig.ReplicaZones) != 0 {
+		return d.createRegionalDisk(diskConfig)
 	}
 
+	return d.createZonalDisk(diskConfig)
+}
+
+func (d *driverGCE) createRegionalDisk(diskConfig BlockDevice) (<-chan *compute.Disk, <-chan error) {
+	diskChan := make(chan *compute.Disk, 1)
+	errChan := make(chan error, 1)
+
+	computePayload, err := diskConfig.generateComputeDiskPayload()
+	if err != nil {
+		errChan <- err
+		close(diskChan)
+		close(errChan)
+		return diskChan, errChan
+	}
+
+	region, _ := getRegionFromZone(diskConfig.zone)
+	op, err := d.service.RegionDisks.Insert(d.projectId, region, computePayload).Do()
+	if err != nil {
+		errChan <- err
+		close(diskChan)
+		close(errChan)
+		return diskChan, errChan
+	}
+
+	go func() {
+		defer func() {
+			close(errChan)
+			close(diskChan)
+		}()
+
+		err := waitForState(errChan, "DONE", d.refreshRegionOp(region, op))
+		if err != nil {
+			errChan <- err
+			return
+		}
+		disk, err := d.service.Disks.Get(d.projectId, region, diskConfig.DiskName).Do()
+		if err != nil {
+			errChan <- err
+			return
+		}
+
+		diskChan <- disk
+	}()
+	return diskChan, errChan
+}
+
+func (d *driverGCE) createZonalDisk(diskConfig BlockDevice) (<-chan *compute.Disk, <-chan error) {
+	diskChan := make(chan *compute.Disk, 1)
+	errChan := make(chan error, 1)
+
+	zone := diskConfig.zone
+
+	var op *compute.Operation
+	var err error
+
+	computePayload, err := diskConfig.generateComputeDiskPayload()
+	if err != nil {
+		errChan <- err
+		close(diskChan)
+		close(errChan)
+		return diskChan, errChan
+	}
+
+	op, err = d.service.Disks.Insert(d.projectId, zone, computePayload).Do()
+	if err != nil {
+		errChan <- err
+		close(diskChan)
+		close(errChan)
+		return diskChan, errChan
+	}
+
+	go func() {
+		defer func() {
+			close(errChan)
+			close(diskChan)
+		}()
+
+		err := waitForState(errChan, "DONE", d.refreshZoneOp(zone, op))
+		if err != nil {
+			errChan <- err
+			return
+		}
+		disk, err := d.service.Disks.Get(d.projectId, zone, diskConfig.DiskName).Do()
+		if err != nil {
+			errChan <- err
+			return
+		}
+
+		diskChan <- disk
+	}()
+	return diskChan, errChan
+}
+
+func (d *driverGCE) DeleteDisk(zoneOrRegion, name string) <-chan error {
+	if isZoneARegion(zoneOrRegion) {
+		return d.deleteRegionalDisk(zoneOrRegion, name)
+	}
+
+	return d.deleteZonalDisk(zoneOrRegion, name)
+}
+
+func (d *driverGCE) deleteZonalDisk(zone, name string) <-chan error {
 	errCh := make(chan error, 1)
+
+	op, err := d.service.Disks.Delete(d.projectId, zone, name).Do()
+	if err != nil {
+		errCh <- err
+		close(errCh)
+		return errCh
+	}
+
 	go func() {
 		_ = waitForState(errCh, "DONE", d.refreshZoneOp(zone, op))
+		close(errCh)
 	}()
-	return errCh, nil
+	return errCh
 }
+
+func (d *driverGCE) deleteRegionalDisk(region, name string) <-chan error {
+	errCh := make(chan error, 1)
+
+	op, err := d.service.RegionDisks.Delete(d.projectId, region, name).Do()
+	if err != nil {
+		errCh <- err
+		close(errCh)
+		return errCh
+	}
+
+	go func() {
+		_ = waitForState(errCh, "DONE", d.refreshRegionOp(region, op))
+		close(errCh)
+	}()
+	return errCh
+}
+
 func (d *driverGCE) GetImage(name string, fromFamily bool) (*Image, error) {
 
 	projects := []string{
@@ -497,28 +625,34 @@ func (d *driverGCE) RunInstance(c *InstanceConfig) (<-chan error, error) {
 		log.Printf("[DEBUG] using google-managed encryption key for boot disk")
 	}
 
+	computeDisks := []*compute.AttachedDisk{
+		{
+			Type:              "PERSISTENT",
+			Mode:              "READ_WRITE",
+			Kind:              "compute#attachedDisk",
+			Boot:              true,
+			AutoDelete:        false,
+			DiskEncryptionKey: diskEncryptionKey,
+			InitializeParams: &compute.AttachedDiskInitializeParams{
+				SourceImage: c.Image.SelfLink,
+				DiskName:    c.DiskName,
+				DiskSizeGb:  c.DiskSizeGb,
+				DiskType:    fmt.Sprintf("zones/%s/diskTypes/%s", zone.Name, c.DiskType),
+			},
+		},
+	}
+
+	for _, disk := range c.ExtraBlockDevices {
+		computeDisks = append(computeDisks, disk.generateDiskAttachment())
+	}
+
 	// Create the instance information
 	instance := compute.Instance{
 		AdvancedMachineFeatures: &compute.AdvancedMachineFeatures{
 			EnableNestedVirtualization: c.EnableNestedVirtualization,
 		},
-		Description: c.Description,
-		Disks: []*compute.AttachedDisk{
-			{
-				Type:              "PERSISTENT",
-				Mode:              "READ_WRITE",
-				Kind:              "compute#attachedDisk",
-				Boot:              true,
-				AutoDelete:        false,
-				DiskEncryptionKey: diskEncryptionKey,
-				InitializeParams: &compute.AttachedDiskInitializeParams{
-					SourceImage: c.Image.SelfLink,
-					DiskName:    c.DiskName,
-					DiskSizeGb:  c.DiskSizeGb,
-					DiskType:    fmt.Sprintf("zones/%s/diskTypes/%s", zone.Name, c.DiskType),
-				},
-			},
-		},
+		Description:       c.Description,
+		Disks:             computeDisks,
 		GuestAccelerators: guestAccelerators,
 		Labels:            c.Labels,
 		MachineType:       machineType.SelfLink,
@@ -759,6 +893,27 @@ func (d *driverGCE) refreshGlobalOp(op *compute.Operation) stateRefreshFunc {
 func (d *driverGCE) refreshZoneOp(zone string, op *compute.Operation) stateRefreshFunc {
 	return func() (string, error) {
 		newOp, err := d.service.ZoneOperations.Get(d.projectId, zone, op.Name).Do()
+		if err != nil {
+			return "", err
+		}
+
+		// If the op is done, check for errors
+		err = nil
+		if newOp.Status == "DONE" {
+			if newOp.Error != nil {
+				for _, e := range newOp.Error.Errors {
+					err = packersdk.MultiErrorAppend(err, fmt.Errorf(e.Message))
+				}
+			}
+		}
+
+		return newOp.Status, err
+	}
+}
+
+func (d *driverGCE) refreshRegionOp(region string, op *compute.Operation) stateRefreshFunc {
+	return func() (string, error) {
+		newOp, err := d.service.RegionOperations.Get(d.projectId, region, op.Name).Do()
 		if err != nil {
 			return "", err
 		}

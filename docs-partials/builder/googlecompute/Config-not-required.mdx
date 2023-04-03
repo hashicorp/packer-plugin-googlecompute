@@ -72,6 +72,15 @@
   state of your VM instances. Note: integrity monitoring relies on having
   vTPM enabled. [Details](https://cloud.google.com/security/shielded-cloud/shielded-vm)
 
+- `disk_attachment` ([]BlockDevice) - Extra disks to attach to the instance that will build the final image.
+  
+  You may reference an existing external persistent disk, or you can configure
+  a set of disks to be created before the instance is created, and will
+  be deleted upon build completion.
+  
+  Scratch (ephemeral) SSDs are always created at launch, and deleted when the
+  instance is torn-down.
+
 - `skip_create_image` (bool) - Skip creating the image. Useful for setting to `true` during a build test stage. Defaults to `false`.
 
 - `image_name` (string) - The unique name of the resulting image. Defaults to
