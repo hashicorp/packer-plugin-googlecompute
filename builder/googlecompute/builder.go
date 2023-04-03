@@ -79,6 +79,9 @@ func (b *Builder) Run(ctx context.Context, ui packersdk.Ui, hook packersdk.Hook)
 				SSH:  &b.config.Comm.SSH,
 			},
 		),
+		&StepCreateDisks{
+			DiskConfiguration: b.config.ExtraBlockDevices,
+		},
 		&StepImportOSLoginSSHKey{
 			Debug: b.config.PackerDebug,
 		},

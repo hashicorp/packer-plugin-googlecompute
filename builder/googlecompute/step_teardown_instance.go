@@ -59,14 +59,14 @@ func (s *StepTeardownInstance) Cleanup(state multistep.StateBag) {
 	driver := state.Get("driver").(Driver)
 	ui := state.Get("ui").(packersdk.Ui)
 
+	var err error
+
 	ui.Say("Deleting disk...")
-	errCh, err := driver.DeleteDisk(config.Zone, config.DiskName)
-	if err == nil {
-		select {
-		case err = <-errCh:
-		case <-time.After(config.StateTimeout):
-			err = errors.New("time out while waiting for disk to delete")
-		}
+	errCh := driver.DeleteDisk(config.Zone, config.DiskName)
+	select {
+	case err = <-errCh:
+	case <-time.After(config.StateTimeout):
+		err = errors.New("time out while waiting for disk to delete")
 	}
 
 	if err != nil {

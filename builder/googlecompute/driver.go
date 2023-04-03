@@ -12,6 +12,9 @@ import (
 // with GCE. The Driver interface exists mostly to allow a mock implementation
 // to be used to test the steps.
 type Driver interface {
+	// CreateDisk creates a persistent disk from the specified config.
+	CreateDisk(diskConfig BlockDevice) (<-chan *compute.Disk, <-chan error)
+
 	// CreateImage creates an image from the given disk in Google Compute
 	// Engine.
 	CreateImage(name, description, family, zone, disk string, image_labels map[string]string, image_licenses []string, image_guest_os_features []string, image_encryption_key *compute.CustomerEncryptionKey, imageStorageLocation []string) (<-chan *Image, <-chan error)
@@ -23,7 +26,7 @@ type Driver interface {
 	DeleteInstance(zone, name string) (<-chan error, error)
 
 	// DeleteDisk deletes the disk with the given name.
-	DeleteDisk(zone, name string) (<-chan error, error)
+	DeleteDisk(zone, name string) <-chan error
 
 	// GetImage gets an image; tries the default and public projects. If
 	// fromFamily is true, name designates an image family instead of a
@@ -88,6 +91,7 @@ type InstanceConfig struct {
 	EnableSecureBoot             bool
 	EnableVtpm                   bool
 	EnableIntegrityMonitoring    bool
+	ExtraBlockDevices            []BlockDevice
 	Image                        *Image
 	Labels                       map[string]string
 	MachineType                  string

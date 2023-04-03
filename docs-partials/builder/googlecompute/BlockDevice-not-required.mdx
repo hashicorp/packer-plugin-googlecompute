@@ -1,0 +1,51 @@
+<!-- Code generated from the comments of the BlockDevice struct in builder/googlecompute/block_device.go; DO NOT EDIT MANUALLY -->
+
+- `attachment_mode` (string) - How to attach the volume to the instance
+  
+  Can be either READ_ONLY or READ_WRITE (default).
+
+- `device_name` (string) - The device name as exposed to the OS in the /dev/disk/by-id/google-* directory
+  
+  If unspecified, the disk will have a default name in the form
+  persistent-disk-x with 'x' being a number assigned by GCE
+  
+  This field only applies to persistent disks, local SSDs will always
+  be exposed as /dev/disk/by-id/google-local-nvme-ssd-x.
+
+- `disk_encryption_key` (CustomerEncryptionKey) - Disk encryption key to apply to the requested disk.
+  
+  Possible values:
+  * kmsKeyName -  The name of the encryption key that is stored in Google Cloud KMS.
+  * RawKey: - A 256-bit customer-supplied encryption key, encodes in RFC 4648 base64.
+
+- `disk_name` (string) - Name of the disk to create.
+  This only applies to non-scratch disks. If the disk is persistent, and
+  not specified, Packer will generate a unique name for the disk.
+  
+  The name must be 1-63 characters long and comply to the regexp
+  '[a-z]([-a-z0-9]*[a-z0-9])?'
+
+- `interface_type` (string) - The interface to use for attaching the disk.
+  Can be either NVME or SCSI. Defaults to SCSI.
+  
+  The available options depend on the type of disk, SEE: https://cloud.google.com/compute/docs/disks/persistent-disks#choose_an_interface
+
+- `iops` (int) - The requested IOPS for the disk.
+  
+  This is only available for pd_extreme disks.
+
+- `keep_device` (bool) - Keep the device in the created disks after the instance is terminated.
+  By default, the builder will remove the disks at the end of the build.
+  
+  This cannot be used with 'scratch' volumes.
+
+- `replica_zones` ([]string) - The list of extra zones to replicate the disk into
+  
+  The zone in which the instance is created will automatically be
+  added to the zones in which the disk is replicated.
+
+- `source_volume` (string) - The URI of the volume to attach
+  
+  If this is specified, it won't be deleted after the instance is shut-down.
+
+<!-- End of code generated from the comments of the BlockDevice struct in builder/googlecompute/block_device.go; -->

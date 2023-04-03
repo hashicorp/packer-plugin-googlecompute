@@ -10,6 +10,10 @@ import (
 // DriverMock is a Driver implementation that is a mocked out so that
 // it can be used for tests.
 type DriverMock struct {
+	CreateDiskConfig   BlockDevice
+	CreateDiskResultCh <-chan *compute.Disk
+	CreateDiskErrCh    <-chan error
+
 	CreateImageName             string
 	CreateImageDesc             string
 	CreateImageFamily           string
@@ -36,7 +40,7 @@ type DriverMock struct {
 
 	DeleteDiskZone  string
 	DeleteDiskName  string
-	DeleteDiskErrCh <-chan error
+	DeleteDiskErrCh chan error
 	DeleteDiskErr   error
 
 	GetImageName           string
@@ -178,18 +182,43 @@ func (d *DriverMock) DeleteInstance(zone, name string) (<-chan error, error) {
 	return resultCh, d.DeleteInstanceErr
 }
 
-func (d *DriverMock) DeleteDisk(zone, name string) (<-chan error, error) {
+func (d *DriverMock) CreateDisk(diskConfig BlockDevice) (<-chan *compute.Disk, <-chan error) {
+	d.CreateDiskConfig = diskConfig
+
+	resultCh := d.CreateDiskResultCh
+	if resultCh == nil {
+		ch := make(chan *compute.Disk)
+		close(ch)
+		resultCh = ch
+	}
+
+	errCh := d.CreateDiskErrCh
+	if errCh != nil {
+		ch := make(chan error)
+		close(ch)
+		errCh = ch
+	}
+
+	return resultCh, errCh
+}
+
+func (d *DriverMock) DeleteDisk(zone, name string) <-chan error {
 	d.DeleteDiskZone = zone
 	d.DeleteDiskName = name
 
 	resultCh := d.DeleteDiskErrCh
 	if resultCh == nil {
 		ch := make(chan error)
-		close(ch)
 		resultCh = ch
 	}
 
-	return resultCh, d.DeleteDiskErr
+	if d.DeleteDiskErr != nil {
+		resultCh <- d.DeleteDiskErr
+	}
+
+	close(resultCh)
+
+	return resultCh
 }
 
 func (d *DriverMock) GetImage(name string, fromFamily bool) (*Image, error) {

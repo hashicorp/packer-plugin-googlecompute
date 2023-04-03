@@ -1,0 +1,18 @@
+<!-- Code generated from the comments of the BlockDevice struct in builder/googlecompute/block_device.go; DO NOT EDIT MANUALLY -->
+
+- `volume_size` (int) - Size of the volume to request, in gigabytes.
+  
+  The size specified must be in range of the sizes for the chosen volume type.
+
+- `volume_type` (BlockDeviceType) - The volume type is the type of storage to reserve and attach to the instance being provisioned.
+  
+  The following values are supported by this builder:
+  * scratch: local SSD data, always 375 GiB (default)
+  * pd_standard: persistent, HDD-backed disk
+  * pd_balanced: persistent, SSD-backed disk
+  * pd_ssd: persistent, SSD-backed disk, with extra performance guarantees
+  * pd_extreme: persistent, fastest SSD-backed disk, with custom IOPS
+  
+  For details on the different types, refer to: https://cloud.google.com/compute/docs/disks#disk-types
+
+<!-- End of code generated from the comments of the BlockDevice struct in builder/googlecompute/block_device.go; -->
