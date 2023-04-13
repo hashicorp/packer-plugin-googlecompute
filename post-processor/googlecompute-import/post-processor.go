@@ -80,9 +80,9 @@ type Config struct {
 	ImagePlatformKey string `mapstructure:"image_platform_key"`
 	//A key used to establish a trust relationship between the firmware and the OS. You may specify multiple comma-separated keys for this value.
 	ImageKeyExchangeKey []string `mapstructure:"image_key_exchange_key"`
-	//A database of certificates that have been revoked and will cause the system to stop booting if a boot file is signed with one of them. You may specify single or multiple comma-separated values for this value.
-	ImageSignaturesDB []string `mapstructure:"image_signatures_db"`
 	//A database of certificates that are trusted and can be used to sign boot files. You may specify single or multiple comma-separated values for this value.
+	ImageSignaturesDB []string `mapstructure:"image_signatures_db"`
+	//A database of certificates that have been revoked and will cause the system to stop booting if a boot file is signed with one of them. You may specify single or multiple comma-separated values for this value.
 	ImageForbiddenSignaturesDB []string `mapstructure:"image_forbidden_signatures_db"`
 
 	account *googlecompute.ServiceAccount
