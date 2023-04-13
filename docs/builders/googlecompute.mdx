@@ -489,11 +489,16 @@ script by tracking the `startup-script-status` metadata. Packer will check if th
 is set to done and if it not set to done before the timeout, Packer will fail the build.
 
 ### Windows
+A Windows startup script can only be provided as a metadata field option. The
+builder will _not_ wait for a Windows startup script to terminate. You have
+to ensure that it finishes before the instance shuts down. For a list of
+supported startup script keys refer to [Using startup scripts on Windows](https://cloud.google.com/compute/docs/instances/startup-scripts/windows)
 
-A Windows startup script can only be provided via the
-`sysprep-specialize-script-cmd` instance creation `metadata` field. The builder
-will _not_ wait for a Windows startup script to terminate. You have to ensure
-that it finishes before the instance shuts down.
+```hcl
+metadata = {
+  sysprep-specialize-script-cmd = "..."
+}
+```
 
 ### Logging
 
