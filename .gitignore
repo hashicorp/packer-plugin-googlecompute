@@ -4,3 +4,4 @@ packer-plugin-googlecompute
 
 **/packer_log*.txt
 
+crash.log
