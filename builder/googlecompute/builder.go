@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // The googlecompute package contains a packersdk.Builder implementation that
 // builds images for Google Compute Engine.
 package googlecompute
