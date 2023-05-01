@@ -115,6 +115,9 @@ type Config struct {
 	//
 	// Scratch (ephemeral) SSDs are always created at launch, and deleted when the
 	// instance is torn-down.
+	//
+	// Refer to the [Extra Disk Attachments](#extra-disk-attachments) section for
+	// more information on this configuration type.
 	ExtraBlockDevices []BlockDevice `mapstructure:"disk_attachment" required:"false"`
 	// Whether to use an IAP proxy.
 	IAPConfig `mapstructure:",squash"`
