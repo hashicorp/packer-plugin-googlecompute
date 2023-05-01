@@ -521,3 +521,39 @@ CentOS and recent Debian images have root ssh access disabled by default. Set
 
 The machine type must have a scratch disk, which means you can't use an
 `f1-micro` or `g1-small` to build images.
+
+## Extra disk attachments
+
+@include 'builder/googlecompute/BlockDevice.mdx'
+
+These can be defined using the [disk_attachment](#disk_attachment) block in the configuration.
+
+Note that this is an array, and therefore in HCL2 can be defined as multiple blocks, each
+one corresponding to a disk that will be attached to the instance you are booting.
+
+Example:
+
+```hcl
+source "googlecompute" "example" {
+  # Add whichever is necessary to build the image
+
+  disk_attachment {
+    volume_type     = "scratch"
+    volume_size     = 375
+  }
+
+  disk_attachment {
+    volume_type     = "pd-standard"
+    volume_size     = 25
+    interface_type  = "SCSI"
+  }
+}
+```
+
+### Required:
+
+@include 'builder/googlecompute/BlockDevice-required.mdx'
+
+### Optional:
+
+@include 'builder/googlecompute/BlockDevice-not-required.mdx'
