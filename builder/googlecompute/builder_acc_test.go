@@ -157,3 +157,24 @@ func TestAccBuilder_WithExtraPersistentDiskAndRegions(t *testing.T) {
 	}
 	acctest.TestPlugin(t, testCase)
 }
+
+func TestAccBuilder_WithMultipleDisks(t *testing.T) {
+	tmpl, err := testDataFs.ReadFile("testdata/multiple_disks.pkr.hcl")
+	if err != nil {
+		t.Fatalf("failed to read testdata file: %s", err)
+	}
+
+	testCase := &acctest.PluginTestCase{
+		Name:     "googlecompute-packer-with-multiple-extra-disks",
+		Template: string(tmpl),
+		Check: func(buildCommand *exec.Cmd, logfile string) error {
+			if buildCommand.ProcessState != nil {
+				if buildCommand.ProcessState.ExitCode() != 0 {
+					return fmt.Errorf("Bad exit code. Logfile: %s", logfile)
+				}
+			}
+			return nil
+		},
+	}
+	acctest.TestPlugin(t, testCase)
+}
