@@ -42,10 +42,7 @@ func (c *Config) createInstanceMetadata(sourceImage *Image, sshPublicKey string)
 		}
 	}
 
-	// Merge any existing ssh keys with our public key, unless there is no
-	// supplied public key. This is possible if a private_key_file was
-	// specified.
-	if sshPublicKey != "" {
+	if c.Comm.SSHPrivateKeyFile == "" && sshPublicKey != "" {
 		sshMetaKey := "ssh-keys"
 		sshPublicKey = strings.TrimSuffix(sshPublicKey, "\n")
 		sshKeys := fmt.Sprintf("%s:%s %s", c.Comm.SSHUsername, sshPublicKey, c.Comm.SSHUsername)
