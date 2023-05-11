@@ -129,10 +129,16 @@ func (p *PostProcessor) Configure(raws ...interface{}) error {
 	}
 
 	if p.config.ImageArchitecture == "" {
+		// Lower case is not required here
 		p.config.ImageArchitecture = "ARCHITECTURE_UNSPECIFIED"
-	} else if p.config.ImageArchitecture != "x86_64" && p.config.ImageArchitecture != "arm64" {
-		errs = packersdk.MultiErrorAppend(errs,
-			fmt.Errorf("Invalid image architecture: Must be one of x86_64 or arm64"))
+	} else {
+		// The api is unclear on what case is expected for here and inconsistent across https://cloud.google.com/compute/docs/reference/rest/v1/machineImages
+		// vs https://cloud.google.com/compute/docs/images/create-custom#guest-os-features but lower case works
+		p.config.ImageArchitecture = strings.ToLower(p.config.ImageArchitecture)
+		if p.config.ImageArchitecture != "x86_64" && p.config.ImageArchitecture != "arm64" {
+			errs = packersdk.MultiErrorAppend(errs,
+				fmt.Errorf("Invalid image architecture: Must be one of x86_64 or arm64"))
+		}
 	}
 
 	if p.config.AccountFile != "" {
