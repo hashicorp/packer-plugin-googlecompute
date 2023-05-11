@@ -122,13 +122,8 @@ func (s *StepImportOSLoginSSHKey) Run(ctx context.Context, state multistep.State
 
 // Cleanup the SSH Key that we added to the POSIX account
 func (s *StepImportOSLoginSSHKey) Cleanup(state multistep.StateBag) {
-	config := state.Get("config").(*Config)
 	driver := state.Get("driver").(Driver)
 	ui := state.Get("ui").(packersdk.Ui)
-
-	if !config.UseOSLogin {
-		return
-	}
 
 	fingerprint, ok := state.Get("ssh_key_public_sha256").(string)
 	if !ok || fingerprint == "" {
