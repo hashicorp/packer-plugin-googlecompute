@@ -38,8 +38,16 @@ func (s *StepImportOSLoginSSHKey) Run(ctx context.Context, state multistep.State
 		return multistep.ActionContinue
 	}
 
-	// If no public key information is available chances are that a private key was provided
-	//  or that the user is using a SSH agent for authentication.
+	// If the user specified a private key, the assumption is that the instance
+	// will already know the private key, and therefore doesn't need to be
+	// registered for OSLogin.
+	if config.Comm.SSHPrivateKeyFile != "" {
+		ui.Say("Private key file specified, won't import SSH key for OSLogin")
+		return multistep.ActionContinue
+	}
+
+	// If no public key information is available chances are that the user
+	// is using a SSH agent for authentication.
 	if config.Comm.SSHPublicKey == nil {
 		ui.Say("No public SSH key found; skipping SSH public key import for OSLogin...")
 		return multistep.ActionContinue
