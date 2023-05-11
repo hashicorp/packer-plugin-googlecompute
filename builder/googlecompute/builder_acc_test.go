@@ -4,9 +4,15 @@
 package googlecompute
 
 import (
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
 	"embed"
+	"encoding/pem"
 	"fmt"
+	"os"
 	"os/exec"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/packer-plugin-sdk/acctest"
@@ -49,6 +55,76 @@ func TestAccBuilder_DefaultTokenSource(t *testing.T) {
 					return fmt.Errorf("Bad exit code. Logfile: %s", logfile)
 				}
 			}
+			return nil
+		},
+	}
+	acctest.TestPlugin(t, testCase)
+}
+
+// generateSSHPrivateKey generates a PEM encoded ssh private key file
+//
+// The file's deletion is the responsibility of the caller.
+func generateSSHPrivateKey() (string, error) {
+	outFile := fmt.Sprintf("%s/temp_key", os.TempDir())
+
+	priv, err := rsa.GenerateKey(rand.Reader, 4096)
+	if err != nil {
+		return "", fmt.Errorf("failed to generate SSH key: %s", err)
+	}
+
+	x509key := x509.MarshalPKCS1PrivateKey(priv)
+
+	pemKey := pem.EncodeToMemory(&pem.Block{
+		Type:  "RSA PRIVATE KEY",
+		Bytes: x509key,
+	})
+
+	err = os.WriteFile(outFile, pemKey, 0600)
+	if err != nil {
+		return "", fmt.Errorf("failed to write private key to %q: %s", outFile, err)
+	}
+
+	return outFile, nil
+}
+
+func TestAccBuilder_DefaultTokenSourceWithPrivateKey(t *testing.T) {
+	keyFile, err := generateSSHPrivateKey()
+	if err != nil {
+		t.Fatalf("failed to generate SSH private key: %s", err)
+	}
+
+	defer os.Remove(keyFile)
+
+	tmpl, err := testDataFs.ReadFile("testdata/oslogin/default-token-and-pkey.pkr.hcl")
+	if err != nil {
+		t.Fatalf("failed to read testdata file %s", err)
+	}
+
+	testCase := &acctest.PluginTestCase{
+		Name:     "googlecompute-packer-default-ts",
+		Template: fmt.Sprintf(string(tmpl), keyFile),
+		Check: func(buildCommand *exec.Cmd, logfile string) error {
+			if buildCommand.ProcessState != nil {
+				if buildCommand.ProcessState.ExitCode() == 0 {
+					return fmt.Errorf("Packer build should have failed because of the unknown SSH key for the target instance, but succeeded. Logfile: %s", logfile)
+				}
+			}
+
+			rawLogs, err := os.ReadFile(logfile)
+			if err != nil {
+				return fmt.Errorf("failed to read logfile %q: %s", logfile, err)
+			}
+
+			logs := string(rawLogs)
+
+			if !strings.Contains(logs, "Private key file specified, won't import SSH key for OSLogin") {
+				return fmt.Errorf("did not find message stating that a private key file was specified")
+			}
+
+			if strings.Contains(logs, "Deleting SSH public key for OSLogin...") {
+				return fmt.Errorf("found a message about deleting OSLogin SSH public key, shouldn't have")
+			}
+
 			return nil
 		},
 	}
