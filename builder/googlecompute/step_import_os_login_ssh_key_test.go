@@ -7,6 +7,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"os"
 	"testing"
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
@@ -203,10 +204,15 @@ func TestStepImportOSLoginSSHKey_withPrivateSSHKey(t *testing.T) {
 	step := new(StepImportOSLoginSSHKey)
 	defer step.Cleanup(state)
 
+	pkey, err := generateSSHPrivateKey()
+	if err != nil {
+		t.Fatalf("failed to generate SSH key: %s", err)
+	}
+	defer os.Remove(pkey)
+
 	config := state.Get("config").(*Config)
 	config.UseOSLogin = true
-	config.Comm.SSHPrivateKey = []byte{'k', 'e', 'y'}
-	config.Comm.SSHPublicKey = nil
+	config.Comm.SSHPrivateKeyFile = pkey
 
 	if action := step.Run(context.Background(), state); action != multistep.ActionContinue {
 		t.Fatalf("bad action: %#v", action)
