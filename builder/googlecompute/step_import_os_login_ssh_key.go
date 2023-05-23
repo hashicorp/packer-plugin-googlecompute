@@ -120,9 +120,7 @@ func (s *StepImportOSLoginSSHKey) Run(ctx context.Context, state multistep.State
 		}
 	}
 
-	if s.Debug {
-		ui.Message(fmt.Sprintf("ssh_username: %s", username))
-	}
+	log.Printf("[DEBUG] OSLogin step, setting ssh_username: %s", username)
 	config.Comm.SSHUsername = username
 
 	return multistep.ActionContinue
