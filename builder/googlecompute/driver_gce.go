@@ -400,6 +400,14 @@ func (d *driverGCE) deleteRegionalDisk(region, name string) <-chan error {
 	return errCh
 }
 
+func (d *driverGCE) GetDisk(zoneOrRegion, name string) (*compute.Disk, error) {
+	if isZoneARegion(zoneOrRegion) {
+		return d.service.RegionDisks.Get(d.projectId, zoneOrRegion, name).Do()
+	}
+
+	return d.service.Disks.Get(d.projectId, zoneOrRegion, name).Do()
+}
+
 func (d *driverGCE) GetImage(name string, fromFamily bool) (*Image, error) {
 
 	projects := []string{

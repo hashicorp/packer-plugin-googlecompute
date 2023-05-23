@@ -31,6 +31,9 @@ type Driver interface {
 	// DeleteDisk deletes the disk with the given name.
 	DeleteDisk(zone, name string) <-chan error
 
+	// GetDisk gets the disk with the given name in a zone/region.
+	GetDisk(zone, name string) (*compute.Disk, error)
+
 	// GetImage gets an image; tries the default and public projects. If
 	// fromFamily is true, name designates an image family instead of a
 	// particular image.
