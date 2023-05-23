@@ -207,6 +207,16 @@ func TestAccBuilder_WithExtraPersistentDisk(t *testing.T) {
 					return fmt.Errorf("Bad exit code. Logfile: %s", logfile)
 				}
 			}
+
+			logs, err := os.ReadFile(logfile)
+			if err != nil {
+				t.Fatalf("failed to open logfile %q: %s", logfile, err)
+			}
+
+			if strings.Contains(string(logs), "Deleting persistent disk") {
+				t.Errorf("extra persistent disk should be automatically deleted on instance tear-down, but was deleted during the cleanup for the step_extra_disks")
+			}
+
 			return nil
 		},
 	}
@@ -228,6 +238,16 @@ func TestAccBuilder_WithExtraPersistentDiskAndRegions(t *testing.T) {
 					return fmt.Errorf("Bad exit code. Logfile: %s", logfile)
 				}
 			}
+
+			logs, err := os.ReadFile(logfile)
+			if err != nil {
+				t.Fatalf("failed to open logfile %q: %s", logfile, err)
+			}
+
+			if strings.Contains(string(logs), "Deleting persistent disk") {
+				t.Errorf("extra persistent disk should be automatically deleted on instance tear-down, but was deleted during the cleanup for the step_extra_disks")
+			}
+
 			return nil
 		},
 	}
@@ -249,6 +269,16 @@ func TestAccBuilder_WithMultipleDisks(t *testing.T) {
 					return fmt.Errorf("Bad exit code. Logfile: %s", logfile)
 				}
 			}
+
+			logs, err := os.ReadFile(logfile)
+			if err != nil {
+				t.Fatalf("failed to open logfile %q: %s", logfile, err)
+			}
+
+			if strings.Contains(string(logs), "Deleting persistent disk") {
+				t.Errorf("extra persistent disk should be automatically deleted on instance tear-down, but was deleted during the cleanup for the step_extra_disks")
+			}
+
 			return nil
 		},
 	}

@@ -339,7 +339,7 @@ func TestGenerateDiskAttachment(t *testing.T) {
 				zone:           "us-central1-a",
 			},
 			expectval: &compute.AttachedDisk{
-				AutoDelete:        false,
+				AutoDelete:        true,
 				Boot:              false,
 				DiskEncryptionKey: &compute.CustomerEncryptionKey{},
 				Interface:         "NVME",
@@ -358,6 +358,45 @@ func TestGenerateDiskAttachment(t *testing.T) {
 				zone:           "us-central1-a",
 			},
 			expectval: &compute.AttachedDisk{
+				AutoDelete:        true,
+				Boot:              false,
+				DiskEncryptionKey: &compute.CustomerEncryptionKey{},
+				Interface:         "NVME",
+				Mode:              "READ_ONLY",
+				Type:              "PERSISTENT",
+				DeviceName:        "packer-test",
+			},
+		},
+		{
+			name: "basic persistent disk from source",
+			config: BlockDevice{
+				AttachmentMode: "READ_ONLY",
+				InterfaceType:  "NVME",
+				zone:           "us-central1-a",
+				SourceVolume:   "dummy_source",
+			},
+			expectval: &compute.AttachedDisk{
+				AutoDelete:        false,
+				Boot:              false,
+				DiskEncryptionKey: &compute.CustomerEncryptionKey{},
+				Interface:         "NVME",
+				Mode:              "READ_ONLY",
+				Type:              "PERSISTENT",
+				Source:            "dummy_source",
+			},
+		},
+		{
+			name: "basic persistent disk with keep device",
+			config: BlockDevice{
+				VolumeSize:     25,
+				VolumeType:     "pd-standard",
+				AttachmentMode: "READ_ONLY",
+				InterfaceType:  "NVME",
+				DeviceName:     "packer-test",
+				zone:           "us-central1-a",
+				KeepDevice:     true,
+			},
+			expectval: &compute.AttachedDisk{
 				AutoDelete:        false,
 				Boot:              false,
 				DiskEncryptionKey: &compute.CustomerEncryptionKey{},
@@ -373,7 +412,7 @@ func TestGenerateDiskAttachment(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.config.Prepare()
 			if err != nil {
-				t.Fatalf("failed to prepare config: %#v", err)
+				t.Fatalf("failed to prepare config: %s", err)
 			}
 
 			att := tt.config.generateDiskAttachment()
