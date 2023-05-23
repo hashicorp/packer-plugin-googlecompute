@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
@@ -106,14 +107,26 @@ func (s *StepCreateDisks) Cleanup(state multistep.StateBag) {
 			continue
 		}
 
-		ui.Say(fmt.Sprintf("Deleting disk %q", gceDisk.DiskName))
-
 		zone := config.Zone
 		if len(gceDisk.ReplicaZones) != 0 {
 			zone, _ = getRegionFromZone(zone)
 		}
 
-		var err error
+		_, err := driver.GetDisk(zone, gceDisk.DiskName)
+		if err != nil {
+			// If the disk isn't found, it's likely because it was auto-deleted
+			// when the instance was torn-down.
+			//
+			// In this case, we don't say anything to the user since the disk is already
+			// gone, and there's nothing they have to do in order to clean it up.
+			if strings.Contains(err.Error(), "googleapi: Error 404") {
+				continue
+			}
+
+			ui.Say(fmt.Sprintf("Failed to get disk: %s, will attempt deletion regardless, may fail", err))
+		}
+
+		ui.Say(fmt.Sprintf("Deleting persistent disk %q", gceDisk.DiskName))
 
 		errCh := driver.DeleteDisk(zone, gceDisk.DiskName)
 		select {
@@ -128,7 +141,7 @@ func (s *StepCreateDisks) Cleanup(state multistep.StateBag) {
 					"Name: %s\n"+
 					"Error: %s", gceDisk.DiskName, err))
 		} else {
-			ui.Say(fmt.Sprintf("Disk %q successfully deleted", gceDisk.DiskName))
+			ui.Say(fmt.Sprintf("Persistent disk %q successfully deleted", gceDisk.DiskName))
 		}
 	}
 }

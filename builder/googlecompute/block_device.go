@@ -281,6 +281,19 @@ func (bd BlockDevice) generateComputeDiskPayload() (*compute.Disk, error) {
 	return payload, nil
 }
 
+// shouldAutoDelete returns whether the disk should be automatically deleted after build is done.
+func (bd BlockDevice) shouldAutoDelete() bool {
+	if bd.VolumeType == LocalScratch {
+		return true
+	}
+
+	if bd.KeepDevice {
+		return false
+	}
+
+	return true
+}
+
 func (bd BlockDevice) generateDiskAttachment() *compute.AttachedDisk {
 	if bd.VolumeType == LocalScratch {
 		return &compute.AttachedDisk{
@@ -298,6 +311,7 @@ func (bd BlockDevice) generateDiskAttachment() *compute.AttachedDisk {
 	}
 
 	return &compute.AttachedDisk{
+		AutoDelete:        bd.shouldAutoDelete(),
 		Boot:              false,
 		DeviceName:        bd.DeviceName,
 		Interface:         bd.InterfaceType,
