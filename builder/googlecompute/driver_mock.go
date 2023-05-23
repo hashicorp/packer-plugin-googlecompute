@@ -46,6 +46,11 @@ type DriverMock struct {
 	DeleteDiskErrCh chan error
 	DeleteDiskErr   error
 
+	GetDiskName   string
+	GetDiskZone   string
+	GetDiskResult *compute.Disk
+	GetDiskErr    error
+
 	GetImageName           string
 	GetImageSourceProjects []string
 	GetImageFromFamily     bool
@@ -222,6 +227,13 @@ func (d *DriverMock) DeleteDisk(zone, name string) <-chan error {
 	close(resultCh)
 
 	return resultCh
+}
+
+func (d *DriverMock) GetDisk(zoneOrRegion, name string) (*compute.Disk, error) {
+	d.GetDiskZone = zoneOrRegion
+	d.GetDiskName = name
+
+	return d.GetDiskResult, d.GetDiskErr
 }
 
 func (d *DriverMock) GetImage(name string, fromFamily bool) (*Image, error) {
