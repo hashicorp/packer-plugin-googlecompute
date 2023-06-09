@@ -17,6 +17,7 @@ type DriverMock struct {
 	CreateDiskResultCh <-chan *compute.Disk
 	CreateDiskErrCh    <-chan error
 
+	CreateImageProjectId        string
 	CreateImageName             string
 	CreateImageDesc             string
 	CreateImageFamily           string
@@ -33,6 +34,7 @@ type DriverMock struct {
 	CreateImageErrCh            <-chan error
 	CreateImageResultCh         <-chan *Image
 
+	DeleteProjectId  string
 	DeleteImageName  string
 	DeleteImageErrCh <-chan error
 
@@ -84,8 +86,9 @@ type DriverMock struct {
 	GetSerialPortOutputResult string
 	GetSerialPortOutputErr    error
 
-	ImageExistsName   string
-	ImageExistsResult bool
+	ImageExistsProjectId string
+	ImageExistsName      string
+	ImageExistsResult    bool
 
 	RunInstanceConfig *InstanceConfig
 	RunInstanceErrCh  <-chan error
@@ -109,7 +112,8 @@ type DriverMock struct {
 	AddToInstanceMetadataErr     error
 }
 
-func (d *DriverMock) CreateImage(name, description, family, zone, disk string, image_labels map[string]string, image_licenses []string, image_features []string, image_encryption_key *compute.CustomerEncryptionKey, imageStorageLocations []string) (<-chan *Image, <-chan error) {
+func (d *DriverMock) CreateImage(project, name, description, family, zone, disk string, image_labels map[string]string, image_licenses []string, image_features []string, image_encryption_key *compute.CustomerEncryptionKey, imageStorageLocations []string) (<-chan *Image, <-chan error) {
+	d.CreateImageProjectId = project
 	d.CreateImageName = name
 	d.CreateImageDesc = description
 	d.CreateImageFamily = family
@@ -163,7 +167,8 @@ func (d *DriverMock) CreateImage(name, description, family, zone, disk string, i
 	return resultCh, errCh
 }
 
-func (d *DriverMock) DeleteImage(name string) <-chan error {
+func (d *DriverMock) DeleteImage(project, name string) <-chan error {
+	d.DeleteProjectId = project
 	d.DeleteImageName = name
 
 	resultCh := d.DeleteImageErrCh
@@ -280,7 +285,8 @@ func (d *DriverMock) GetSerialPortOutput(zone, name string) (string, error) {
 	return d.GetSerialPortOutputResult, d.GetSerialPortOutputErr
 }
 
-func (d *DriverMock) ImageExists(name string) bool {
+func (d *DriverMock) ImageExists(project, name string) bool {
+	d.ImageExistsProjectId = project
 	d.ImageExistsName = name
 	return d.ImageExistsResult
 }
