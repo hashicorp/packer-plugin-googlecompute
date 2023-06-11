@@ -181,7 +181,7 @@ type Config struct {
 	InstanceName string `mapstructure:"instance_name" required:"false"`
 	// Key/value pair labels to apply to the launched instance.
 	Labels map[string]string `mapstructure:"labels" required:"false"`
-	// The machine type. Defaults to "n1-standard-1".
+	// The machine type. Defaults to "e2-standard-2".
 	MachineType string `mapstructure:"machine_type" required:"false"`
 	// Metadata applied to the launched instance.
 	// All metadata configuration values are expected to be of type string.
@@ -489,7 +489,7 @@ func (c *Config) Prepare(raws ...interface{}) ([]string, error) {
 	}
 
 	if c.MachineType == "" {
-		c.MachineType = "n1-standard-1"
+		c.MachineType = "e2-standard-2"
 	}
 
 	if c.StateTimeout == 0 {
