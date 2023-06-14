@@ -155,8 +155,7 @@ Below is a fully functioning example. It doesn't do anything useful since no
 provisioners or startup-script metadata are defined, but it will effectively
 repackage an existing GCE image.
 
-<Tabs>
-<Tab heading="JSON">
+**JSON**
 
 ```json
 {
@@ -172,8 +171,7 @@ repackage an existing GCE image.
 }
 ```
 
-</Tab>
-<Tab heading="HCL2">
+**HCL2**
 
 ```hcl
 source "googlecompute" "basic-example" {
@@ -188,8 +186,6 @@ build {
 }
 ```
 
-</Tab>
-</Tabs>
 
 ### Windows Example
 
@@ -204,8 +200,7 @@ Or alternatively by navigating to [https://console.cloud.google.com/networking/f
 Once this is set up, the following is a complete working packer config after
 setting a valid `project_id`:
 
-<Tabs>
-<Tab heading="JSON">
+**JSON**
 
 ```json
 {
@@ -229,8 +224,7 @@ setting a valid `project_id`:
 }
 ```
 
-</Tab>
-<Tab heading="HCL2">
+**HCL2**
 
 ```hcl
 source "googlecompute" "windows-example" {
@@ -253,8 +247,6 @@ build {
 }
 ```
 
-</Tab>
-</Tabs>
 
 -> **Warning:** Please note that if you're setting up WinRM for provisioning, you'll probably want to turn it off or restrict its permissions as part of a shutdown script at the end of Packer's provisioning process. For more details on the why/how, check out this useful blog post and the associated code:
 https://missionimpossiblecode.io/post/winrm-for-provisioning-close-the-door-on-the-way-out-eh/
@@ -355,8 +347,7 @@ Virtualization for VM
 Instances](https://cloud.google.com/compute/docs/instances/enable-nested-virtualization-vm-instances)
 for details.
 
-<Tabs>
-<Tab heading="JSON">
+**JSON**
 
 ```json
 {
@@ -373,8 +364,7 @@ for details.
 }
 ```
 
-</Tab>
-<Tab heading="HCL2">
+**HCL2**
 
 ```hcl
 source "googlecompute" "basic-example" {
@@ -390,8 +380,6 @@ build {
 }
 ```
 
-</Tab>
-</Tabs>
 
 ### Shared VPC Example
 
@@ -402,8 +390,7 @@ for details. The user/service account running Packer must have `Compute Network 
 the Shared VPC Host Project to create the instance in addition to the other roles mentioned in the
 Running on Google Cloud section.
 
-<Tabs>
-<Tab heading="JSON">
+**JSON**
 
 ```json
 {
@@ -422,8 +409,7 @@ Running on Google Cloud section.
 }
 ```
 
-</Tab>
-<Tab heading="HCL2">
+**HCL2**
 
 ```hcl
 source "googlecompute" "sharedvpc-example" {
@@ -441,8 +427,6 @@ build {
 }
 ```
 
-</Tab>
-</Tabs>
 
 ### Separate Image Project Example
 
