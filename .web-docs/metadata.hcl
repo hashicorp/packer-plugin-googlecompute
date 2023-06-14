@@ -1,0 +1,22 @@
+# For full specification on the configuration of this file visit:
+# https://github.com/hashicorp/integration-template#metadata-configuration
+integration {
+  name = "Google Cloud Platform"
+  description = "TODO"
+  identifier = "packer/BrandonRomano/googlecompute"
+  component {
+    type = "builder"
+    name = "Google Cloud Platform"
+    slug = "googlecompute"
+  }
+  component {
+    type = "post-processor"
+    name = "Google Cloud Platform Image Import"
+    slug = "googlecompute-import"
+  }
+  component {
+    type = "post-processor"
+    name = "Google Cloud Platform Image Exporter"
+    slug = "googlecompute-export"
+  }
+}

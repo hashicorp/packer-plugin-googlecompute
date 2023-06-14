@@ -1,13 +1,3 @@
----
-description: |
-  The Google Compute Image Import post-processor takes a compressed raw disk
-  image and imports it to a GCE image available to Google Compute Engine.
-page_title: Google Cloud Platform Image Import - Post-Processors
-sidebar_title: googlecompute-import
----
-
-# Google Compute Image Import Post-Processor
-
 Type: `googlecompute-import`
 Artifact BuilderId: `packer.post-processor.googlecompute-import`
 
@@ -36,11 +26,74 @@ See [Post-Processor Input Artifacts](/packer/docs/templates/legacy_json_template
 
 ### Required
 
-@include 'post-processor/googlecompute-import/Config-required.mdx'
+<!-- Code generated from the comments of the Config struct in post-processor/googlecompute-import/post-processor.go; DO NOT EDIT MANUALLY -->
+
+- `project_id` (string) - The project ID where the GCS bucket exists and where the GCE image is stored.
+
+- `bucket` (string) - The name of the GCS bucket where the raw disk image will be uploaded.
+
+- `image_name` (string) - The unique name of the resulting image.
+
+<!-- End of code generated from the comments of the Config struct in post-processor/googlecompute-import/post-processor.go; -->
+
 
 ### Optional
 
-@include 'post-processor/googlecompute-import/Config-not-required.mdx'
+<!-- Code generated from the comments of the Config struct in post-processor/googlecompute-import/post-processor.go; DO NOT EDIT MANUALLY -->
+
+- `access_token` (string) - A temporary OAuth 2.0 access token
+
+- `account_file` (string) - The JSON file containing your account credentials.
+  If specified, the account file will take precedence over any `googlecompute` builder authentication method.
+
+- `impersonate_service_account` (string) - This allows service account impersonation as per the [docs](https://cloud.google.com/iam/docs/impersonating-service-accounts).
+
+- `scopes` ([]string) - The service account scopes for launched importer post-processor instance.
+  Defaults to:
+  
+  ```json
+  [
+    "https://www.googleapis.com/auth/cloud-platform"
+  ]
+  ```
+
+- `gcs_object_name` (string) - The name of the GCS object in `bucket` where
+  the RAW disk image will be copied for import. This is treated as a
+  [template engine](/packer/docs/templates/legacy_json_templates/engine). Therefore, you
+  may use user variables and template functions in this field. Defaults to
+  `packer-import-{{timestamp}}.tar.gz`.
+
+- `image_architecture` (string) - Specifies the architecture or processor type that this image can support. Must be one of: `arm64` or `x86_64`. Defaults to `ARCHITECTURE_UNSPECIFIED`.
+
+- `image_description` (string) - The description of the resulting image.
+
+- `image_family` (string) - The name of the image family to which the resulting image belongs.
+
+- `image_guest_os_features` ([]string) - A list of features to enable on the guest operating system. Applicable only for bootable images. Valid
+  values are `MULTI_IP_SUBNET`, `UEFI_COMPATIBLE`,
+  `VIRTIO_SCSI_MULTIQUEUE`, `GVNIC` and `WINDOWS` currently.
+
+- `image_labels` (map[string]string) - Key/value pair labels to apply to the created image.
+
+- `image_storage_locations` ([]string) - Specifies a Cloud Storage location, either regional or multi-regional, where image content is to be stored. If not specified, the multi-region location closest to the source is chosen automatically.
+
+- `skip_clean` (bool) - Skip removing the TAR file uploaded to the GCS
+  bucket after the import process has completed. "true" means that we should
+  leave it in the GCS bucket, "false" means to clean it out. Defaults to
+  `false`.
+
+- `vault_gcp_oauth_engine` (string) - Vault GCP Oauth Engine
+
+- `image_platform_key` (string) - A key used to establish the trust relationship between the platform owner and the firmware. You may only specify one platform key, and it must be a valid X.509 certificate.
+
+- `image_key_exchange_key` ([]string) - A key used to establish a trust relationship between the firmware and the OS. You may specify multiple comma-separated keys for this value.
+
+- `image_signatures_db` ([]string) - A database of certificates that are trusted and can be used to sign boot files. You may specify single or multiple comma-separated values for this value.
+
+- `image_forbidden_signatures_db` ([]string) - A database of certificates that have been revoked and will cause the system to stop booting if a boot file is signed with one of them. You may specify single or multiple comma-separated values for this value.
+
+<!-- End of code generated from the comments of the Config struct in post-processor/googlecompute-import/post-processor.go; -->
+
 
 ## Basic Example
 
@@ -197,4 +250,3 @@ build {
   ]
 }
 ```
-

@@ -1,15 +1,3 @@
----
-description: >
-  The Google Compute Image Exporter post-processor exports an image from a
-  Packer googlecompute builder run and uploads it to Google Cloud Storage. The
-  exported images can be easily shared and uploaded to other Google Cloud
-  Projects.
-page_title: Google Cloud Platform Image Exporter - Post-Processors
-sidebar_title: googlecompute-export
----
-
-# Google Compute Image Exporter Post-Processor
-
 Type: `googlecompute-export`
 Artifact BuilderId: `packer.post-processor.googlecompute-export`
 
@@ -33,11 +21,64 @@ To prevent Packer from deleting the image set the `keep_input_artifact` configur
 
 ### Required
 
-@include 'post-processor/googlecompute-export/Config-required.mdx'
+<!-- Code generated from the comments of the Config struct in post-processor/googlecompute-export/post-processor.go; DO NOT EDIT MANUALLY -->
+
+- `paths` ([]string) - A list of GCS paths where the image will be exported.
+  For example `'gs://mybucket/path/to/file.tar.gz'`
+
+<!-- End of code generated from the comments of the Config struct in post-processor/googlecompute-export/post-processor.go; -->
+
 
 ### Optional
 
-@include 'post-processor/googlecompute-export/Config-not-required.mdx'
+<!-- Code generated from the comments of the Config struct in post-processor/googlecompute-export/post-processor.go; DO NOT EDIT MANUALLY -->
+
+- `access_token` (string) - A temporary OAuth 2.0 access token
+
+- `account_file` (string) - The JSON file containing your account credentials.
+  If specified, the account file will take precedence over any `googlecompute` builder authentication method.
+
+- `impersonate_service_account` (string) - This allows service account impersonation as per the [docs](https://cloud.google.com/iam/docs/impersonating-service-accounts).
+
+- `scopes` ([]string) - The service account scopes for launched exporter post-processor instance.
+  Defaults to:
+  
+  ```json
+  [
+    "https://www.googleapis.com/auth/cloud-platform"
+  ]
+  ```
+
+- `disk_size` (int64) - The size of the export instances disk.
+  The disk is unused for the export but a larger size will increase `pd-ssd` read speed.
+  This defaults to `200`, which is 200GB.
+
+- `disk_type` (string) - Type of disk used to back the export instance, like
+  `pd-ssd` or `pd-standard`. Defaults to `pd-ssd`.
+
+- `machine_type` (string) - The export instance machine type. Defaults to `"n1-highcpu-4"`.
+
+- `network` (string) - The Google Compute network id or URL to use for the export instance.
+  Defaults to `"default"`. If the value is not a URL, it
+  will be interpolated to `projects/((builder_project_id))/global/networks/((network))`.
+  This value is not required if a `subnet` is specified.
+
+- `subnetwork` (string) - The Google Compute subnetwork id or URL to use for
+  the export instance. Only required if the `network` has been created with
+  custom subnetting. Note, the region of the subnetwork must match the
+  `zone` in which the VM is launched. If the value is not a URL,
+  it will be interpolated to
+  `projects/((builder_project_id))/regions/((region))/subnetworks/((subnetwork))`
+
+- `zone` (string) - The zone in which to launch the export instance. Defaults
+  to `googlecompute` builder zone. Example: `"us-central1-a"`
+
+- `vault_gcp_oauth_engine` (string) - Vault GCP Oauth Engine
+
+- `service_account_email` (string) - Service Account Email
+
+<!-- End of code generated from the comments of the Config struct in post-processor/googlecompute-export/post-processor.go; -->
+
 
 ## Basic Example
 
@@ -102,4 +143,3 @@ must have write access to both `gs://mybucket1/path/to/file1.tar.gz` and
     }
   }
 ```
-
