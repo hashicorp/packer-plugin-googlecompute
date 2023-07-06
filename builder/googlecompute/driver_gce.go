@@ -45,6 +45,7 @@ type GCEDriverConfig struct {
 	ProjectId                     string
 	Account                       *ServiceAccount
 	ImpersonateServiceAccountName string
+	QuotaProject                  string
 	Scopes                        []string
 	AccessToken                   string
 	VaultOauthEngineName          string
@@ -89,7 +90,7 @@ func (ots OauthTokenSource) Token() (*oauth2.Token, error) {
 
 }
 
-func NewClientOptionGoogle(account *ServiceAccount, vaultOauth string, impersonatesa string, accessToken string, scopes []string) ([]option.ClientOption, error) {
+func NewClientOptionGoogle(account *ServiceAccount, vaultOauth string, impersonatesa string, quotaProject string, accessToken string, scopes []string) ([]option.ClientOption, error) {
 	var err error
 
 	var opts []option.ClientOption
@@ -146,6 +147,13 @@ func NewClientOptionGoogle(account *ServiceAccount, vaultOauth string, impersona
 		//    (In this final case any provided scopes are ignored.)
 	}
 
+	if quotaProject != "" {
+		log.Printf("[INFO] Using quota project: %s", quotaProject)
+		opts = append(opts, option.WithQuotaProject(quotaProject))
+	} else {
+		log.Printf("[DEBUG] No quota project specified.")
+	}
+
 	// Insert UserAgents
 	opts = append(opts, option.WithUserAgent(useragent.String(version.PluginVersion.FormattedVersion())))
 
@@ -158,7 +166,7 @@ func NewClientOptionGoogle(account *ServiceAccount, vaultOauth string, impersona
 
 func NewDriverGCE(config GCEDriverConfig) (Driver, error) {
 
-	opts, err := NewClientOptionGoogle(config.Account, config.VaultOauthEngineName, config.ImpersonateServiceAccountName, config.AccessToken, config.Scopes)
+	opts, err := NewClientOptionGoogle(config.Account, config.VaultOauthEngineName, config.ImpersonateServiceAccountName, config.QuotaProject, config.AccessToken, config.Scopes)
 	if err != nil {
 		return nil, err
 	}
@@ -170,6 +178,7 @@ func NewDriverGCE(config GCEDriverConfig) (Driver, error) {
 	}
 
 	log.Printf("[INFO] Instantiating OS Login client...")
+	log.Printf("[DEBUG] OSLogin client opts: %+v", opts)
 	osLoginService, err := oslogin.NewService(context.TODO(), opts...)
 	if err != nil {
 		return nil, err

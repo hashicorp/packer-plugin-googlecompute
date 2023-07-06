@@ -39,6 +39,8 @@ type Config struct {
 	AccountFile string `mapstructure:"account_file" required:"false"`
 	// This allows service account impersonation as per the [docs](https://cloud.google.com/iam/docs/impersonating-service-accounts).
 	ImpersonateServiceAccount string `mapstructure:"impersonate_service_account" required:"false"`
+	// Specify the GCP project which will receive API calls and billing.
+	QuotaProject string `mapstructure:"quota_project" required:"false"`
 	// The service account scopes for launched importer post-processor instance.
 	// Defaults to:
 	//
@@ -191,7 +193,7 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packersdk.Ui, artifa
 	p.config.ctx.Data = generatedData
 	var err error
 	var opts []option.ClientOption
-	opts, err = googlecompute.NewClientOptionGoogle(p.config.account, p.config.VaultGCPOauthEngine, p.config.ImpersonateServiceAccount, p.config.AccessToken, p.config.Scopes)
+	opts, err = googlecompute.NewClientOptionGoogle(p.config.account, p.config.VaultGCPOauthEngine, p.config.ImpersonateServiceAccount, p.config.QuotaProject, p.config.AccessToken, p.config.Scopes)
 	if err != nil {
 		return nil, false, false, err
 	}

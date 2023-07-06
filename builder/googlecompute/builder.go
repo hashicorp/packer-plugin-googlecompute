@@ -52,6 +52,7 @@ func (b *Builder) Run(ctx context.Context, ui packersdk.Ui, hook packersdk.Hook)
 		Account:                       b.config.account,
 		AccessToken:                   b.config.AccessToken,
 		ImpersonateServiceAccountName: b.config.ImpersonateServiceAccount,
+		QuotaProject:                  b.config.QuotaProject,
 		Scopes:                        b.config.Scopes,
 		VaultOauthEngineName:          b.config.VaultGCPOauthEngine,
 	}
@@ -104,6 +105,7 @@ func (b *Builder) Run(ctx context.Context, ui packersdk.Ui, hook packersdk.Hook)
 			CommConf:           &b.config.Comm,
 			AccountFile:        b.config.AccountFile,
 			ImpersonateAccount: b.config.ImpersonateServiceAccount,
+			QuotaProject:       b.config.QuotaProject,
 			ProjectId:          b.config.ProjectId,
 		},
 		&communicator.StepConnect{

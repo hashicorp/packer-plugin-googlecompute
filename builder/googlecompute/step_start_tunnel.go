@@ -137,6 +137,7 @@ type StepStartTunnel struct {
 	CommConf           *communicator.Config
 	AccountFile        string
 	ImpersonateAccount string
+	QuotaProject       string
 	ProjectId          string
 
 	tunnelDriver TunnelDriver
@@ -272,11 +273,15 @@ func (s *StepStartTunnel) Run(ctx context.Context, state multistep.StateBag) mul
 	args := []string{"compute", "start-iap-tunnel", instanceName,
 		strconv.Itoa(s.CommConf.Port()),
 		fmt.Sprintf("--local-host-port=localhost:%d", s.IAPConf.IAPLocalhostPort),
-		"--zone", c.Zone, "--project", s.ProjectId,
+		"--zone", c.Zone,
+		"--project", s.ProjectId,
 	}
 
 	if s.ImpersonateAccount != "" {
 		args = append(args, fmt.Sprintf("--impersonate-service-account='%s'", s.ImpersonateAccount))
+	}
+	if s.QuotaProject != "" {
+		args = append(args, fmt.Sprintf("--billing-project='%s'", s.QuotaProject))
 	}
 
 	// This is the port the IAP tunnel listens on, on localhost.

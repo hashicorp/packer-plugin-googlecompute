@@ -70,6 +70,7 @@ type FlatConfig struct {
 	AccessToken                  *string                    `mapstructure:"access_token" required:"false" cty:"access_token" hcl:"access_token"`
 	AccountFile                  *string                    `mapstructure:"account_file" required:"false" cty:"account_file" hcl:"account_file"`
 	ImpersonateServiceAccount    *string                    `mapstructure:"impersonate_service_account" required:"false" cty:"impersonate_service_account" hcl:"impersonate_service_account"`
+	QuotaProject                 *string                    `mapstructure:"quota_project" required:"false" cty:"quota_project" hcl:"quota_project"`
 	ProjectId                    *string                    `mapstructure:"project_id" required:"true" cty:"project_id" hcl:"project_id"`
 	AcceleratorType              *string                    `mapstructure:"accelerator_type" required:"false" cty:"accelerator_type" hcl:"accelerator_type"`
 	AcceleratorCount             *int64                     `mapstructure:"accelerator_count" required:"false" cty:"accelerator_count" hcl:"accelerator_count"`
@@ -201,6 +202,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"access_token":                    &hcldec.AttrSpec{Name: "access_token", Type: cty.String, Required: false},
 		"account_file":                    &hcldec.AttrSpec{Name: "account_file", Type: cty.String, Required: false},
 		"impersonate_service_account":     &hcldec.AttrSpec{Name: "impersonate_service_account", Type: cty.String, Required: false},
+		"quota_project":                   &hcldec.AttrSpec{Name: "quota_project", Type: cty.String, Required: false},
 		"project_id":                      &hcldec.AttrSpec{Name: "project_id", Type: cty.String, Required: false},
 		"accelerator_type":                &hcldec.AttrSpec{Name: "accelerator_type", Type: cty.String, Required: false},
 		"accelerator_count":               &hcldec.AttrSpec{Name: "accelerator_count", Type: cty.Number, Required: false},

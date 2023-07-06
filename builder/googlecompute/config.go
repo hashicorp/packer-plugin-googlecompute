@@ -49,6 +49,8 @@ type Config struct {
 	AccountFile string `mapstructure:"account_file" required:"false"`
 	// This allows service account impersonation as per the [docs](https://cloud.google.com/iam/docs/impersonating-service-accounts).
 	ImpersonateServiceAccount string `mapstructure:"impersonate_service_account" required:"false"`
+	// Specify the GCP project which will receive API calls and billing.
+	QuotaProject string `mapstructure:"quota_project" required:"false"`
 	// The project ID that will be used to launch instances and store images.
 	ProjectId string `mapstructure:"project_id" required:"true"`
 	// Full or partial URL of the guest accelerator type. GPU accelerators can
