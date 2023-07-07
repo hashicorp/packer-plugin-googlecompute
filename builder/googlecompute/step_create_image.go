@@ -58,7 +58,7 @@ func (s *StepCreateImage) Run(ctx context.Context, state multistep.StateBag) mul
 	}
 
 	if err != nil {
-		err := fmt.Errorf("Error waiting for image: %s in", err)
+		err := fmt.Errorf("Error waiting for image: %s", err)
 		state.Put("error", err)
 		ui.Error(err.Error())
 		return multistep.ActionHalt
