@@ -2,7 +2,7 @@
 # https://github.com/hashicorp/integration-template#metadata-configuration
 integration {
   name = "Google Cloud Platform"
-  description = "TODO"
+  description = "The googlecompute plugin can be used with HashiCorp Packer to create custom images on GCE."
   identifier = "packer/BrandonRomano/googlecompute"
   component {
     type = "builder"
