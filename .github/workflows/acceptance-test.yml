@@ -39,9 +39,9 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@e30db14379863a8c79331b04a9969f4c1e225e0b # v1.1.1
       - name: Install Packer
-        uses: sudomateo/setup-packer@v1 # TSCCR: no entry for repository "sudomateo/setup-packer"
+        uses: hashicorp/setup-packer@v2.0.0
         with:
-          packer-version: latest
+          version: latest
       - name: 'Authenticate to Google Cloud'
         uses: 'google-github-actions/auth@v0.7.3'
         id:   'gcp-auth'
