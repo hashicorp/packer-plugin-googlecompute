@@ -43,7 +43,7 @@ jobs:
         with:
           version: latest
       - name: 'Authenticate to Google Cloud'
-        uses: 'google-github-actions/auth@v0.7.3'
+        uses: google-github-actions/auth@35b0e87d162680511bf346c299f71c9c5c379033 # v1.1.1
         id:   'gcp-auth'
         with:
          credentials_json: '${{ secrets.GOOGLE_CREDENTIALS }}'
