@@ -6,12 +6,12 @@ require (
 	cloud.google.com/go/compute/metadata v0.1.1
 	github.com/gofrs/uuid v4.0.0+incompatible
 	github.com/google/go-cmp v0.5.9
-	github.com/hashicorp/hcl/v2 v2.13.0
-	github.com/hashicorp/packer-plugin-sdk v0.4.0
+	github.com/hashicorp/hcl/v2 v2.16.2
+	github.com/hashicorp/packer-plugin-sdk v0.5.1
 	github.com/hashicorp/vault/api v1.1.1
 	github.com/mitchellh/mapstructure v1.4.1
 	github.com/stretchr/testify v1.7.0
-	github.com/zclconf/go-cty v1.10.0
+	github.com/zclconf/go-cty v1.12.1
 	golang.org/x/oauth2 v0.1.0
 	google.golang.org/api v0.101.0
 )
