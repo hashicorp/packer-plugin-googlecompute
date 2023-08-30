@@ -13,454 +13,6 @@ and the [Google Compute Import
 Post-Processor](/packer/integrations/hashicorp/googlecompute/latest/components/post-processor/googlecompute-import) for more
 information.
 
-## Plugin Installation
-
-From Packer v1.7.0, you can install this builder from its plugin; copy and paste
-this code into your Packer configuration to do so. Then, run `packer init`.
-
-```hcl
-packer {
-  required_plugins {
-    googlecompute = {
-      version = ">= 1.1.1"
-      source = "github.com/hashicorp/googlecompute"
-    }
-  }
-}
-```
-
-## Authentication
-
-Authenticating with Google Cloud services requires either a User Application Default Credentials, 
-a JSON Service Account Key or an Access Token.  These are **not** required if you are
-running the `googlecompute` Packer builder on Google Cloud with a
-properly-configured [Google Service
-Account](https://cloud.google.com/compute/docs/authentication).
-
-### Running locally on your workstation.
-
-If you run the `googlecompute` Packer builder locally on your workstation, you will
-need to install the Google Cloud SDK and authenticate using [User Application Default
-Credentials](https://cloud.google.com/sdk/gcloud/reference/auth/application-default).
-You don't need to specify an _account file_ if you are using this method. Your user
-must have at least `Compute Instance Admin (v1)` & `Service Account User` roles
-to use Packer succesfully.
-
-### Running on Google Cloud
-
-If you run the `googlecompute` Packer builder on GCE or GKE, you can
-configure that instance or cluster to use a [Google Service
-Account](https://cloud.google.com/compute/docs/authentication). This will allow
-Packer to authenticate to Google Cloud without having to bake in a separate
-credential/authentication file.
-
-It is recommended that you create a custom service account for Packer and assign it
-`Compute Instance Admin (v1)` & `Service Account User` roles.
-
-For `gcloud`, you can run the following commands:
-
-```shell-session
-$ gcloud iam service-accounts create packer \
-  --project YOUR_GCP_PROJECT \
-  --description="Packer Service Account" \
-  --display-name="Packer Service Account"
-
-$ gcloud projects add-iam-policy-binding YOUR_GCP_PROJECT \
-    --member=serviceAccount:packer@YOUR_GCP_PROJECT.iam.gserviceaccount.com \
-    --role=roles/compute.instanceAdmin.v1
-
-$ gcloud projects add-iam-policy-binding YOUR_GCP_PROJECT \
-    --member=serviceAccount:packer@YOUR_GCP_PROJECT.iam.gserviceaccount.com \
-    --role=roles/iam.serviceAccountUser
-
-$ gcloud projects add-iam-policy-binding YOUR_GCP_PROJECT \
-    --member=serviceAccount:packer@YOUR_GCP_PROJECT.iam.gserviceaccount.com \
-    --role=roles/iap.tunnelResourceAccessor
-
-$ gcloud compute instances create INSTANCE-NAME \
-  --project YOUR_GCP_PROJECT \
-  --image-family ubuntu-2004-lts \
-  --image-project ubuntu-os-cloud \
-  --network YOUR_GCP_NETWORK \
-  --zone YOUR_GCP_ZONE \
-  --service-account=packer@YOUR_GCP_PROJECT.iam.gserviceaccount.com \
-  --scopes="https://www.googleapis.com/auth/cloud-platform"
-```
-
-**The service account will be used automatically by Packer as long as there is
-no _account file_ specified in the Packer configuration file.**
-
-### Running outside of Google Cloud
-
-The [Google Cloud Console](https://console.cloud.google.com) allows
-you to create and download a credential file that will let you use the
-`googlecompute` Packer builder anywhere. To make the process more
-straightforwarded, it is documented here.
-
-1.  Log into the [Google Cloud
-    Console](https://console.cloud.google.com/iam-admin/serviceaccounts) and select a project.
-
-2.  Click Select a project, choose your project, and click Open.
-
-3.  Click Create Service Account.
-
-4.  Enter a service account name (friendly display name), an optional description, select the `Compute Engine Instance Admin (v1)` and `Service Account User` roles, and then click Save.
-
-5.  Generate a JSON Key and save it in a secure location.
-
-6.  Set the Environment Variable `GOOGLE_APPLICATION_CREDENTIALS` to point to the path of the service account key.
-
-### Precedence of Authentication Methods
-
-Packer looks for credentials in the following places, preferring the first
-location found:
-
-1.  An `access_token` option in your packer file.
-
-2.  An `account_file` option in your packer file.
-
-3.  A JSON file (Service Account) whose path is specified by the
-    `GOOGLE_APPLICATION_CREDENTIALS` environment variable.
-
-4.  A JSON file in a location known to the `gcloud` command-line tool.
-    (`gcloud auth application-default login` creates it)
-
-    On Windows, this is:
-
-        %APPDATA%/gcloud/application_default_credentials.json
-
-    On other systems:
-
-        $HOME/.config/gcloud/application_default_credentials.json
-
-5.  On Google Compute Engine and Google App Engine Managed VMs, it fetches
-    credentials from the metadata server. (Needs a correct VM authentication
-    scope configuration, see above.)
-
-## Examples
-
-### Basic Example
-
-Below is a fully functioning example. It doesn't do anything useful since no
-provisioners or startup-script metadata are defined, but it will effectively
-repackage an existing GCE image.
-
-**JSON**
-
-```json
-{
-  "builders": [
-    {
-      "type": "googlecompute",
-      "project_id": "my project",
-      "source_image": "debian-9-stretch-v20200805",
-      "ssh_username": "packer",
-      "zone": "us-central1-a"
-    }
-  ]
-}
-```
-
-**HCL2**
-
-```hcl
-source "googlecompute" "basic-example" {
-  project_id = "my project"
-  source_image = "debian-9-stretch-v20200805"
-  ssh_username = "packer"
-  zone = "us-central1-a"
-}
-
-build {
-  sources = ["sources.googlecompute.basic-example"]
-}
-```
-
-
-### Windows Example
-
-Before you can provision using the winrm communicator, you need to allow
-traffic through google's firewall on the winrm port (tcp:5986). You can do so
-using the gcloud command.
-
-    gcloud compute firewall-rules create allow-winrm --allow tcp:5986
-
-Or alternatively by navigating to [https://console.cloud.google.com/networking/firewalls/list](https://console.cloud.google.com/networking/firewalls/list).
-
-Once this is set up, the following is a complete working packer config after
-setting a valid `project_id`:
-
-**JSON**
-
-```json
-{
-  "builders": [
-    {
-      "type": "googlecompute",
-      "project_id": "my project",
-      "source_image": "windows-server-2019-dc-v20200813",
-      "disk_size": "50",
-      "machine_type": "n1-standard-2",
-      "communicator": "winrm",
-      "winrm_username": "packer_user",
-      "winrm_insecure": true,
-      "winrm_use_ssl": true,
-      "metadata": {
-        "sysprep-specialize-script-cmd": "winrm quickconfig -quiet & net user /add packer_user & net localgroup administrators packer_user /add & winrm set winrm/config/service/auth @{Basic=\"true\"}"
-      },
-      "zone": "us-central1-a"
-    }
-  ]
-}
-```
-
-**HCL2**
-
-```hcl
-source "googlecompute" "windows-example" {
-  project_id = "MY_PROJECT"
-  source_image = "windows-server-2019-dc-v20200813"
-  zone = "us-central1-a"
-  disk_size = 50
-  machine_type = "n1-standard-2"
-  communicator = "winrm"
-  winrm_username = "packer_user"
-  winrm_insecure = true
-  winrm_use_ssl = true
-  metadata = {
-    sysprep-specialize-script-cmd = "winrm quickconfig -quiet & net user /add packer_user & net localgroup administrators packer_user /add & winrm set winrm/config/service/auth @{Basic=\"true\"}"
-  }
-}
-
-build {
-  sources = ["sources.googlecompute.windows-example"]
-}
-```
-
-
--> **Warning:** Please note that if you're setting up WinRM for provisioning, you'll probably want to turn it off or restrict its permissions as part of a shutdown script at the end of Packer's provisioning process. For more details on the why/how, check out this useful blog post and the associated code:
-https://missionimpossiblecode.io/post/winrm-for-provisioning-close-the-door-on-the-way-out-eh/
-
-This build can take up to 15 min.
-
-### Windows over WinSSH Example
-
-The following uses Windows SSH as backend communicator
-[https://docs.microsoft.com/en-us/windows-server/administration/openssh/openssh_install_firstuse](https://docs.microsoft.com/en-us/windows-server/administration/openssh/openssh_install_firstuse)
-
-```hcl
-source "googlecompute" "windows-ssh-example" {
-  project_id = "MY_PROJECT"
-  source_image = "windows-server-2019-dc-v20200813"
-  zone = "us-east4-a"
-  disk_size = 50
-  machine_type = "n1-standard-2"
-  communicator = "ssh"
-  ssh_username = var.packer_username
-  ssh_password = var.packer_user_password
-  ssh_timeout = "1h"
-  metadata = {
-    sysprep-specialize-script-cmd = "net user ${var.packer_username} \"${var.packer_user_password}\" /add /y & wmic UserAccount where Name=\"${var.packer_username}\" set PasswordExpires=False & net localgroup administrators ${var.packer_username} /add & powershell Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0 & powershell Start-Service sshd & powershell Set-Service -Name sshd -StartupType 'Automatic' & powershell New-NetFirewallRule -Name 'OpenSSH-Server-In-TCP' -DisplayName 'OpenSSH Server (sshd)' -Enabled True -Direction Inbound -Protocol TCP -Action Allow -LocalPort 22 & powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"Set-ExecutionPolicy -ExecutionPolicy bypass -Force\""
-  }
-}
-
-build {
-  sources = ["sources.googlecompute.windows-ssh-example"]
-
-  provisioner "powershell" {
-    script = "../scripts/install-features.ps1"
-    elevated_user     = var.packer_username
-    elevated_password = var.packer_user_password
-  }
-}
-```
-
-### Windows over WinSSH - Ansible Provisioner
-
-The following uses Windows SSH as backend communicator
-[https://docs.microsoft.com/en-us/windows-server/administration/openssh/openssh_install_firstuse](https://docs.microsoft.com/en-us/windows-server/administration/openssh/openssh_install_firstuse)
-with a private key.
-
-* The `sysprep-specialize-script-cmd` creates the `packer_user` and adds it to the local administrators group and configures the ssh key, firewall rule and required permissions.
-
-```
-source "googlecompute" "windows-ssh-ansible" {
-  project_id              = var.project_id
-  source_image            = "windows-server-2019-dc-v20200813"
-  zone                    = "us-east4-a"
-  disk_size               = 50
-  machine_type            = "n1-standard-8"
-  communicator            = "ssh"
-  ssh_username            = var.packer_username
-  ssh_private_key_file    = var.ssh_key_file_path
-  ssh_timeout             = "1h"
-  
-  metadata = {
-    sysprep-specialize-script-cmd = "net user ${var.packer_username} \"${var.packer_user_password}\" /add /y & wmic UserAccount where Name=\"${var.packer_username}\" set PasswordExpires=False & net localgroup administrators ${var.packer_username} /add & powershell Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0 & echo ${var.ssh_pub_key} > C:\\ProgramData\\ssh\\administrators_authorized_keys & icacls.exe \"C:\\ProgramData\\ssh\\administrators_authorized_keys\" /inheritance:r /grant \"Administrators:F\" /grant \"SYSTEM:F\" & powershell New-ItemProperty -Path \"HKLM:\\SOFTWARE\\OpenSSH\" -Name DefaultShell -Value \"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\" -PropertyType String -Force  & powershell Start-Service sshd & powershell Set-Service -Name sshd -StartupType 'Automatic' & powershell New-NetFirewallRule -Name 'OpenSSH-Server-In-TCP' -DisplayName 'OpenSSH Server (sshd)' -Enabled True -Direction Inbound -Protocol TCP -Action Allow -LocalPort 22 & powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"Set-ExecutionPolicy -ExecutionPolicy bypass -Force\""
-  }
-  account_file = var.account_file_path
-
-}
-
-build {
-  sources = ["sources.googlecompute.windows-ssh-ansible"]
-
-  provisioner "ansible" {
-    playbook_file           = "./playbooks/playbook.yml"
-    use_proxy               = false
-    ansible_ssh_extra_args  = ["-o StrictHostKeyChecking=no -o IdentitiesOnly=yes"]
-    ssh_authorized_key_file = "var.public_key_path"
-    extra_arguments = ["-e", "win_packages=${var.win_packages}",
-      "-e",
-      "ansible_shell_type=powershell",
-      "-e",
-      "ansible_shell_executable=None",
-      "-e",
-      "ansible_shell_executable=None"
-    ]
-    user = var.packer_username
-  }
-
-}
-
-```
-
-
-
-
-
-### Nested Hypervisor Example
-
-This is an example of using the `image_licenses` configuration option to create
-a GCE image that has nested virtualization enabled. See [Enabling Nested
-Virtualization for VM
-Instances](https://cloud.google.com/compute/docs/instances/enable-nested-virtualization-vm-instances)
-for details.
-
-**JSON**
-
-```json
-{
-  "builders": [
-    {
-      "type": "googlecompute",
-      "project_id": "my project",
-      "source_image_family": "centos-7",
-      "ssh_username": "packer",
-      "zone": "us-central1-a",
-      "image_licenses": ["projects/vm-options/global/licenses/enable-vmx"]
-    }
-  ]
-}
-```
-
-**HCL2**
-
-```hcl
-source "googlecompute" "basic-example" {
-  project_id = "my project"
-  source_image_family = "centos-7"
-  ssh_username = "packer"
-  zone = "us-central1-a"
-  image_licenses = ["projects/vm-options/global/licenses/enable-vmx"]
-}
-
-build {
-  sources = ["sources.googlecompute.basic-example"]
-}
-```
-
-
-### Shared VPC Example
-
-This is an example of using the `network_project_id` configuration option to create
-a GCE instance in a Shared VPC Network. See [Creating a GCE Instance using Shared
-VPC](https://cloud.google.com/vpc/docs/provisioning-shared-vpc#creating_an_instance_in_a_shared_subnet)
-for details. The user/service account running Packer must have `Compute Network User` role on
-the Shared VPC Host Project to create the instance in addition to the other roles mentioned in the
-Running on Google Cloud section.
-
-**JSON**
-
-```json
-{
-  "builders": [
-    {
-      "type": "googlecompute",
-      "project_id": "my project",
-      "subnetwork": "default",
-      "source_image_family": "centos-7",
-      "network_project_id": "SHARED_VPC_PROJECT",
-      "ssh_username": "packer",
-      "zone": "us-central1-a",
-      "image_licenses": ["projects/vm-options/global/licenses/enable-vmx"]
-    }
-  ]
-}
-```
-
-**HCL2**
-
-```hcl
-source "googlecompute" "sharedvpc-example" {
-  project_id = "my project"
-  source_image_family = "centos-7"
-  subnetwork = "default"
-  network_project_id = "SHARED_VPC_PROJECT"
-  ssh_username = "packer"
-  zone = "us-central1-a"
-  image_licenses = ["projects/vm-options/global/licenses/enable-vmx"]
-}
-
-build {
-  sources = ["sources.googlecompute.sharedvpc-example"]
-}
-```
-
-
-### Separate Image Project Example
-
-This is an example of using the `image_project_id` configuration option to create
-the generated image in a different GCP project than the one used to create the virtual machine. Make sure that Packer has permission in the target project to manage images, the `Compute Storage Admin` role will grant the desired permissions.
-
-<Tabs>
-<Tab heading="JSON">
-
-```json
-{
-  "builders": [
-    {
-      "type": "googlecompute",
-      "project_id": "my project",
-      "image_project_id": "my image target project",
-      "source_image": "debian-9-stretch-v20200805",
-      "ssh_username": "packer",
-      "zone": "us-central1-a"
-    }
-  ]
-}
-```
-
-</Tab>
-<Tab heading="HCL2">
-
-```hcl
-source "googlecompute" "basic-example" {
-  project_id = "my project"
-  image_project_id = "my image target project"
-  source_image = "debian-9-stretch-v20200805"
-  ssh_username = "packer"
-  zone = "us-central1-a"
-}
-
-build {
-  sources = ["sources.googlecompute.basic-example"]
-}
-```
-
-</Tab>
-</Tabs>
-
 ## Configuration Reference
 
 Configuration options are organized below into two categories: required and
@@ -470,151 +22,6 @@ described.
 In addition to the options listed here, a
 [communicator](/packer/docs/templates/legacy_json_templates/communicator) can be configured for this
 builder.
-
-### Communicator Configuration
-
-#### Optional:
-
-<!-- Code generated from the comments of the Config struct in communicator/config.go; DO NOT EDIT MANUALLY -->
-
-- `communicator` (string) - Packer currently supports three kinds of communicators:
-  
-  -   `none` - No communicator will be used. If this is set, most
-      provisioners also can't be used.
-  
-  -   `ssh` - An SSH connection will be established to the machine. This
-      is usually the default.
-  
-  -   `winrm` - A WinRM connection will be established.
-  
-  In addition to the above, some builders have custom communicators they
-  can use. For example, the Docker builder has a "docker" communicator
-  that uses `docker exec` and `docker cp` to execute scripts and copy
-  files.
-
-- `pause_before_connecting` (duration string | ex: "1h5m2s") - We recommend that you enable SSH or WinRM as the very last step in your
-  guest's bootstrap script, but sometimes you may have a race condition
-  where you need Packer to wait before attempting to connect to your
-  guest.
-  
-  If you end up in this situation, you can use the template option
-  `pause_before_connecting`. By default, there is no pause. For example if
-  you set `pause_before_connecting` to `10m` Packer will check whether it
-  can connect, as normal. But once a connection attempt is successful, it
-  will disconnect and then wait 10 minutes before connecting to the guest
-  and beginning provisioning.
-
-<!-- End of code generated from the comments of the Config struct in communicator/config.go; -->
-
-
-<!-- Code generated from the comments of the SSH struct in communicator/config.go; DO NOT EDIT MANUALLY -->
-
-- `ssh_host` (string) - The address to SSH to. This usually is automatically configured by the
-  builder.
-
-- `ssh_port` (int) - The port to connect to SSH. This defaults to `22`.
-
-- `ssh_username` (string) - The username to connect to SSH with. Required if using SSH.
-
-- `ssh_password` (string) - A plaintext password to use to authenticate with SSH.
-
-- `ssh_ciphers` ([]string) - This overrides the value of ciphers supported by default by Golang.
-  The default value is [
-    "aes128-gcm@openssh.com",
-    "chacha20-poly1305@openssh.com",
-    "aes128-ctr", "aes192-ctr", "aes256-ctr",
-  ]
-  
-  Valid options for ciphers include:
-  "aes128-ctr", "aes192-ctr", "aes256-ctr", "aes128-gcm@openssh.com",
-  "chacha20-poly1305@openssh.com",
-  "arcfour256", "arcfour128", "arcfour", "aes128-cbc", "3des-cbc",
-
-- `ssh_clear_authorized_keys` (bool) - If true, Packer will attempt to remove its temporary key from
-  `~/.ssh/authorized_keys` and `/root/.ssh/authorized_keys`. This is a
-  mostly cosmetic option, since Packer will delete the temporary private
-  key from the host system regardless of whether this is set to true
-  (unless the user has set the `-debug` flag). Defaults to "false";
-  currently only works on guests with `sed` installed.
-
-- `ssh_key_exchange_algorithms` ([]string) - If set, Packer will override the value of key exchange (kex) algorithms
-  supported by default by Golang. Acceptable values include:
-  "curve25519-sha256@libssh.org", "ecdh-sha2-nistp256",
-  "ecdh-sha2-nistp384", "ecdh-sha2-nistp521",
-  "diffie-hellman-group14-sha1", and "diffie-hellman-group1-sha1".
-
-- `ssh_certificate_file` (string) - Path to user certificate used to authenticate with SSH.
-  The `~` can be used in path and will be expanded to the
-  home directory of current user.
-
-- `ssh_pty` (bool) - If `true`, a PTY will be requested for the SSH connection. This defaults
-  to `false`.
-
-- `ssh_timeout` (duration string | ex: "1h5m2s") - The time to wait for SSH to become available. Packer uses this to
-  determine when the machine has booted so this is usually quite long.
-  Example value: `10m`.
-  This defaults to `5m`, unless `ssh_handshake_attempts` is set.
-
-- `ssh_disable_agent_forwarding` (bool) - If true, SSH agent forwarding will be disabled. Defaults to `false`.
-
-- `ssh_handshake_attempts` (int) - The number of handshakes to attempt with SSH once it can connect.
-  This defaults to `10`, unless a `ssh_timeout` is set.
-
-- `ssh_bastion_host` (string) - A bastion host to use for the actual SSH connection.
-
-- `ssh_bastion_port` (int) - The port of the bastion host. Defaults to `22`.
-
-- `ssh_bastion_agent_auth` (bool) - If `true`, the local SSH agent will be used to authenticate with the
-  bastion host. Defaults to `false`.
-
-- `ssh_bastion_username` (string) - The username to connect to the bastion host.
-
-- `ssh_bastion_password` (string) - The password to use to authenticate with the bastion host.
-
-- `ssh_bastion_interactive` (bool) - If `true`, the keyboard-interactive used to authenticate with bastion host.
-
-- `ssh_bastion_private_key_file` (string) - Path to a PEM encoded private key file to use to authenticate with the
-  bastion host. The `~` can be used in path and will be expanded to the
-  home directory of current user.
-
-- `ssh_bastion_certificate_file` (string) - Path to user certificate used to authenticate with bastion host.
-  The `~` can be used in path and will be expanded to the
-  home directory of current user.
-
-- `ssh_file_transfer_method` (string) - `scp` or `sftp` - How to transfer files, Secure copy (default) or SSH
-  File Transfer Protocol.
-  
-  **NOTE**: Guests using Windows with Win32-OpenSSH v9.1.0.0p1-Beta, scp
-  (the default protocol for copying data) returns a a non-zero error code since the MOTW
-  cannot be set, which cause any file transfer to fail. As a workaround you can override the transfer protocol
-  with SFTP instead `ssh_file_transfer_protocol = "sftp"`.
-
-- `ssh_proxy_host` (string) - A SOCKS proxy host to use for SSH connection
-
-- `ssh_proxy_port` (int) - A port of the SOCKS proxy. Defaults to `1080`.
-
-- `ssh_proxy_username` (string) - The optional username to authenticate with the proxy server.
-
-- `ssh_proxy_password` (string) - The optional password to use to authenticate with the proxy server.
-
-- `ssh_keep_alive_interval` (duration string | ex: "1h5m2s") - How often to send "keep alive" messages to the server. Set to a negative
-  value (`-1s`) to disable. Example value: `10s`. Defaults to `5s`.
-
-- `ssh_read_write_timeout` (duration string | ex: "1h5m2s") - The amount of time to wait for a remote command to end. This might be
-  useful if, for example, packer hangs on a connection after a reboot.
-  Example: `5m`. Disabled by default.
-
-- `ssh_remote_tunnels` ([]string) - 
-
-- `ssh_local_tunnels` ([]string) - 
-
-<!-- End of code generated from the comments of the SSH struct in communicator/config.go; -->
-
-
-- `ssh_private_key_file` (string) - Path to a PEM encoded private key file to use to authenticate with SSH.
-  The `~` can be used in path and will be expanded to the home directory
-  of current user.
-
 
 ### Required:
 
@@ -1012,6 +419,152 @@ metadata = {
 Startup script logs can be copied to a Google Cloud Storage (GCS) location
 specified via the `startup-script-log-dest` instance creation `metadata` field.
 The GCS location must be writeable by the service account of the instance that Packer created.
+
+### Communicator Configuration
+
+#### Optional:
+
+<!-- Code generated from the comments of the Config struct in communicator/config.go; DO NOT EDIT MANUALLY -->
+
+- `communicator` (string) - Packer currently supports three kinds of communicators:
+  
+  -   `none` - No communicator will be used. If this is set, most
+      provisioners also can't be used.
+  
+  -   `ssh` - An SSH connection will be established to the machine. This
+      is usually the default.
+  
+  -   `winrm` - A WinRM connection will be established.
+  
+  In addition to the above, some builders have custom communicators they
+  can use. For example, the Docker builder has a "docker" communicator
+  that uses `docker exec` and `docker cp` to execute scripts and copy
+  files.
+
+- `pause_before_connecting` (duration string | ex: "1h5m2s") - We recommend that you enable SSH or WinRM as the very last step in your
+  guest's bootstrap script, but sometimes you may have a race condition
+  where you need Packer to wait before attempting to connect to your
+  guest.
+  
+  If you end up in this situation, you can use the template option
+  `pause_before_connecting`. By default, there is no pause. For example if
+  you set `pause_before_connecting` to `10m` Packer will check whether it
+  can connect, as normal. But once a connection attempt is successful, it
+  will disconnect and then wait 10 minutes before connecting to the guest
+  and beginning provisioning.
+
+<!-- End of code generated from the comments of the Config struct in communicator/config.go; -->
+
+
+<!-- Code generated from the comments of the SSH struct in communicator/config.go; DO NOT EDIT MANUALLY -->
+
+- `ssh_host` (string) - The address to SSH to. This usually is automatically configured by the
+  builder.
+
+- `ssh_port` (int) - The port to connect to SSH. This defaults to `22`.
+
+- `ssh_username` (string) - The username to connect to SSH with. Required if using SSH.
+
+- `ssh_password` (string) - A plaintext password to use to authenticate with SSH.
+
+- `ssh_ciphers` ([]string) - This overrides the value of ciphers supported by default by Golang.
+  The default value is [
+    "aes128-gcm@openssh.com",
+    "chacha20-poly1305@openssh.com",
+    "aes128-ctr", "aes192-ctr", "aes256-ctr",
+  ]
+  
+  Valid options for ciphers include:
+  "aes128-ctr", "aes192-ctr", "aes256-ctr", "aes128-gcm@openssh.com",
+  "chacha20-poly1305@openssh.com",
+  "arcfour256", "arcfour128", "arcfour", "aes128-cbc", "3des-cbc",
+
+- `ssh_clear_authorized_keys` (bool) - If true, Packer will attempt to remove its temporary key from
+  `~/.ssh/authorized_keys` and `/root/.ssh/authorized_keys`. This is a
+  mostly cosmetic option, since Packer will delete the temporary private
+  key from the host system regardless of whether this is set to true
+  (unless the user has set the `-debug` flag). Defaults to "false";
+  currently only works on guests with `sed` installed.
+
+- `ssh_key_exchange_algorithms` ([]string) - If set, Packer will override the value of key exchange (kex) algorithms
+  supported by default by Golang. Acceptable values include:
+  "curve25519-sha256@libssh.org", "ecdh-sha2-nistp256",
+  "ecdh-sha2-nistp384", "ecdh-sha2-nistp521",
+  "diffie-hellman-group14-sha1", and "diffie-hellman-group1-sha1".
+
+- `ssh_certificate_file` (string) - Path to user certificate used to authenticate with SSH.
+  The `~` can be used in path and will be expanded to the
+  home directory of current user.
+
+- `ssh_pty` (bool) - If `true`, a PTY will be requested for the SSH connection. This defaults
+  to `false`.
+
+- `ssh_timeout` (duration string | ex: "1h5m2s") - The time to wait for SSH to become available. Packer uses this to
+  determine when the machine has booted so this is usually quite long.
+  Example value: `10m`.
+  This defaults to `5m`, unless `ssh_handshake_attempts` is set.
+
+- `ssh_disable_agent_forwarding` (bool) - If true, SSH agent forwarding will be disabled. Defaults to `false`.
+
+- `ssh_handshake_attempts` (int) - The number of handshakes to attempt with SSH once it can connect.
+  This defaults to `10`, unless a `ssh_timeout` is set.
+
+- `ssh_bastion_host` (string) - A bastion host to use for the actual SSH connection.
+
+- `ssh_bastion_port` (int) - The port of the bastion host. Defaults to `22`.
+
+- `ssh_bastion_agent_auth` (bool) - If `true`, the local SSH agent will be used to authenticate with the
+  bastion host. Defaults to `false`.
+
+- `ssh_bastion_username` (string) - The username to connect to the bastion host.
+
+- `ssh_bastion_password` (string) - The password to use to authenticate with the bastion host.
+
+- `ssh_bastion_interactive` (bool) - If `true`, the keyboard-interactive used to authenticate with bastion host.
+
+- `ssh_bastion_private_key_file` (string) - Path to a PEM encoded private key file to use to authenticate with the
+  bastion host. The `~` can be used in path and will be expanded to the
+  home directory of current user.
+
+- `ssh_bastion_certificate_file` (string) - Path to user certificate used to authenticate with bastion host.
+  The `~` can be used in path and will be expanded to the
+  home directory of current user.
+
+- `ssh_file_transfer_method` (string) - `scp` or `sftp` - How to transfer files, Secure copy (default) or SSH
+  File Transfer Protocol.
+  
+  **NOTE**: Guests using Windows with Win32-OpenSSH v9.1.0.0p1-Beta, scp
+  (the default protocol for copying data) returns a a non-zero error code since the MOTW
+  cannot be set, which cause any file transfer to fail. As a workaround you can override the transfer protocol
+  with SFTP instead `ssh_file_transfer_protocol = "sftp"`.
+
+- `ssh_proxy_host` (string) - A SOCKS proxy host to use for SSH connection
+
+- `ssh_proxy_port` (int) - A port of the SOCKS proxy. Defaults to `1080`.
+
+- `ssh_proxy_username` (string) - The optional username to authenticate with the proxy server.
+
+- `ssh_proxy_password` (string) - The optional password to use to authenticate with the proxy server.
+
+- `ssh_keep_alive_interval` (duration string | ex: "1h5m2s") - How often to send "keep alive" messages to the server. Set to a negative
+  value (`-1s`) to disable. Example value: `10s`. Defaults to `5s`.
+
+- `ssh_read_write_timeout` (duration string | ex: "1h5m2s") - The amount of time to wait for a remote command to end. This might be
+  useful if, for example, packer hangs on a connection after a reboot.
+  Example: `5m`. Disabled by default.
+
+- `ssh_remote_tunnels` ([]string) - 
+
+- `ssh_local_tunnels` ([]string) - 
+
+<!-- End of code generated from the comments of the SSH struct in communicator/config.go; -->
+
+
+- `ssh_private_key_file` (string) - Path to a PEM encoded private key file to use to authenticate with SSH.
+  The `~` can be used in path and will be expanded to the home directory
+  of current user.
+
+
 
 ### Temporary SSH keypair
 
