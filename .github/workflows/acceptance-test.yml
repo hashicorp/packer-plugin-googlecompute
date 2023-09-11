@@ -39,7 +39,7 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@e30db14379863a8c79331b04a9969f4c1e225e0b # v1.1.1
       - name: Install Packer
-        uses: hashicorp/setup-packer@v2.0.0
+        uses: hashicorp/setup-packer@ae6b3ed3bec089bbfb576ab7d714df7cbc4b88a4 # v2.0.0
         with:
           version: latest
       - name: 'Authenticate to Google Cloud'
