@@ -58,7 +58,7 @@ func (s *StepCreateWindowsPassword) Run(ctx context.Context, state multistep.Sta
 	binary.BigEndian.PutUint32(buf, uint32(priv.E))
 
 	email := ""
-	if c.account != nil {
+	if c.account != nil && c.account.jwt != nil {
 		email = c.account.jwt.Email
 	}
 
