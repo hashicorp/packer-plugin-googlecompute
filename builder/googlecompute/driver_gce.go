@@ -116,12 +116,14 @@ func NewClientOptionGoogle(account *ServiceAccount, vaultOauth string, impersona
 		token := &oauth2.Token{AccessToken: accessToken}
 		ts := oauth2.StaticTokenSource(token)
 		opts = append(opts, option.WithTokenSource(ts))
-	} else if account != nil && account.jwt != nil && len(account.jwt.PrivateKey) > 0 {
+	} else if account != nil {
 		// Auth with AccountFile if provided
 		log.Printf("[INFO] Requesting Google token via account_file...")
-		log.Printf("[INFO]   -- Email: %s", account.jwt.Email)
 		log.Printf("[INFO]   -- Scopes: %s", DriverScopes)
-		log.Printf("[INFO]   -- Private Key Length: %d", len(account.jwt.PrivateKey))
+		if account.jwt != nil && len(account.jwt.PrivateKey) > 0 {
+			log.Printf("[INFO]   -- Email: %s", account.jwt.Email)
+			log.Printf("[INFO]   -- Private Key Length: %d", len(account.jwt.PrivateKey))
+		}
 
 		opts = append(opts, option.WithCredentialsJSON(account.jsonKey))
 	} else {
