@@ -358,6 +358,16 @@ builder.
   during it's creation.
   Example value: `5m`.
 
+- `use_machine_image` (bool) - Use Machine Image
+
+- `machine_image_name` (string) - Machine Image Name
+
+- `machine_image_desc` (string) - Machine Image Desc
+
+- `machine_source_instance_name` (string) - Machine Image Source Instance
+
+- `machine_source_instance_zone` (string) - Machine Image Source Instance Zone
+
 <!-- End of code generated from the comments of the Config struct in builder/googlecompute/config.go; -->
 
 
