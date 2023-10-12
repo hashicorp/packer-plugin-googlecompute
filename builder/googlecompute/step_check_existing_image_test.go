@@ -35,3 +35,26 @@ func TestStepCheckExistingImage(t *testing.T) {
 		t.Fatalf("bad: %#v", driver.ImageExistsName)
 	}
 }
+
+func TestStepCheckMachineExistingImage(t *testing.T) {
+	state := testState(t)
+	step := new(StepCheckExistingImage)
+	defer step.Cleanup(state)
+
+	state.Put("instance_name", "foo")
+
+	config := state.Get("config").(*Config)
+	driver := state.Get("driver").(*DriverMock)
+	config.UseMachineImage = true
+	driver.MachineImageExistsResult = true
+
+	// run the step
+	if action := step.Run(context.Background(), state); action != multistep.ActionHalt {
+		t.Fatalf("bad action: %#v", action)
+	}
+
+	// Verify state
+	if driver.MachineImageExistsName != config.MachineImageName {
+		t.Fatalf("bad: %#v", driver.MachineImageExistsName)
+	}
+}

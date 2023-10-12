@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	registryimage "github.com/hashicorp/packer-plugin-sdk/packer/registry/image"
+	compute "google.golang.org/api/compute/v1"
 )
 
 // Artifact represents a GCE image as the result of a Packer build.
@@ -140,6 +141,141 @@ func (a *Artifact) State(name string) interface{} {
 		return a.image.Name
 	case "ImageSizeGb":
 		return a.image.SizeGb
+	case "AccountFilePath":
+		return a.config.AccountFile
+	case "ProjectId":
+		return a.config.ProjectId
+	case "BuildZone":
+		return a.config.Zone
+	}
+
+	if _, ok := a.StateData[name]; ok {
+		return a.StateData[name]
+	}
+
+	return nil
+
+}
+
+// machine-image
+// Artifact represents a GCE machine image as the result of a Packer build.
+type MachineImageArtifact struct {
+	image  *compute.MachineImage
+	driver Driver
+	config *Config
+	// StateData should store data such as GeneratedData
+	// to be shared with post-processors
+	StateData map[string]interface{}
+}
+
+// BuilderId returns the builder Id.
+func (*MachineImageArtifact) BuilderId() string {
+	return BuilderId
+}
+
+// Destroy destroys the GCE machine image represented by the artifact.
+func (a *MachineImageArtifact) Destroy() error {
+	log.Printf("Destroying machine image: %s", a.image.Name)
+	errCh := a.driver.DeleteMachineImage(a.config.ImageProjectId, a.image.Name)
+	return <-errCh
+}
+
+// Files returns the files represented by the artifact.
+func (*MachineImageArtifact) Files() []string {
+	return nil
+}
+
+// Id returns the GCE image name.
+func (a *MachineImageArtifact) Id() string {
+	return a.image.Name
+}
+
+// String returns the string representation of the artifact.
+func (a *MachineImageArtifact) String() string {
+	return fmt.Sprintf("A disk image was created in the '%v' project: %v",
+		a.config.ImageProjectId, a.image.Name)
+}
+
+func (a *MachineImageArtifact) State(name string) interface{} {
+	if name == registryimage.ArtifactStateURI {
+		img, _ := registryimage.FromArtifact(a,
+			registryimage.WithID(a.Id()),
+			registryimage.WithProvider("gce"),
+			registryimage.WithRegion(a.config.Zone),
+		)
+
+		// Set source image and/or family as labels
+		// if a.config.SourceImage != "" {
+		// 	labels["source_image"] = a.config.SourceImage
+		// }
+		// if a.config.SourceImageFamily != "" {
+		// 	labels["source_image_family"] = a.config.SourceImageFamily
+		// }
+
+		// Set PARtifact's source image name from state; this is set regardless
+		// of whether image or image family were used:
+		data, ok := a.StateData["generated_data"].(map[string]interface{})
+		if ok {
+			img.SourceImageID = data["SourceImageName"].(string)
+		}
+
+		// if len(a.config.SourceImageProjectId) > 0 {
+		// 	labels["source_image_project_ids"] = strings.Join(a.config.SourceImageProjectId, ",")
+		// }
+
+		// for k, v := range a.image.Labels {
+		// 	labels["tags"] = labels["tags"] + fmt.Sprintf("%s:%s", k, v)
+		// }
+
+		// img.Labels = labels
+		return img
+	}
+
+	if name == registryimage.ArtifactStateURI {
+		img, _ := registryimage.FromArtifact(a,
+			registryimage.WithID(a.Id()),
+			registryimage.WithProvider("gce"),
+			registryimage.WithRegion(a.config.Zone),
+		)
+
+		// labels := map[string]string{
+		// 	"self_link":    a.image.SelfLink,
+		// 	"project_id":   a.image.ProjectId,
+		// 	"disk_size_gb": strconv.FormatInt(a.image.SizeGb, 10),
+		// 	"machine_type": a.config.MachineType,
+		// 	"licenses":     strings.Join(a.image.Licenses, ","),
+		// }
+
+		// Set source image and/or family as labels
+		// if a.config.SourceImage != "" {
+		// 	labels["source_image"] = a.config.SourceImage
+		// }
+		// if a.config.SourceImageFamily != "" {
+		// 	labels["source_image_family"] = a.config.SourceImageFamily
+		// }
+
+		// Set PARtifact's source image name from state; this is set regardless
+		// of whether image or image family were used:
+		data, ok := a.StateData["generated_data"].(map[string]interface{})
+		if ok {
+			img.SourceImageID = data["SourceImageName"].(string)
+		}
+
+		// if len(a.config.SourceImageProjectId) > 0 {
+		// 	labels["source_image_project_ids"] = strings.Join(a.config.SourceImageProjectId, ",")
+		// }
+
+		// for k, v := range a.image.Labels {
+		// 	labels["tags"] = labels["tags"] + fmt.Sprintf("%s:%s", k, v)
+		// }
+
+		//img.Labels = labels
+		return img
+	}
+
+	switch name {
+	case "MachineImageName":
+		return a.image.Name
 	case "AccountFilePath":
 		return a.config.AccountFile
 	case "ProjectId":

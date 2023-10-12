@@ -81,6 +81,12 @@ type Driver interface {
 
 	// Add to the instance metadata for the existing instance
 	AddToInstanceMetadata(zone string, name string, metadata map[string]string) error
+	//machine-image
+	MachineImageExists(project, name string) bool
+	//
+	GetMachineImage(project, name string) (*compute.MachineImage, error)
+	DeleteMachineImage(project, name string) <-chan error
+	CreateMachineImage(project, name, description, source_instance, source_instance_zone string) (<-chan *compute.MachineImage, <-chan error)
 }
 
 type InstanceConfig struct {

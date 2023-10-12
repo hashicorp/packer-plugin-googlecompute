@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/multistep/commonsteps"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/hashicorp/packer-plugin-sdk/packerbuilderdata"
+	compute "google.golang.org/api/compute/v1"
 )
 
 // The unique ID for this builder.
@@ -120,7 +121,12 @@ func (b *Builder) Run(ctx context.Context, ui packersdk.Ui, hook packersdk.Hook)
 	if _, exists := b.config.Metadata[StartupScriptKey]; exists || b.config.StartupScriptFile != "" {
 		steps = append(steps, new(StepWaitStartupScript))
 	}
-	steps = append(steps, new(StepTeardownInstance), new(StepCreateImage))
+	if b.config.UseMachineImage {
+		steps = append(steps, new(StepCreateMachineImage), new(StepTeardownInstance))
+
+	} else {
+		steps = append(steps, new(StepTeardownInstance), new(StepCreateImage))
+	}
 
 	// Run the steps.
 	b.runner = commonsteps.NewRunner(steps, b.config.PackerConfig, ui)
@@ -135,13 +141,24 @@ func (b *Builder) Run(ctx context.Context, ui packersdk.Ui, hook packersdk.Hook)
 		return nil, nil
 	}
 
-	artifact := &Artifact{
-		image:     state.Get("image").(*Image),
-		driver:    driver,
-		config:    &b.config,
-		StateData: map[string]interface{}{"generated_data": state.Get("generated_data")},
+	if b.config.UseMachineImage {
+		artifact := &MachineImageArtifact{
+			image:     state.Get("image").(*compute.MachineImage),
+			driver:    driver,
+			config:    &b.config,
+			StateData: map[string]interface{}{"generated_data": state.Get("generated_data")},
+		}
+		return artifact, nil
+	} else {
+		artifact := &Artifact{
+			image:     state.Get("image").(*Image),
+			driver:    driver,
+			config:    &b.config,
+			StateData: map[string]interface{}{"generated_data": state.Get("generated_data")},
+		}
+		return artifact, nil
+
 	}
-	return artifact, nil
 }
 
 // Cancel.

@@ -360,9 +360,15 @@ type Config struct {
 	// Example: "us-central1-a"
 	Zone string `mapstructure:"zone" required:"true"`
 
-	account            *ServiceAccount
-	imageAlreadyExists bool
-	ctx                interpolate.Context
+	account                        *ServiceAccount
+	imageAlreadyExists             bool
+	ctx                            interpolate.Context
+	machineImageAlreadyExists      bool
+	UseMachineImage                bool   `mapstructure:"use_machine_image" required:"false"`
+	MachineImageName               string `mapstructure:"machine_image_name" required:"false"`
+	MachineImageDesc               string `mapstructure:"machine_image_desc" required:"false"`
+	MachineImageSourceInstance     string `mapstructure:"machine_source_instance_name" required:"false"`
+	MachineImageSourceInstanceZone string `mapstructure:"machine_source_instance_zone" required:"false"`
 }
 
 func (c *Config) Prepare(raws ...interface{}) ([]string, error) {
