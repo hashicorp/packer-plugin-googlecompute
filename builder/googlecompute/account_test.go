@@ -7,6 +7,8 @@ import (
 	"os"
 	"path"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -36,51 +38,39 @@ var (
 
 func TestProcessAccountFile_JWTtext(t *testing.T) {
 	account, err := ProcessAccountFile(string(JWT_JSON))
-	if err != nil {
-		t.Errorf("Bad: unexpected error when trying to load JWT credential %v", err)
-	}
-	if account == nil {
-		t.Errorf("Bad: Account file could not be loaded")
-	}
-	if account != nil && account.jwt == nil {
-		t.Errorf("Bad: JWT credential was nil")
-	}
-	if account.jwt.Email != "dummy@myproject.iam.gserviceaccount.com" {
-		t.Errorf("Bad: JWT credential email was %s, expected 'dummy@myproject.iam.gserviceaccount.com'", account.jwt.Email)
-	}
+	assert.NoError(t, err)
+	assert.NotNil(t, account)
+	assert.NotNil(t, account.jwt)
+	assert.Equalf(t, account.jwt.Email, "dummy@myproject.iam.gserviceaccount.com", "JWT email is not correct")
+	assert.Nil(t, account.credentials)
 }
 
 func TestProcessAccountFile_JWTFile(t *testing.T) {
 	workdir := t.TempDir()
 	credsFile := path.Join(workdir, "jwt-file")
 	err := os.WriteFile(credsFile, JWT_JSON, 0777)
-	if err != nil {
-		t.Errorf("Bad: error writing temporary JWT creds file: %v", err)
-	}
+	assert.NoError(t, err)
 	account, err := ProcessAccountFile(credsFile)
-	if err != nil {
-		t.Errorf("Bad: unexpected error when trying to load JWT credential: %v", err)
-	}
-	if account == nil {
-		t.Errorf("Bad: Account file could not be loaded")
-	}
-	if account != nil && account.jwt == nil {
-		t.Errorf("Bad: JWT credential was nil")
-	}
-	if account.jwt.Email != "dummy@myproject.iam.gserviceaccount.com" {
-		t.Errorf("Bad: JWT credential email was %s, expected 'dummy@myproject.iam.gserviceaccount.com'", account.jwt.Email)
-	}
+	assert.NoError(t, err)
+	assert.NotNil(t, account)
+	assert.NotNil(t, account.jwt)
+	assert.Equalf(t, account.jwt.Email, "dummy@myproject.iam.gserviceaccount.com", "JWT email is not correct")
+	assert.Nil(t, account.credentials)
 }
 
 func TestProcessAccountFile_OIDC(t *testing.T) {
 	account, err := ProcessAccountFile(string(OIDC_JSON))
-	if err != nil {
-		t.Errorf("Bad: unexpected error when trying to load OIDC credential: %v", err)
-	}
-	if account == nil {
-		t.Errorf("Bad: Account file could not be loaded")
-	}
-	if account != nil && account.jwt != nil {
-		t.Errorf("Bad: JWT credential was not nil (should be nil for OIDC account file)")
-	}
+	assert.NoError(t, err)
+	assert.NotNil(t, account)
+	assert.Nil(t, account.jwt)
+	assert.NotNil(t, account.credentials)
+}
+
+func TestProcessAccountFile_invalidContent(t *testing.T) {
+	account, err := ProcessAccountFile("{}")
+	assert.Nil(t, account)
+	assert.Error(t, err)
+	assert.Containsf(t, err.Error(), "JWT format error:", "Error message is missing the JWT error string")
+	assert.Containsf(t, err.Error(), "Alternate format error:", "Error message is missing the alternate credential error string")
+	assert.NotContainsf(t, err.Error(), "credentials parsing not done unless JWT parsing fails", "This error message should be replaced by the error from parsing the alternate credential parsing")
 }
