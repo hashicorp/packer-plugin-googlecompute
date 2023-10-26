@@ -4,6 +4,7 @@
 package googlecompute
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -14,7 +15,11 @@ import (
 
 type ServiceAccount struct {
 	jsonKey []byte
-	jwt     *jwt.Config
+	// Used for JWT-based authentication (service account JSON file)
+	jwt *jwt.Config
+	// Used for other auth methods (client_credentials.json, service account key file,
+	// gcloud user credentials file, JSON config file for workload identity federation)
+	credentials *google.Credentials
 }
 
 // ProcessAccountFile will return a ServiceAccount for the JSON account file stored in text.
@@ -35,20 +40,24 @@ func ProcessAccountFile(text string) (*ServiceAccount, error) {
 		}
 	}
 
-	var conf *jwt.Config
+	var jwtConf *jwt.Config
+	var jwtErr error
+	jwtConf, jwtErr = google.JWTConfigFromJSON(data, DriverScopes...)
 
-	conf, err = google.JWTConfigFromJSON(data, DriverScopes...)
-	// If we fail to load the file as JWTConfig, we're actually probably OK.
-	// The only thing we really use this for setting email address defaults
-	// in a few places. We squelch the error here so that non-JWT credentials
-	// can be used, but we don't actually load data analogous to the JWT data.
-	if err != nil && !strings.Contains(err.Error(), "google: read JWT from JSON credentials: 'type' field is") {
-		return nil, fmt.Errorf("Error parsing account_file: %s", err)
+	var credentials *google.Credentials
+	var credentialsErr error
+	// If JWT format failed, try alternate format. We don't want to load a given file as both. JWT is the
+	// more restricted of the two.
+	if jwtErr != nil {
+		credentials, credentialsErr = google.CredentialsFromJSON(context.Background(), data, DriverScopes...)
 	}
 
-	return &ServiceAccount{
-		jsonKey: data,
-		// Conf can be nil if we failed to load the file as JWTConfig.
-		jwt: conf,
-	}, nil
+	if jwtConf != nil || credentials != nil {
+		return &ServiceAccount{
+			jsonKey:     data,
+			jwt:         jwtConf,
+			credentials: credentials,
+		}, nil
+	}
+	return nil, fmt.Errorf("Error parsing account_file. Neither JWT format nor alternate format succeeded.\nJWT format error: %s\nAlternate format error: %s", jwtErr, credentialsErr)
 }
