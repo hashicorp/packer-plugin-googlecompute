@@ -48,6 +48,7 @@ type GCEDriverConfig struct {
 	Scopes                        []string
 	AccessToken                   string
 	VaultOauthEngineName          string
+	Credentials                   *AccountCredentials
 }
 
 var DriverScopes = []string{
@@ -89,7 +90,7 @@ func (ots OauthTokenSource) Token() (*oauth2.Token, error) {
 
 }
 
-func NewClientOptionGoogle(account *ServiceAccount, vaultOauth string, impersonatesa string, accessToken string, scopes []string) ([]option.ClientOption, error) {
+func NewClientOptionGoogle(account *ServiceAccount, vaultOauth string, impersonatesa string, accessToken string, credentials *AccountCredentials, scopes []string) ([]option.ClientOption, error) {
 	var err error
 
 	var opts []option.ClientOption
@@ -116,16 +117,20 @@ func NewClientOptionGoogle(account *ServiceAccount, vaultOauth string, impersona
 		token := &oauth2.Token{AccessToken: accessToken}
 		ts := oauth2.StaticTokenSource(token)
 		opts = append(opts, option.WithTokenSource(ts))
-	} else if account != nil {
+	} else if account != nil && account.jwt != nil && len(account.jwt.PrivateKey) > 0 {
 		// Auth with AccountFile if provided
 		log.Printf("[INFO] Requesting Google token via account_file...")
 		log.Printf("[INFO]   -- Scopes: %s", DriverScopes)
-		if account.jwt != nil && len(account.jwt.PrivateKey) > 0 {
-			log.Printf("[INFO]   -- Email: %s", account.jwt.Email)
-			log.Printf("[INFO]   -- Private Key Length: %d", len(account.jwt.PrivateKey))
-		}
+		log.Printf("[INFO]   -- Email: %s", account.jwt.Email)
+		log.Printf("[INFO]   -- Private Key Length: %d", len(account.jwt.PrivateKey))
 
 		opts = append(opts, option.WithCredentialsJSON(account.jsonKey))
+	} else if credentials != nil {
+		// Auth with Credentials if provided
+		log.Printf("[INFO] Requesting Google token via credentials file...")
+		log.Printf("[INFO]   -- Scopes: %s", DriverScopes)
+
+		opts = append(opts, option.WithCredentialsJSON(credentials.jsonKey))
 	} else {
 		log.Printf("[INFO] Requesting Google token via GCE API Default Client Token Source...")
 		scopes := append(DriverScopes, "https://www.googleapis.com/auth/cloud-platform")
@@ -160,7 +165,7 @@ func NewClientOptionGoogle(account *ServiceAccount, vaultOauth string, impersona
 
 func NewDriverGCE(config GCEDriverConfig) (Driver, error) {
 
-	opts, err := NewClientOptionGoogle(config.Account, config.VaultOauthEngineName, config.ImpersonateServiceAccountName, config.AccessToken, config.Scopes)
+	opts, err := NewClientOptionGoogle(config.Account, config.VaultOauthEngineName, config.ImpersonateServiceAccountName, config.AccessToken, config.Credentials, config.Scopes)
 	if err != nil {
 		return nil, err
 	}

@@ -31,6 +31,7 @@ type FlatConfig struct {
 	Zone                      *string           `mapstructure:"zone" cty:"zone" hcl:"zone"`
 	VaultGCPOauthEngine       *string           `mapstructure:"vault_gcp_oauth_engine" cty:"vault_gcp_oauth_engine" hcl:"vault_gcp_oauth_engine"`
 	ServiceAccountEmail       *string           `mapstructure:"service_account_email" cty:"service_account_email" hcl:"service_account_email"`
+	Credentials               *string           `mapstructure:"credentials_file" required:"false" cty:"credentials_file" hcl:"credentials_file"`
 }
 
 // FlatMapstructure returns a new FlatConfig.

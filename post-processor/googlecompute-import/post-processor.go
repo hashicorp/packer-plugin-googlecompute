@@ -34,9 +34,12 @@ type Config struct {
 
 	//A temporary OAuth 2.0 access token
 	AccessToken string `mapstructure:"access_token" required:"false"`
-	//The JSON file containing your account credentials.
+	//The JSON file containing your service account credentials (service_account.json).
 	//If specified, the account file will take precedence over any `googlecompute` builder authentication method.
 	AccountFile string `mapstructure:"account_file" required:"false"`
+	//The JSON file containing your credentials (federated workload or workforce).
+	//If specified, the account file will take precedence over any `googlecompute` builder authentication method.
+	CredentialsFile string `mapstructure:"credentials_file" required:"false"`
 	// This allows service account impersonation as per the [docs](https://cloud.google.com/iam/docs/impersonating-service-accounts).
 	ImpersonateServiceAccount string `mapstructure:"impersonate_service_account" required:"false"`
 	// The service account scopes for launched importer post-processor instance.
@@ -90,8 +93,9 @@ type Config struct {
 	//A database of certificates that have been revoked and will cause the system to stop booting if a boot file is signed with one of them. You may specify single or multiple comma-separated values for this value.
 	ImageForbiddenSignaturesDB []string `mapstructure:"image_forbidden_signatures_db"`
 
-	account *googlecompute.ServiceAccount
-	ctx     interpolate.Context
+	account     *googlecompute.ServiceAccount
+	ctx         interpolate.Context
+	credentials *googlecompute.AccountCredentials
 }
 
 type PostProcessor struct {
@@ -157,6 +161,22 @@ func (p *PostProcessor) Configure(raws ...interface{}) error {
 		p.config.account = cfg
 	}
 
+	if p.config.CredentialsFile != "" {
+		if p.config.AccessToken != "" {
+			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("You cannot "+
+				"specify access_token and credentials_file at the same time"))
+		}
+		if p.config.AccountFile != "" {
+			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("You cannot "+
+				"specify account_file and credentials_file at the same time"))
+		}
+		cfg, err := googlecompute.ProcessCredentialsFile(p.config.CredentialsFile)
+		if err != nil {
+			errs = packersdk.MultiErrorAppend(errs, err)
+		}
+		p.config.credentials = cfg
+	}
+
 	if len(p.config.Scopes) == 0 {
 		p.config.Scopes = []string{
 			storage.CloudPlatformScope,
@@ -191,7 +211,7 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packersdk.Ui, artifa
 	p.config.ctx.Data = generatedData
 	var err error
 	var opts []option.ClientOption
-	opts, err = googlecompute.NewClientOptionGoogle(p.config.account, p.config.VaultGCPOauthEngine, p.config.ImpersonateServiceAccount, p.config.AccessToken, p.config.Scopes)
+	opts, err = googlecompute.NewClientOptionGoogle(p.config.account, p.config.VaultGCPOauthEngine, p.config.ImpersonateServiceAccount, p.config.AccessToken, p.config.credentials, p.config.Scopes)
 	if err != nil {
 		return nil, false, false, err
 	}
