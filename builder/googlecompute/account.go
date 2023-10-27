@@ -23,7 +23,7 @@ func ProcessAccountFile(text string) (*ServiceAccount, error) {
 	var data []byte = []byte(text)
 	var err error
 
-	if !strings.HasPrefix(text, "{") {
+	if !strings.HasPrefix(strings.TrimSpace(text), "{") {
 		// If text was not JSON, assume it is a file path instead
 		if _, err := os.Stat(text); os.IsNotExist(err) {
 			return nil, fmt.Errorf("account_file path does not exist: %s", text)
