@@ -54,6 +54,7 @@ func (b *Builder) Run(ctx context.Context, ui packersdk.Ui, hook packersdk.Hook)
 		ImpersonateServiceAccountName: b.config.ImpersonateServiceAccount,
 		Scopes:                        b.config.Scopes,
 		VaultOauthEngineName:          b.config.VaultGCPOauthEngine,
+		Credentials:                   b.config.credentials,
 	}
 
 	driver, err := NewDriverGCE(cfg)

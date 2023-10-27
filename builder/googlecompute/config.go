@@ -61,6 +61,10 @@ type Config struct {
 	// The name of a pre-allocated static external IP address. Note, must be
 	// the name and not the actual IP address.
 	Address string `mapstructure:"address" required:"false"`
+	// The JSON file containing your account credentials. Not required if you
+	// run Packer on a GCE instance with a service account. Instructions for
+	// creating the file or using service accounts are above.
+	CredentialsFile string `mapstructure:"credentials_file" required:"false"`
 	// If true, the default service account will not be used if
 	// service_account_email is not specified. Set this value to true and omit
 	// service_account_email to provision a VM with no service account.
@@ -367,6 +371,7 @@ type Config struct {
 	account            *ServiceAccount
 	imageAlreadyExists bool
 	ctx                interpolate.Context
+	credentials        *AccountCredentials
 }
 
 func (c *Config) Prepare(raws ...interface{}) ([]string, error) {
@@ -593,6 +598,22 @@ func (c *Config) Prepare(raws ...interface{}) ([]string, error) {
 			errs = packersdk.MultiErrorAppend(errs, err)
 		}
 		c.account = cfg
+	}
+
+	if c.CredentialsFile != "" {
+		if c.AccessToken != "" {
+			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("You cannot "+
+				"specify access_token and credentials_file"))
+		}
+		if c.AccountFile != "" {
+			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("You cannot "+
+				"specify access_file and credentials_file"))
+		}
+		cfg, err := ProcessCredentialsFile(c.CredentialsFile)
+		if err != nil {
+			errs = packersdk.MultiErrorAppend(errs, err)
+		}
+		c.credentials = cfg
 	}
 
 	if c.OmitExternalIP && c.Address != "" {

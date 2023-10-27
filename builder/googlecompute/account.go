@@ -4,7 +4,6 @@
 package googlecompute
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -15,11 +14,7 @@ import (
 
 type ServiceAccount struct {
 	jsonKey []byte
-	// Used for JWT-based authentication (service account JSON file)
-	jwt *jwt.Config
-	// Used for other auth methods (client_credentials.json, service account key file,
-	// gcloud user credentials file, JSON config file for workload identity federation)
-	credentials *google.Credentials
+	jwt     *jwt.Config
 }
 
 // ProcessAccountFile will return a ServiceAccount for the JSON account file stored in text.
@@ -40,24 +35,14 @@ func ProcessAccountFile(text string) (*ServiceAccount, error) {
 		}
 	}
 
-	var jwtConf *jwt.Config
-	var jwtErr error
-	jwtConf, jwtErr = google.JWTConfigFromJSON(data, DriverScopes...)
+	conf, err := google.JWTConfigFromJSON(data, DriverScopes...)
 
-	var credentials *google.Credentials
-	var credentialsErr error
-	// If JWT format failed, try alternate format. We don't want to load a given file as both. JWT is the
-	// more restricted of the two.
-	if jwtErr != nil {
-		credentials, credentialsErr = google.CredentialsFromJSON(context.Background(), data, DriverScopes...)
+	if err != nil {
+		return nil, fmt.Errorf("Error parsing account_file: %v", err)
 	}
 
-	if jwtConf != nil || credentials != nil {
-		return &ServiceAccount{
-			jsonKey:     data,
-			jwt:         jwtConf,
-			credentials: credentials,
-		}, nil
-	}
-	return nil, fmt.Errorf("Error parsing account_file. Neither JWT format nor alternate format succeeded.\nJWT format error: %s\nAlternate format error: %s", jwtErr, credentialsErr)
+	return &ServiceAccount{
+		jsonKey: data,
+		jwt:     conf,
+	}, nil
 }

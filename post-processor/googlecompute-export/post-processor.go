@@ -29,9 +29,12 @@ type Config struct {
 
 	//A temporary OAuth 2.0 access token
 	AccessToken string `mapstructure:"access_token" required:"false"`
-	//The JSON file containing your account credentials.
+	//The JSON file containing your service account credentials (service_account.json).
 	//If specified, the account file will take precedence over any `googlecompute` builder authentication method.
 	AccountFile string `mapstructure:"account_file" required:"false"`
+	//The JSON file containing your account credentials (workload or workforce identity federation).
+	//If specified, the account file will take precedence over any `googlecompute` builder authentication method.
+	CredentialsFile string `mapstructure:"credentials_file" required:"false"`
 	// This allows service account impersonation as per the [docs](https://cloud.google.com/iam/docs/impersonating-service-accounts).
 	ImpersonateServiceAccount string `mapstructure:"impersonate_service_account" required:"false"`
 	// The service account scopes for launched exporter post-processor instance.
@@ -74,8 +77,9 @@ type Config struct {
 	VaultGCPOauthEngine string `mapstructure:"vault_gcp_oauth_engine"`
 	ServiceAccountEmail string `mapstructure:"service_account_email"`
 
-	account *googlecompute.ServiceAccount
-	ctx     interpolate.Context
+	account     *googlecompute.ServiceAccount
+	credentials *googlecompute.AccountCredentials
+	ctx         interpolate.Context
 }
 
 type PostProcessor struct {
@@ -124,9 +128,22 @@ func (p *PostProcessor) Configure(raws ...interface{}) error {
 			errs, fmt.Errorf("May set either account_file or "+
 				"vault_gcp_oauth_engine, but not both."))
 	}
-	if p.config.AccountFile != "" && p.config.AccessToken != "" {
-		errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("You cannot "+
-			"specify access_token and account_file at the same time"))
+
+	specifiedAccountDetails := 0
+	if p.config.AccountFile != "" {
+		specifiedAccountDetails++
+	}
+	if p.config.AccessToken != "" {
+		specifiedAccountDetails++
+	}
+	if p.config.CredentialsFile != "" {
+		specifiedAccountDetails++
+	}
+
+	if specifiedAccountDetails > 1 {
+		errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("You can "+
+			"specify only one of `access_token`, `account_file`, and "+
+			"`credentials_file` at one time"))
 	}
 
 	if len(p.config.Scopes) == 0 {
@@ -156,6 +173,7 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packersdk.Ui, artifa
 	}
 
 	builderAccountFile := artifact.State("AccountFilePath").(string)
+	builderCredentialsFile := artifact.State("CredentialsFilePath").(string)
 	builderImageName := artifact.State("ImageName").(string)
 	builderProjectId := artifact.State("ProjectId").(string)
 	builderZone := artifact.State("BuildZone").(string)
@@ -180,6 +198,22 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packersdk.Ui, artifa
 			return nil, false, false, err
 		}
 		p.config.account = cfg
+	}
+
+	// Set up credentials for GCE driver.
+	if builderCredentialsFile != "" {
+		cfg, err := googlecompute.ProcessCredentialsFile(builderCredentialsFile)
+		if err != nil {
+			return nil, false, false, err
+		}
+		p.config.credentials = cfg
+	}
+	if p.config.CredentialsFile != "" {
+		cfg, err := googlecompute.ProcessCredentialsFile(p.config.CredentialsFile)
+		if err != nil {
+			return nil, false, false, err
+		}
+		p.config.credentials = cfg
 	}
 
 	// Set up exporter instance configuration.
@@ -226,6 +260,7 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packersdk.Ui, artifa
 		ImpersonateServiceAccountName: p.config.ImpersonateServiceAccount,
 		Scopes:                        p.config.Scopes,
 		VaultOauthEngineName:          p.config.VaultGCPOauthEngine,
+		Credentials:                   p.config.credentials,
 	}
 
 	driver, err := googlecompute.NewDriverGCE(cfg)

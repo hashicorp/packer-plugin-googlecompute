@@ -25,15 +25,6 @@ var (
 		"client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/myproject%40myproject.iam.gserviceaccount.com",
 		"universe_domain": "googleapis.com"
 	  }`)
-	OIDC_JSON = []byte(`{
-		"type":"external_account",
-	"audience":"//iam.googleapis.com/projects/123456789/locations/global/workloadIdentityPools/poolName/providers/some-provider-name",
-	"subject_token_type":"urn:ietf:params:oauth:token-type:jwt","token_url":"https://sts.googleapis.com/v1/token",
-	"service_account_impersonation_url":"https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/some-service-account@some-gcp-project.iam.gserviceaccount.com:generateAccessToken",
-	"credential_source":{"url":"https://pipelines.actions.githubusercontent.com/blahblahblah",
-	"headers":{"Authorization":"***"},
-	"format":{"type":"json","subject_token_field_name":"value"}}}
-	`)
 )
 
 func TestProcessAccountFile_JWTtext(t *testing.T) {
@@ -42,7 +33,6 @@ func TestProcessAccountFile_JWTtext(t *testing.T) {
 	assert.NotNil(t, account)
 	assert.NotNil(t, account.jwt)
 	assert.Equalf(t, account.jwt.Email, "dummy@myproject.iam.gserviceaccount.com", "JWT email is not correct")
-	assert.Nil(t, account.credentials)
 }
 
 func TestProcessAccountFile_JWTFile(t *testing.T) {
@@ -55,22 +45,10 @@ func TestProcessAccountFile_JWTFile(t *testing.T) {
 	assert.NotNil(t, account)
 	assert.NotNil(t, account.jwt)
 	assert.Equalf(t, account.jwt.Email, "dummy@myproject.iam.gserviceaccount.com", "JWT email is not correct")
-	assert.Nil(t, account.credentials)
-}
-
-func TestProcessAccountFile_OIDC(t *testing.T) {
-	account, err := ProcessAccountFile(string(OIDC_JSON))
-	assert.NoError(t, err)
-	assert.NotNil(t, account)
-	assert.Nil(t, account.jwt)
-	assert.NotNil(t, account.credentials)
 }
 
 func TestProcessAccountFile_invalidContent(t *testing.T) {
 	account, err := ProcessAccountFile("{}")
 	assert.Nil(t, account)
 	assert.Error(t, err)
-	assert.Containsf(t, err.Error(), "JWT format error:", "Error message is missing the JWT error string")
-	assert.Containsf(t, err.Error(), "Alternate format error:", "Error message is missing the alternate credential error string")
-	assert.NotContainsf(t, err.Error(), "credentials parsing not done unless JWT parsing fails", "This error message should be replaced by the error from parsing the alternate credential parsing")
 }
