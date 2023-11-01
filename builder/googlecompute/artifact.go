@@ -140,8 +140,6 @@ func (a *Artifact) State(name string) interface{} {
 		return a.image.Name
 	case "ImageSizeGb":
 		return a.image.SizeGb
-	case "AccountFilePath":
-		return a.config.AccountFile
 	case "ProjectId":
 		return a.config.ProjectId
 	case "BuildZone":
