@@ -142,8 +142,6 @@ func (a *Artifact) State(name string) interface{} {
 		return a.image.SizeGb
 	case "AccountFilePath":
 		return a.config.AccountFile
-	case "CredentialsFilePath":
-		return a.config.CredentialsFile
 	case "ProjectId":
 		return a.config.ProjectId
 	case "BuildZone":
