@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/hashicorp/packer-plugin-googlecompute/lib/common"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
 )
@@ -22,7 +23,7 @@ type StepTeardownInstance struct {
 // Run executes the Packer build step that tears down a GCE instance.
 func (s *StepTeardownInstance) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	config := state.Get("config").(*Config)
-	driver := state.Get("driver").(Driver)
+	driver := state.Get("driver").(common.Driver)
 	ui := state.Get("ui").(packersdk.Ui)
 
 	name := config.InstanceName
@@ -59,7 +60,7 @@ func (s *StepTeardownInstance) Run(ctx context.Context, state multistep.StateBag
 // the disk.
 func (s *StepTeardownInstance) Cleanup(state multistep.StateBag) {
 	config := state.Get("config").(*Config)
-	driver := state.Get("driver").(Driver)
+	driver := state.Get("driver").(common.Driver)
 	ui := state.Get("ui").(packersdk.Ui)
 
 	var err error

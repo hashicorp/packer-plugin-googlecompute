@@ -13,6 +13,7 @@ import (
 	"time"
 
 	metadata "cloud.google.com/go/compute/metadata"
+	"github.com/hashicorp/packer-plugin-googlecompute/lib/common"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
 	"google.golang.org/api/oauth2/v2"
@@ -31,7 +32,7 @@ type StepImportOSLoginSSHKey struct {
 // The key pairs are added to the ssh config
 func (s *StepImportOSLoginSSHKey) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	config := state.Get("config").(*Config)
-	driver := state.Get("driver").(Driver)
+	driver := state.Get("driver").(common.Driver)
 	ui := state.Get("ui").(packersdk.Ui)
 
 	if !config.UseOSLogin {
@@ -124,7 +125,7 @@ func (s *StepImportOSLoginSSHKey) Run(ctx context.Context, state multistep.State
 
 // Cleanup the SSH Key that we added to the POSIX account
 func (s *StepImportOSLoginSSHKey) Cleanup(state multistep.StateBag) {
-	driver := state.Get("driver").(Driver)
+	driver := state.Get("driver").(common.Driver)
 	ui := state.Get("ui").(packersdk.Ui)
 
 	fingerprint, ok := state.Get("ssh_key_public_sha256").(string)
@@ -145,7 +146,7 @@ func (s *StepImportOSLoginSSHKey) Cleanup(state multistep.StateBag) {
 func tokeninfo(ctx context.Context, config *Config) (*oauth2.Tokeninfo, error) {
 	var err error
 	var opts []option.ClientOption
-	opts, err = NewClientOptionGoogle(config.VaultGCPOauthEngine, config.ImpersonateServiceAccount, config.AccessToken, config.credentials, config.Scopes)
+	opts, err = common.NewClientOptionGoogle(config.VaultGCPOauthEngine, config.ImpersonateServiceAccount, config.AccessToken, config.credentials, config.Scopes)
 	if err != nil {
 		return nil, err
 	}

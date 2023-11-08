@@ -7,6 +7,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/hashicorp/packer-plugin-googlecompute/lib/common"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 )
 
@@ -20,7 +21,7 @@ func TestStepTeardownInstance(t *testing.T) {
 	defer step.Cleanup(state)
 
 	config := state.Get("config").(*Config)
-	driver := state.Get("driver").(*DriverMock)
+	driver := state.Get("driver").(*common.DriverMock)
 
 	// run the step
 	if action := step.Run(context.Background(), state); action != multistep.ActionContinue {

@@ -7,6 +7,7 @@ import (
 	"context"
 	"os"
 
+	"github.com/hashicorp/packer-plugin-googlecompute/lib/common"
 	"golang.org/x/oauth2/google"
 )
 
@@ -23,5 +24,5 @@ func ProcessCredentialsFile(path string) (*google.Credentials, error) {
 // ProcessCredentials essentially proxies the google lib's function to read
 // credentials from raw JSON
 func ProcessCredentials(text []byte) (*google.Credentials, error) {
-	return google.CredentialsFromJSON(context.Background(), text, DriverScopes...)
+	return google.CredentialsFromJSON(context.Background(), text, common.DriverScopes...)
 }

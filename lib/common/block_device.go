@@ -4,7 +4,7 @@
 //go:generate packer-sdc struct-markdown
 //go:generate packer-sdc mapstructure-to-hcl2 -type BlockDevice
 
-package googlecompute
+package common
 
 import (
 	"fmt"
@@ -92,11 +92,11 @@ type BlockDevice struct {
 	//
 	// For details on the different types, refer to: https://cloud.google.com/compute/docs/disks#disk-types
 	VolumeType BlockDeviceType `mapstructure:"volume_type" required:"true"`
-	// zone is the zone in which to create the disk in.
+	// Zone is the zone in which to create the disk in.
 	//
 	// It is not exposed since the parent config already specifies it
 	// and it will be set for the block device when preparing it.
-	zone string
+	Zone string `mapstructure:"_"`
 }
 
 func volumeTypeError() string {
@@ -226,7 +226,7 @@ func (bd *BlockDevice) prepareDiskCreate() []error {
 
 var regionRegexp = regexp.MustCompile("^(.+)-[^-]$")
 
-func getRegionFromZone(zone string) (string, error) {
+func GetRegionFromZone(zone string) (string, error) {
 	matches := regionRegexp.FindStringSubmatch(zone)
 	if len(matches) != 2 {
 		return "", fmt.Errorf("failed to extract region from zone %q", zone)
@@ -236,11 +236,11 @@ func getRegionFromZone(zone string) (string, error) {
 
 var zoneRegexp = regexp.MustCompile("^[a-z]+-[a-z]+[0-9]-[a-z]$")
 
-func isZoneARegion(zone string) bool {
+func IsZoneARegion(zone string) bool {
 	return !zoneRegexp.MatchString(zone)
 }
 
-func (bd BlockDevice) generateComputeDiskPayload() (*compute.Disk, error) {
+func (bd BlockDevice) GenerateComputeDiskPayload() (*compute.Disk, error) {
 	// We don't create a new disk if it is referenced
 	if bd.SourceVolume != "" {
 		return nil, nil
@@ -258,15 +258,15 @@ func (bd BlockDevice) generateComputeDiskPayload() (*compute.Disk, error) {
 	}
 
 	if len(bd.ReplicaZones) == 0 {
-		payload.Type = fmt.Sprintf("zones/%s/diskTypes/%s", bd.zone, bd.VolumeType)
+		payload.Type = fmt.Sprintf("zones/%s/diskTypes/%s", bd.Zone, bd.VolumeType)
 	} else {
-		region, err := getRegionFromZone(bd.zone)
+		region, err := GetRegionFromZone(bd.Zone)
 		if err != nil {
 			return nil, err
 		}
 		payload.Type = fmt.Sprintf("regions/%s/diskTypes/%s", region, bd.VolumeType)
 		payload.ReplicaZones = []string{
-			fmt.Sprintf("zones/%s", bd.zone),
+			fmt.Sprintf("zones/%s", bd.Zone),
 		}
 	}
 
@@ -294,7 +294,7 @@ func (bd BlockDevice) shouldAutoDelete() bool {
 	return true
 }
 
-func (bd BlockDevice) generateDiskAttachment() *compute.AttachedDisk {
+func (bd BlockDevice) GenerateDiskAttachment() *compute.AttachedDisk {
 	if bd.VolumeType == LocalScratch {
 		return &compute.AttachedDisk{
 			AutoDelete:        true,
@@ -305,7 +305,7 @@ func (bd BlockDevice) generateDiskAttachment() *compute.AttachedDisk {
 			Mode:              bd.AttachmentMode,
 			Type:              "SCRATCH",
 			InitializeParams: &compute.AttachedDiskInitializeParams{
-				DiskType: fmt.Sprintf("zones/%s/diskTypes/local-ssd", bd.zone),
+				DiskType: fmt.Sprintf("zones/%s/diskTypes/local-ssd", bd.Zone),
 			},
 		}
 	}

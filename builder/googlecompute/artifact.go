@@ -9,13 +9,14 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/hashicorp/packer-plugin-googlecompute/lib/common"
 	registryimage "github.com/hashicorp/packer-plugin-sdk/packer/registry/image"
 )
 
 // Artifact represents a GCE image as the result of a Packer build.
 type Artifact struct {
-	image  *Image
-	driver Driver
+	image  *common.Image
+	driver common.Driver
 	config *Config
 	// StateData should store data such as GeneratedData
 	// to be shared with post-processors

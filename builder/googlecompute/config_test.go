@@ -628,8 +628,8 @@ func TestConfigExtraBlockDevice_zone_forwarded(t *testing.T) {
 
 	blockDevice := ebd[0]
 
-	if blockDevice.zone != config.Zone {
-		t.Errorf("Expected block device zone (%q) to match config's (%q)", blockDevice.zone, config.Zone)
+	if blockDevice.Zone != config.Zone {
+		t.Errorf("Expected block device zone (%q) to match config's (%q)", blockDevice.Zone, config.Zone)
 	}
 }
 

@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/hashicorp/packer-plugin-googlecompute/lib/common"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
 )
@@ -23,7 +24,7 @@ type StepCreateImage int
 // instance must be deleted and the disk retained before doing this step.
 func (s *StepCreateImage) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	config := state.Get("config").(*Config)
-	driver := state.Get("driver").(Driver)
+	driver := state.Get("driver").(common.Driver)
 	ui := state.Get("ui").(packersdk.Ui)
 
 	if config.SkipCreateImage {

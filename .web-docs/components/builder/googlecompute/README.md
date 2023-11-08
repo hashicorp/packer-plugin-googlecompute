@@ -111,7 +111,7 @@ builder.
 - `disk_type` (string) - Type of disk used to back your instance, like pd-ssd or pd-standard.
   Defaults to pd-standard.
 
-- `disk_encryption_key` (\*CustomerEncryptionKey) - Disk encryption key to apply to the created boot disk. Possible values:
+- `disk_encryption_key` (\*common.CustomerEncryptionKey) - Disk encryption key to apply to the created boot disk. Possible values:
   * kmsKeyName -  The name of the encryption key that is stored in Google Cloud KMS.
   * RawKey: - A 256-bit customer-supplied encryption key, encodes in RFC 4648 base64.
   
@@ -146,7 +146,7 @@ builder.
   state of your VM instances. Note: integrity monitoring relies on having
   vTPM enabled. [Details](https://cloud.google.com/security/shielded-cloud/shielded-vm)
 
-- `disk_attachment` ([]BlockDevice) - Extra disks to attach to the instance that will build the final image.
+- `disk_attachment` ([]common.BlockDevice) - Extra disks to attach to the instance that will build the final image.
   
   You may reference an existing external persistent disk, or you can configure
   a set of disks to be created before the instance is created, and will
@@ -169,7 +169,7 @@ builder.
 
 - `image_description` (string) - The description of the resulting image.
 
-- `image_encryption_key` (\*CustomerEncryptionKey) - Image encryption key to apply to the created image. Possible values:
+- `image_encryption_key` (\*common.CustomerEncryptionKey) - Image encryption key to apply to the created image. Possible values:
   * kmsKeyName -  The name of the encryption key that is stored in Google Cloud KMS.
   * RawKey: - A 256-bit customer-supplied encryption key, encodes in RFC 4648 base64.
   
@@ -259,7 +259,7 @@ builder.
 
 - `preemptible` (bool) - If true, launch a preemptible instance.
 
-- `node_affinity` ([]NodeAffinity) - Sets a node affinity label for the launched instance (eg. for sole tenancy).
+- `node_affinity` ([]common.NodeAffinity) - Sets a node affinity label for the launched instance (eg. for sole tenancy).
   Please see [Provisioning VMs on
   sole-tenant nodes](https://cloud.google.com/compute/docs/nodes/provisioning-sole-tenant-vms)
   for more information.

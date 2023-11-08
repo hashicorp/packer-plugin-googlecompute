@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package googlecompute
+package common
 
 import (
 	"testing"
@@ -61,7 +61,7 @@ func TestGetNetworking(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		n, sn, err := getNetworking(tc.c)
+		n, sn, err := GetNetworking(tc.c)
 		if n != tc.expectedNetwork {
 			t.Errorf("Expected network %q but got network %q", tc.expectedNetwork, n)
 		}

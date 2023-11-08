@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package googlecompute
+package common
 
 import (
 	"fmt"
@@ -329,7 +329,7 @@ func (d *DriverMock) CreateOrResetWindowsPassword(instance, zone string, c *Wind
 	d.CreateOrResetWindowsPasswordZone = zone
 	d.CreateOrResetWindowsPasswordConfig = c
 
-	c.password = "MOCK_PASSWORD"
+	c.Password = "MOCK_PASSWORD"
 
 	resultCh := d.CreateOrResetWindowsPasswordErrCh
 	if resultCh == nil {

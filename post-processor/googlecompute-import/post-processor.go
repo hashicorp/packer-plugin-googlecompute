@@ -25,14 +25,15 @@ import (
 
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/hashicorp/packer-plugin-googlecompute/builder/googlecompute"
-	"github.com/hashicorp/packer-plugin-sdk/common"
+	"github.com/hashicorp/packer-plugin-googlecompute/lib/common"
+	sdk_common "github.com/hashicorp/packer-plugin-sdk/common"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/hashicorp/packer-plugin-sdk/template/config"
 	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
 )
 
 type Config struct {
-	common.PackerConfig `mapstructure:",squash"`
+	sdk_common.PackerConfig `mapstructure:",squash"`
 
 	// Authentication methods
 
@@ -258,7 +259,7 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packersdk.Ui, artifa
 	p.config.ctx.Data = generatedData
 	var err error
 	var opts []option.ClientOption
-	opts, err = googlecompute.NewClientOptionGoogle(p.config.VaultGCPOauthEngine, p.config.ImpersonateServiceAccount, p.config.AccessToken, p.config.credentials, p.config.Scopes)
+	opts, err = common.NewClientOptionGoogle(p.config.VaultGCPOauthEngine, p.config.ImpersonateServiceAccount, p.config.AccessToken, p.config.credentials, p.config.Scopes)
 	if err != nil {
 		return nil, false, false, err
 	}

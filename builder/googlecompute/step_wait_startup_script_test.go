@@ -7,6 +7,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/hashicorp/packer-plugin-googlecompute/lib/common"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/template/config"
 	"github.com/stretchr/testify/assert"
@@ -16,7 +17,7 @@ func TestStepWaitStartupScript(t *testing.T) {
 	state := testState(t)
 	step := new(StepWaitStartupScript)
 	c := state.Get("config").(*Config)
-	d := state.Get("driver").(*DriverMock)
+	d := state.Get("driver").(*common.DriverMock)
 
 	testZone := "test-zone"
 	testInstanceName := "test-instance-name"
@@ -60,7 +61,7 @@ func TestStepWaitStartupScript_withWrapStartupScript(t *testing.T) {
 			state := testState(t)
 			step := new(StepWaitStartupScript)
 			c := state.Get("config").(*Config)
-			d := state.Get("driver").(*DriverMock)
+			d := state.Get("driver").(*common.DriverMock)
 
 			c.StartupScriptFile = "startup.sh"
 			c.WrapStartupScriptFile = tc.WrapStartup
