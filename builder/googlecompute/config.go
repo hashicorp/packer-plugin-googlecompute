@@ -390,7 +390,7 @@ func (c *Config) Prepare(raws ...interface{}) ([]string, error) {
 		return nil, err
 	}
 
-	var errs *packersdk.MultiError
+	var errs error
 
 	for i, bd := range c.ExtraBlockDevices {
 		err := bd.Prepare()
@@ -652,12 +652,7 @@ func (c *Config) Prepare(raws ...interface{}) ([]string, error) {
 		c.WindowsPasswordTimeout = 3 * time.Minute
 	}
 
-	// Check for any errors.
-	if errs != nil && len(errs.Errors) > 0 {
-		return nil, errs
-	}
-
-	return nil, nil
+	return nil, errs
 }
 
 type CustomerEncryptionKey struct {
