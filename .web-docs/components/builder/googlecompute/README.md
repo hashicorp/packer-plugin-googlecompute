@@ -62,7 +62,33 @@ builder.
   run Packer on a GCE instance with a service account. Instructions for
   creating the file or using service accounts are above.
 
+- `credentials_file` (string) - The JSON file containing your account credentials.
+  
+  The file's contents may be anything supported by the Google Go client, i.e.:
+  
+  * Service account JSON
+  * OIDC-provided token for federation
+  * Gcloud user credentials file (refresh-token JSON)
+  * A Google Developers Console client_credentials.json
+
+- `credentials_json` (string) - The raw JSON payload for credentials.
+  
+  The accepted data formats are same as those described under
+  [credentials_file](#credentials_file).
+
 - `impersonate_service_account` (string) - This allows service account impersonation as per the [docs](https://cloud.google.com/iam/docs/impersonating-service-accounts).
+
+- `vault_gcp_oauth_engine` (string) - Can be set instead of account_file. If set, this builder will use
+  HashiCorp Vault to generate an Oauth token for authenticating against
+  Google Cloud. The value should be the path of the token generator
+  within vault.
+  For information on how to configure your Vault + GCP engine to produce
+  Oauth tokens, see https://www.vaultproject.io/docs/auth/gcp
+  You must have the environment variables VAULT_ADDR and VAULT_TOKEN set,
+  along with any other relevant variables for accessing your vault
+  instance. For more information, see the Vault docs:
+  https://www.vaultproject.io/docs/commands/#environment-variables
+  Example:`"vault_gcp_oauth_engine": "gcp/token/my-project-editor",`
 
 - `accelerator_type` (string) - Full or partial URL of the guest accelerator type. GPU accelerators can
   only be used with `"on_host_maintenance": "TERMINATE"` option set.
@@ -336,18 +362,6 @@ builder.
    000000000000000000000000000000000000000000000000000000000000000a:
      fingerprint: 000000000000000000000000000000000000000000000000000000000000000a
   ```
-
-- `vault_gcp_oauth_engine` (string) - Can be set instead of account_file. If set, this builder will use
-  HashiCorp Vault to generate an Oauth token for authenticating against
-  Google Cloud. The value should be the path of the token generator
-  within vault.
-  For information on how to configure your Vault + GCP engine to produce
-  Oauth tokens, see https://www.vaultproject.io/docs/auth/gcp
-  You must have the environment variables VAULT_ADDR and VAULT_TOKEN set,
-  along with any other relevant variables for accessing your vault
-  instance. For more information, see the Vault docs:
-  https://www.vaultproject.io/docs/commands/#environment-variables
-  Example:`"vault_gcp_oauth_engine": "gcp/token/my-project-editor",`
 
 - `wait_to_add_ssh_keys` (duration string | ex: "1h5m2s") - The time to wait between the creation of the instance used to create the image,
   and the addition of SSH configuration, including SSH keys, to that instance.

@@ -5,7 +5,6 @@ package googlecompute
 
 import (
 	"os"
-	"path"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -24,21 +23,29 @@ var (
 )
 
 func TestProcessCredentialsFile_OIDCtext(t *testing.T) {
-	account, err := ProcessCredentialsFile(string(JWT_JSON))
+	account, err := ProcessCredentials(OIDC_JSON)
 	assert.NoError(t, err)
 	assert.NotNil(t, account)
-	assert.NotNil(t, account.credentials)
 }
 
 func TestProcessCredentialsFile_OIDCFile(t *testing.T) {
-	workdir := t.TempDir()
-	credsFile := path.Join(workdir, "jwt-file")
-	err := os.WriteFile(credsFile, JWT_JSON, 0777)
-	assert.NoError(t, err)
-	account, err := ProcessCredentialsFile(credsFile)
+	credsFile, err := os.CreateTemp("", "creds_")
+	if err != nil {
+		t.Fatalf("failed to create temporary creds file: %s", err)
+	}
+
+	credsFilePath := credsFile.Name()
+
+	defer os.Remove(credsFilePath)
+	_, err = credsFile.Write(OIDC_JSON)
+	if err != nil {
+		t.Fatalf("failed to write credentials to file: %s", err)
+	}
+	credsFile.Close()
+
+	account, err := ProcessCredentialsFile(credsFilePath)
 	assert.NoError(t, err)
 	assert.NotNil(t, account)
-	assert.NotNil(t, account.credentials)
 }
 
 func TestProcessCredentialsFile_invalidContent(t *testing.T) {

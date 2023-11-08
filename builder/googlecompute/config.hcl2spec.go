@@ -69,7 +69,10 @@ type FlatConfig struct {
 	WinRMUseNTLM                 *bool                      `mapstructure:"winrm_use_ntlm" cty:"winrm_use_ntlm" hcl:"winrm_use_ntlm"`
 	AccessToken                  *string                    `mapstructure:"access_token" required:"false" cty:"access_token" hcl:"access_token"`
 	AccountFile                  *string                    `mapstructure:"account_file" required:"false" cty:"account_file" hcl:"account_file"`
+	CredentialsFile              *string                    `mapstructure:"credentials_file" required:"false" cty:"credentials_file" hcl:"credentials_file"`
+	CredentialsJSON              *string                    `mapstructure:"credentials_json" required:"false" cty:"credentials_json" hcl:"credentials_json"`
 	ImpersonateServiceAccount    *string                    `mapstructure:"impersonate_service_account" required:"false" cty:"impersonate_service_account" hcl:"impersonate_service_account"`
+	VaultGCPOauthEngine          *string                    `mapstructure:"vault_gcp_oauth_engine" cty:"vault_gcp_oauth_engine" hcl:"vault_gcp_oauth_engine"`
 	ProjectId                    *string                    `mapstructure:"project_id" required:"true" cty:"project_id" hcl:"project_id"`
 	AcceleratorType              *string                    `mapstructure:"accelerator_type" required:"false" cty:"accelerator_type" hcl:"accelerator_type"`
 	AcceleratorCount             *int64                     `mapstructure:"accelerator_count" required:"false" cty:"accelerator_count" hcl:"accelerator_count"`
@@ -125,7 +128,6 @@ type FlatConfig struct {
 	Tags                         []string                   `mapstructure:"tags" required:"false" cty:"tags" hcl:"tags"`
 	UseInternalIP                *bool                      `mapstructure:"use_internal_ip" required:"false" cty:"use_internal_ip" hcl:"use_internal_ip"`
 	UseOSLogin                   *bool                      `mapstructure:"use_os_login" required:"false" cty:"use_os_login" hcl:"use_os_login"`
-	VaultGCPOauthEngine          *string                    `mapstructure:"vault_gcp_oauth_engine" cty:"vault_gcp_oauth_engine" hcl:"vault_gcp_oauth_engine"`
 	WaitToAddSSHKeys             *string                    `mapstructure:"wait_to_add_ssh_keys" cty:"wait_to_add_ssh_keys" hcl:"wait_to_add_ssh_keys"`
 	Zone                         *string                    `mapstructure:"zone" required:"true" cty:"zone" hcl:"zone"`
 }
@@ -201,7 +203,10 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"winrm_use_ntlm":                  &hcldec.AttrSpec{Name: "winrm_use_ntlm", Type: cty.Bool, Required: false},
 		"access_token":                    &hcldec.AttrSpec{Name: "access_token", Type: cty.String, Required: false},
 		"account_file":                    &hcldec.AttrSpec{Name: "account_file", Type: cty.String, Required: false},
+		"credentials_file":                &hcldec.AttrSpec{Name: "credentials_file", Type: cty.String, Required: false},
+		"credentials_json":                &hcldec.AttrSpec{Name: "credentials_json", Type: cty.String, Required: false},
 		"impersonate_service_account":     &hcldec.AttrSpec{Name: "impersonate_service_account", Type: cty.String, Required: false},
+		"vault_gcp_oauth_engine":          &hcldec.AttrSpec{Name: "vault_gcp_oauth_engine", Type: cty.String, Required: false},
 		"project_id":                      &hcldec.AttrSpec{Name: "project_id", Type: cty.String, Required: false},
 		"accelerator_type":                &hcldec.AttrSpec{Name: "accelerator_type", Type: cty.String, Required: false},
 		"accelerator_count":               &hcldec.AttrSpec{Name: "accelerator_count", Type: cty.Number, Required: false},
@@ -257,7 +262,6 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"tags":                            &hcldec.AttrSpec{Name: "tags", Type: cty.List(cty.String), Required: false},
 		"use_internal_ip":                 &hcldec.AttrSpec{Name: "use_internal_ip", Type: cty.Bool, Required: false},
 		"use_os_login":                    &hcldec.AttrSpec{Name: "use_os_login", Type: cty.Bool, Required: false},
-		"vault_gcp_oauth_engine":          &hcldec.AttrSpec{Name: "vault_gcp_oauth_engine", Type: cty.String, Required: false},
 		"wait_to_add_ssh_keys":            &hcldec.AttrSpec{Name: "wait_to_add_ssh_keys", Type: cty.String, Required: false},
 		"zone":                            &hcldec.AttrSpec{Name: "zone", Type: cty.String, Required: false},
 	}
