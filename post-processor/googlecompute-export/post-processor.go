@@ -9,6 +9,7 @@ package googlecomputeexport
 import (
 	"context"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -21,22 +22,59 @@ import (
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/hashicorp/packer-plugin-sdk/template/config"
 	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
+	"golang.org/x/oauth2/google"
 	"google.golang.org/api/storage/v1"
 )
 
 type Config struct {
 	common.PackerConfig `mapstructure:",squash"`
 
-	//A temporary OAuth 2.0 access token
+	// Authentication methods
+
+	// A temporary [OAuth 2.0 access token](https://developers.google.com/identity/protocols/oauth2)
+	// obtained from the Google Authorization server, i.e. the `Authorization: Bearer` token used to
+	// authenticate HTTP requests to GCP APIs.
+	// This is an alternative to `account_file`, and ignores the `scopes` field.
+	// If both are specified, `access_token` will be used over the `account_file` field.
+	//
+	// These access tokens cannot be renewed by Packer and thus will only work until they expire.
+	// If you anticipate Packer needing access for longer than a token's lifetime (default `1 hour`),
+	// please use a service account key with `account_file` instead.
 	AccessToken string `mapstructure:"access_token" required:"false"`
-	//The JSON file containing your service account credentials (service_account.json).
-	//If specified, the account file will take precedence over any `googlecompute` builder authentication method.
+	// The JSON file containing your account credentials. Not required if you
+	// run Packer on a GCE instance with a service account. Instructions for
+	// creating the file or using service accounts are above.
 	AccountFile string `mapstructure:"account_file" required:"false"`
-	//The JSON file containing your account credentials (workload or workforce identity federation).
-	//If specified, the account file will take precedence over any `googlecompute` builder authentication method.
+	// The JSON file containing your account credentials.
+	//
+	// The file's contents may be anything supported by the Google Go client, i.e.:
+	//
+	// * Service account JSON
+	// * OIDC-provided token for federation
+	// * Gcloud user credentials file (refresh-token JSON)
+	// * A Google Developers Console client_credentials.json
 	CredentialsFile string `mapstructure:"credentials_file" required:"false"`
+	// The raw JSON payload for credentials.
+	//
+	// The accepted data formats are same as those described under
+	// [credentials_file](#credentials_file).
+	CredentialsJSON string `mapstructure:"credentials_json" required:"false"`
 	// This allows service account impersonation as per the [docs](https://cloud.google.com/iam/docs/impersonating-service-accounts).
 	ImpersonateServiceAccount string `mapstructure:"impersonate_service_account" required:"false"`
+	// Can be set instead of account_file. If set, this builder will use
+	// HashiCorp Vault to generate an Oauth token for authenticating against
+	// Google Cloud. The value should be the path of the token generator
+	// within vault.
+	// For information on how to configure your Vault + GCP engine to produce
+	// Oauth tokens, see https://www.vaultproject.io/docs/auth/gcp
+	// You must have the environment variables VAULT_ADDR and VAULT_TOKEN set,
+	// along with any other relevant variables for accessing your vault
+	// instance. For more information, see the Vault docs:
+	// https://www.vaultproject.io/docs/commands/#environment-variables
+	// Example:`"vault_gcp_oauth_engine": "gcp/token/my-project-editor",`
+	VaultGCPOauthEngine string `mapstructure:"vault_gcp_oauth_engine"`
+	credentials         *google.Credentials
+
 	// The service account scopes for launched exporter post-processor instance.
 	// Defaults to:
 	//
@@ -74,17 +112,25 @@ type Config struct {
 	//to `googlecompute` builder zone. Example: `"us-central1-a"`
 	Zone                string `mapstructure:"zone"`
 	IAP                 bool   `mapstructure-to-hcl2:",skip"`
-	VaultGCPOauthEngine string `mapstructure:"vault_gcp_oauth_engine"`
 	ServiceAccountEmail string `mapstructure:"service_account_email"`
 
-	account     *googlecompute.ServiceAccount
-	credentials *googlecompute.AccountCredentials
-	ctx         interpolate.Context
+	ctx interpolate.Context
 }
 
 type PostProcessor struct {
 	config Config
 	runner multistep.Runner
+}
+
+func (p *PostProcessor) CheckAuth() error {
+	return googlecompute.CheckAuth(
+		p.config.AccessToken,
+		p.config.AccountFile,
+		p.config.CredentialsFile,
+		p.config.CredentialsJSON,
+		p.config.ImpersonateServiceAccount,
+		p.config.VaultGCPOauthEngine,
+	)
 }
 
 func (p *PostProcessor) ConfigSpec() hcldec.ObjectSpec { return p.config.FlatMapstructure().HCL2Spec() }
@@ -123,27 +169,37 @@ func (p *PostProcessor) Configure(raws ...interface{}) error {
 		p.config.Network = "default"
 	}
 
-	if p.config.AccountFile != "" && p.config.VaultGCPOauthEngine != "" {
-		errs = packersdk.MultiErrorAppend(
-			errs, fmt.Errorf("May set either account_file or "+
-				"vault_gcp_oauth_engine, but not both."))
+	err = p.CheckAuth()
+	if err != nil {
+		errs = packersdk.MultiErrorAppend(errs, err)
 	}
 
-	specifiedAccountDetails := 0
+	// Authenticating via an account file
 	if p.config.AccountFile != "" {
-		specifiedAccountDetails++
-	}
-	if p.config.AccessToken != "" {
-		specifiedAccountDetails++
-	}
-	if p.config.CredentialsFile != "" {
-		specifiedAccountDetails++
+		log.Printf("account_file is deprecated, please use either credentials_json or credentials_file instead")
+		// Heuristic, but should be good enough to discriminate between
+		// the two somewhat reliably.
+		if strings.HasPrefix(strings.TrimSpace(p.config.AccountFile), "{") {
+			p.config.CredentialsJSON = p.config.AccountFile
+		} else {
+			p.config.CredentialsFile = p.config.AccountFile
+		}
 	}
 
-	if specifiedAccountDetails > 1 {
-		errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("You can "+
-			"specify only one of `access_token`, `account_file`, and "+
-			"`credentials_file` at one time"))
+	if p.config.CredentialsFile != "" {
+		cfg, err := googlecompute.ProcessCredentialsFile(p.config.CredentialsFile)
+		if err != nil {
+			errs = packersdk.MultiErrorAppend(errs, err)
+		}
+		p.config.credentials = cfg
+	}
+
+	if p.config.CredentialsJSON != "" {
+		cfg, err := googlecompute.ProcessCredentials([]byte(p.config.CredentialsJSON))
+		if err != nil {
+			errs = packersdk.MultiErrorAppend(errs, err)
+		}
+		p.config.credentials = cfg
 	}
 
 	if len(p.config.Scopes) == 0 {
@@ -172,8 +228,6 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packersdk.Ui, artifa
 		return nil, false, false, err
 	}
 
-	builderAccountFile := artifact.State("AccountFilePath").(string)
-	builderCredentialsFile := artifact.State("CredentialsFilePath").(string)
 	builderImageName := artifact.State("ImageName").(string)
 	builderProjectId := artifact.State("ProjectId").(string)
 	builderZone := artifact.State("BuildZone").(string)
@@ -182,38 +236,6 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packersdk.Ui, artifa
 
 	if p.config.Zone == "" {
 		p.config.Zone = builderZone
-	}
-
-	// Set up credentials for GCE driver.
-	if builderAccountFile != "" {
-		cfg, err := googlecompute.ProcessAccountFile(builderAccountFile)
-		if err != nil {
-			return nil, false, false, err
-		}
-		p.config.account = cfg
-	}
-	if p.config.AccountFile != "" {
-		cfg, err := googlecompute.ProcessAccountFile(p.config.AccountFile)
-		if err != nil {
-			return nil, false, false, err
-		}
-		p.config.account = cfg
-	}
-
-	// Set up credentials for GCE driver.
-	if builderCredentialsFile != "" {
-		cfg, err := googlecompute.ProcessCredentialsFile(builderCredentialsFile)
-		if err != nil {
-			return nil, false, false, err
-		}
-		p.config.credentials = cfg
-	}
-	if p.config.CredentialsFile != "" {
-		cfg, err := googlecompute.ProcessCredentialsFile(p.config.CredentialsFile)
-		if err != nil {
-			return nil, false, false, err
-		}
-		p.config.credentials = cfg
 	}
 
 	// Set up exporter instance configuration.
@@ -255,7 +277,6 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packersdk.Ui, artifa
 	cfg := googlecompute.GCEDriverConfig{
 		Ui:                            ui,
 		ProjectId:                     builderProjectId,
-		Account:                       p.config.account,
 		AccessToken:                   p.config.AccessToken,
 		ImpersonateServiceAccountName: p.config.ImpersonateServiceAccount,
 		Scopes:                        p.config.Scopes,

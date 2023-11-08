@@ -20,7 +20,10 @@ type FlatConfig struct {
 	PackerSensitiveVars        []string          `mapstructure:"packer_sensitive_variables" cty:"packer_sensitive_variables" hcl:"packer_sensitive_variables"`
 	AccessToken                *string           `mapstructure:"access_token" required:"false" cty:"access_token" hcl:"access_token"`
 	AccountFile                *string           `mapstructure:"account_file" required:"false" cty:"account_file" hcl:"account_file"`
+	CredentialsFile            *string           `mapstructure:"credentials_file" required:"false" cty:"credentials_file" hcl:"credentials_file"`
+	CredentialsJSON            *string           `mapstructure:"credentials_json" required:"false" cty:"credentials_json" hcl:"credentials_json"`
 	ImpersonateServiceAccount  *string           `mapstructure:"impersonate_service_account" required:"false" cty:"impersonate_service_account" hcl:"impersonate_service_account"`
+	VaultGCPOauthEngine        *string           `mapstructure:"vault_gcp_oauth_engine" cty:"vault_gcp_oauth_engine" hcl:"vault_gcp_oauth_engine"`
 	Scopes                     []string          `mapstructure:"scopes" required:"false" cty:"scopes" hcl:"scopes"`
 	ProjectId                  *string           `mapstructure:"project_id" required:"true" cty:"project_id" hcl:"project_id"`
 	IAP                        *bool             `mapstructure-to-hcl:",skip" cty:"iap" hcl:"iap"`
@@ -34,7 +37,6 @@ type FlatConfig struct {
 	ImageName                  *string           `mapstructure:"image_name" required:"true" cty:"image_name" hcl:"image_name"`
 	ImageStorageLocations      []string          `mapstructure:"image_storage_locations" cty:"image_storage_locations" hcl:"image_storage_locations"`
 	SkipClean                  *bool             `mapstructure:"skip_clean" cty:"skip_clean" hcl:"skip_clean"`
-	VaultGCPOauthEngine        *string           `mapstructure:"vault_gcp_oauth_engine" cty:"vault_gcp_oauth_engine" hcl:"vault_gcp_oauth_engine"`
 	ImagePlatformKey           *string           `mapstructure:"image_platform_key" cty:"image_platform_key" hcl:"image_platform_key"`
 	ImageKeyExchangeKey        []string          `mapstructure:"image_key_exchange_key" cty:"image_key_exchange_key" hcl:"image_key_exchange_key"`
 	ImageSignaturesDB          []string          `mapstructure:"image_signatures_db" cty:"image_signatures_db" hcl:"image_signatures_db"`
@@ -63,7 +65,10 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"packer_sensitive_variables":    &hcldec.AttrSpec{Name: "packer_sensitive_variables", Type: cty.List(cty.String), Required: false},
 		"access_token":                  &hcldec.AttrSpec{Name: "access_token", Type: cty.String, Required: false},
 		"account_file":                  &hcldec.AttrSpec{Name: "account_file", Type: cty.String, Required: false},
+		"credentials_file":              &hcldec.AttrSpec{Name: "credentials_file", Type: cty.String, Required: false},
+		"credentials_json":              &hcldec.AttrSpec{Name: "credentials_json", Type: cty.String, Required: false},
 		"impersonate_service_account":   &hcldec.AttrSpec{Name: "impersonate_service_account", Type: cty.String, Required: false},
+		"vault_gcp_oauth_engine":        &hcldec.AttrSpec{Name: "vault_gcp_oauth_engine", Type: cty.String, Required: false},
 		"scopes":                        &hcldec.AttrSpec{Name: "scopes", Type: cty.List(cty.String), Required: false},
 		"project_id":                    &hcldec.AttrSpec{Name: "project_id", Type: cty.String, Required: false},
 		"iap":                           &hcldec.AttrSpec{Name: "iap", Type: cty.Bool, Required: false},
@@ -77,7 +82,6 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"image_name":                    &hcldec.AttrSpec{Name: "image_name", Type: cty.String, Required: false},
 		"image_storage_locations":       &hcldec.AttrSpec{Name: "image_storage_locations", Type: cty.List(cty.String), Required: false},
 		"skip_clean":                    &hcldec.AttrSpec{Name: "skip_clean", Type: cty.Bool, Required: false},
-		"vault_gcp_oauth_engine":        &hcldec.AttrSpec{Name: "vault_gcp_oauth_engine", Type: cty.String, Required: false},
 		"image_platform_key":            &hcldec.AttrSpec{Name: "image_platform_key", Type: cty.String, Required: false},
 		"image_key_exchange_key":        &hcldec.AttrSpec{Name: "image_key_exchange_key", Type: cty.List(cty.String), Required: false},
 		"image_signatures_db":           &hcldec.AttrSpec{Name: "image_signatures_db", Type: cty.List(cty.String), Required: false},

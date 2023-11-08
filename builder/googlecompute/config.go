@@ -12,6 +12,7 @@ import (
 	"os"
 	"regexp"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/packer-plugin-sdk/common"
@@ -20,6 +21,7 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/template/config"
 	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
 	"github.com/hashicorp/packer-plugin-sdk/uuid"
+	"golang.org/x/oauth2/google"
 	compute "google.golang.org/api/compute/v1"
 )
 
@@ -32,6 +34,8 @@ var validImageName = regexp.MustCompile(`^[a-z]([-a-z0-9]{0,61}[a-z0-9])?$`)
 type Config struct {
 	common.PackerConfig `mapstructure:",squash"`
 	Comm                communicator.Config `mapstructure:",squash"`
+
+	// Authentication methods
 
 	// A temporary [OAuth 2.0 access token](https://developers.google.com/identity/protocols/oauth2)
 	// obtained from the Google Authorization server, i.e. the `Authorization: Bearer` token used to
@@ -47,8 +51,36 @@ type Config struct {
 	// run Packer on a GCE instance with a service account. Instructions for
 	// creating the file or using service accounts are above.
 	AccountFile string `mapstructure:"account_file" required:"false"`
+	// The JSON file containing your account credentials.
+	//
+	// The file's contents may be anything supported by the Google Go client, i.e.:
+	//
+	// * Service account JSON
+	// * OIDC-provided token for federation
+	// * Gcloud user credentials file (refresh-token JSON)
+	// * A Google Developers Console client_credentials.json
+	CredentialsFile string `mapstructure:"credentials_file" required:"false"`
+	// The raw JSON payload for credentials.
+	//
+	// The accepted data formats are same as those described under
+	// [credentials_file](#credentials_file).
+	CredentialsJSON string `mapstructure:"credentials_json" required:"false"`
 	// This allows service account impersonation as per the [docs](https://cloud.google.com/iam/docs/impersonating-service-accounts).
 	ImpersonateServiceAccount string `mapstructure:"impersonate_service_account" required:"false"`
+	// Can be set instead of account_file. If set, this builder will use
+	// HashiCorp Vault to generate an Oauth token for authenticating against
+	// Google Cloud. The value should be the path of the token generator
+	// within vault.
+	// For information on how to configure your Vault + GCP engine to produce
+	// Oauth tokens, see https://www.vaultproject.io/docs/auth/gcp
+	// You must have the environment variables VAULT_ADDR and VAULT_TOKEN set,
+	// along with any other relevant variables for accessing your vault
+	// instance. For more information, see the Vault docs:
+	// https://www.vaultproject.io/docs/commands/#environment-variables
+	// Example:`"vault_gcp_oauth_engine": "gcp/token/my-project-editor",`
+	VaultGCPOauthEngine string `mapstructure:"vault_gcp_oauth_engine"`
+	credentials         *google.Credentials
+
 	// The project ID that will be used to launch instances and store images.
 	ProjectId string `mapstructure:"project_id" required:"true"`
 	// Full or partial URL of the guest accelerator type. GPU accelerators can
@@ -61,10 +93,6 @@ type Config struct {
 	// The name of a pre-allocated static external IP address. Note, must be
 	// the name and not the actual IP address.
 	Address string `mapstructure:"address" required:"false"`
-	// The JSON file containing your account credentials. Not required if you
-	// run Packer on a GCE instance with a service account. Instructions for
-	// creating the file or using service accounts are above.
-	CredentialsFile string `mapstructure:"credentials_file" required:"false"`
 	// If true, the default service account will not be used if
 	// service_account_email is not specified. Set this value to true and omit
 	// service_account_email to provision a VM with no service account.
@@ -343,18 +371,6 @@ type Config struct {
 	//    fingerprint: 000000000000000000000000000000000000000000000000000000000000000a
 	//```
 	UseOSLogin bool `mapstructure:"use_os_login" required:"false"`
-	// Can be set instead of account_file. If set, this builder will use
-	// HashiCorp Vault to generate an Oauth token for authenticating against
-	// Google Cloud. The value should be the path of the token generator
-	// within vault.
-	// For information on how to configure your Vault + GCP engine to produce
-	// Oauth tokens, see https://www.vaultproject.io/docs/auth/gcp
-	// You must have the environment variables VAULT_ADDR and VAULT_TOKEN set,
-	// along with any other relevant variables for accessing your vault
-	// instance. For more information, see the Vault docs:
-	// https://www.vaultproject.io/docs/commands/#environment-variables
-	// Example:`"vault_gcp_oauth_engine": "gcp/token/my-project-editor",`
-	VaultGCPOauthEngine string `mapstructure:"vault_gcp_oauth_engine"`
 	// The time to wait between the creation of the instance used to create the image,
 	// and the addition of SSH configuration, including SSH keys, to that instance.
 	// The delay is intended to protect packer from anything in the instance boot
@@ -368,10 +384,60 @@ type Config struct {
 	// Example: "us-central1-a"
 	Zone string `mapstructure:"zone" required:"true"`
 
-	account            *ServiceAccount
 	imageAlreadyExists bool
 	ctx                interpolate.Context
-	credentials        *AccountCredentials
+}
+
+func CheckAuth(
+	accessToken string,
+	accountFile string,
+	credentialsFile string,
+	credentialsJSON string,
+	impersonateSA string,
+	vaultGCPOauthEngine string,
+) error {
+	var authTypes []string
+
+	if accessToken != "" {
+		authTypes = append(authTypes, "access_token")
+	}
+
+	if accountFile != "" {
+		authTypes = append(authTypes, "account_file")
+	}
+
+	if credentialsFile != "" {
+		authTypes = append(authTypes, "credentials_file")
+	}
+
+	if credentialsJSON != "" {
+		authTypes = append(authTypes, "credentials_json")
+	}
+
+	if impersonateSA != "" {
+		authTypes = append(authTypes, "impersonate_service_account")
+	}
+
+	if vaultGCPOauthEngine != "" {
+		authTypes = append(authTypes, "vault_gcp_oauth_engine")
+	}
+
+	if len(authTypes) > 1 {
+		return fmt.Errorf("too many authentication methods specified (%s), choose only one", strings.Join(authTypes, ", "))
+	}
+
+	return nil
+}
+
+func (c *Config) CheckAuth() error {
+	return CheckAuth(
+		c.AccessToken,
+		c.AccountFile,
+		c.CredentialsFile,
+		c.CredentialsJSON,
+		c.ImpersonateServiceAccount,
+		c.VaultGCPOauthEngine,
+	)
 }
 
 func (c *Config) Prepare(raws ...interface{}) ([]string, error) {
@@ -390,6 +456,7 @@ func (c *Config) Prepare(raws ...interface{}) ([]string, error) {
 		return nil, err
 	}
 
+	var warnings []string
 	var errs error
 
 	for i, bd := range c.ExtraBlockDevices {
@@ -583,33 +650,33 @@ func (c *Config) Prepare(raws ...interface{}) ([]string, error) {
 		c.Region = region
 	}
 
+	err = c.CheckAuth()
+	if err != nil {
+		errs = packersdk.MultiErrorAppend(errs, err)
+	}
+
 	// Authenticating via an account file
 	if c.AccountFile != "" {
-		if c.VaultGCPOauthEngine != "" && c.ImpersonateServiceAccount != "" {
-			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("You cannot "+
-				"specify impersonate_service_account, account_file and vault_gcp_oauth_engine at the same time"))
+		warnings = append(warnings, "account_file is deprecated, please use either credentials_json or credentials_file instead")
+		// Heuristic, but should be good enough to discriminate between
+		// the two somewhat reliably.
+		if strings.HasPrefix(strings.TrimSpace(c.AccountFile), "{") {
+			c.CredentialsJSON = c.AccountFile
+		} else {
+			c.CredentialsFile = c.AccountFile
 		}
-		if c.AccessToken != "" {
-			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("You cannot "+
-				"specify access_token and account_file"))
-		}
-		cfg, err := ProcessAccountFile(c.AccountFile)
-		if err != nil {
-			errs = packersdk.MultiErrorAppend(errs, err)
-		}
-		c.account = cfg
 	}
 
 	if c.CredentialsFile != "" {
-		if c.AccessToken != "" {
-			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("You cannot "+
-				"specify access_token and credentials_file"))
-		}
-		if c.AccountFile != "" {
-			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("You cannot "+
-				"specify access_file and credentials_file"))
-		}
 		cfg, err := ProcessCredentialsFile(c.CredentialsFile)
+		if err != nil {
+			errs = packersdk.MultiErrorAppend(errs, err)
+		}
+		c.credentials = cfg
+	}
+
+	if c.CredentialsJSON != "" {
+		cfg, err := ProcessCredentials([]byte(c.CredentialsJSON))
 		if err != nil {
 			errs = packersdk.MultiErrorAppend(errs, err)
 		}
@@ -652,7 +719,7 @@ func (c *Config) Prepare(raws ...interface{}) ([]string, error) {
 		c.WindowsPasswordTimeout = 3 * time.Minute
 	}
 
-	return nil, errs
+	return warnings, errs
 }
 
 type CustomerEncryptionKey struct {

@@ -20,7 +20,10 @@ type FlatConfig struct {
 	PackerSensitiveVars       []string          `mapstructure:"packer_sensitive_variables" cty:"packer_sensitive_variables" hcl:"packer_sensitive_variables"`
 	AccessToken               *string           `mapstructure:"access_token" required:"false" cty:"access_token" hcl:"access_token"`
 	AccountFile               *string           `mapstructure:"account_file" required:"false" cty:"account_file" hcl:"account_file"`
+	CredentialsFile           *string           `mapstructure:"credentials_file" required:"false" cty:"credentials_file" hcl:"credentials_file"`
+	CredentialsJSON           *string           `mapstructure:"credentials_json" required:"false" cty:"credentials_json" hcl:"credentials_json"`
 	ImpersonateServiceAccount *string           `mapstructure:"impersonate_service_account" required:"false" cty:"impersonate_service_account" hcl:"impersonate_service_account"`
+	VaultGCPOauthEngine       *string           `mapstructure:"vault_gcp_oauth_engine" cty:"vault_gcp_oauth_engine" hcl:"vault_gcp_oauth_engine"`
 	Scopes                    []string          `mapstructure:"scopes" required:"false" cty:"scopes" hcl:"scopes"`
 	DiskSizeGb                *int64            `mapstructure:"disk_size" cty:"disk_size" hcl:"disk_size"`
 	DiskType                  *string           `mapstructure:"disk_type" cty:"disk_type" hcl:"disk_type"`
@@ -29,9 +32,7 @@ type FlatConfig struct {
 	Paths                     []string          `mapstructure:"paths" required:"true" cty:"paths" hcl:"paths"`
 	Subnetwork                *string           `mapstructure:"subnetwork" cty:"subnetwork" hcl:"subnetwork"`
 	Zone                      *string           `mapstructure:"zone" cty:"zone" hcl:"zone"`
-	VaultGCPOauthEngine       *string           `mapstructure:"vault_gcp_oauth_engine" cty:"vault_gcp_oauth_engine" hcl:"vault_gcp_oauth_engine"`
 	ServiceAccountEmail       *string           `mapstructure:"service_account_email" cty:"service_account_email" hcl:"service_account_email"`
-	Credentials               *string           `mapstructure:"credentials_file" required:"false" cty:"credentials_file" hcl:"credentials_file"`
 }
 
 // FlatMapstructure returns a new FlatConfig.
@@ -56,7 +57,10 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"packer_sensitive_variables":  &hcldec.AttrSpec{Name: "packer_sensitive_variables", Type: cty.List(cty.String), Required: false},
 		"access_token":                &hcldec.AttrSpec{Name: "access_token", Type: cty.String, Required: false},
 		"account_file":                &hcldec.AttrSpec{Name: "account_file", Type: cty.String, Required: false},
+		"credentials_file":            &hcldec.AttrSpec{Name: "credentials_file", Type: cty.String, Required: false},
+		"credentials_json":            &hcldec.AttrSpec{Name: "credentials_json", Type: cty.String, Required: false},
 		"impersonate_service_account": &hcldec.AttrSpec{Name: "impersonate_service_account", Type: cty.String, Required: false},
+		"vault_gcp_oauth_engine":      &hcldec.AttrSpec{Name: "vault_gcp_oauth_engine", Type: cty.String, Required: false},
 		"scopes":                      &hcldec.AttrSpec{Name: "scopes", Type: cty.List(cty.String), Required: false},
 		"disk_size":                   &hcldec.AttrSpec{Name: "disk_size", Type: cty.Number, Required: false},
 		"disk_type":                   &hcldec.AttrSpec{Name: "disk_type", Type: cty.String, Required: false},
@@ -65,7 +69,6 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"paths":                       &hcldec.AttrSpec{Name: "paths", Type: cty.List(cty.String), Required: false},
 		"subnetwork":                  &hcldec.AttrSpec{Name: "subnetwork", Type: cty.String, Required: false},
 		"zone":                        &hcldec.AttrSpec{Name: "zone", Type: cty.String, Required: false},
-		"vault_gcp_oauth_engine":      &hcldec.AttrSpec{Name: "vault_gcp_oauth_engine", Type: cty.String, Required: false},
 		"service_account_email":       &hcldec.AttrSpec{Name: "service_account_email", Type: cty.String, Required: false},
 	}
 	return s
