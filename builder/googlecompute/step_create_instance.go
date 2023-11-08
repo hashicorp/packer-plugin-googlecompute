@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/packer-plugin-googlecompute/lib/common"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/hashicorp/packer-plugin-sdk/packerbuilderdata"
@@ -23,7 +24,7 @@ type StepCreateInstance struct {
 	GeneratedData *packerbuilderdata.GeneratedData
 }
 
-func (c *Config) createInstanceMetadata(sourceImage *Image, sshPublicKey string) (map[string]string, map[string]string, error) {
+func (c *Config) createInstanceMetadata(sourceImage *common.Image, sshPublicKey string) (map[string]string, map[string]string, error) {
 
 	instanceMetadataNoSSHKeys := make(map[string]string)
 	instanceMetadataSSHKeys := make(map[string]string)
@@ -97,7 +98,7 @@ func (c *Config) createInstanceMetadata(sourceImage *Image, sshPublicKey string)
 	return instanceMetadataNoSSHKeys, instanceMetadataSSHKeys, nil
 }
 
-func getImage(c *Config, d Driver) (*Image, error) {
+func getImage(c *Config, d common.Driver) (*common.Image, error) {
 	name := c.SourceImageFamily
 	fromFamily := true
 	if c.SourceImage != "" {
@@ -114,7 +115,7 @@ func getImage(c *Config, d Driver) (*Image, error) {
 // Run executes the Packer build step that creates a GCE instance.
 func (s *StepCreateInstance) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	c := state.Get("config").(*Config)
-	d := state.Get("driver").(Driver)
+	d := state.Get("driver").(common.Driver)
 
 	ui := state.Get("ui").(packersdk.Ui)
 
@@ -172,7 +173,7 @@ func (s *StepCreateInstance) Run(ctx context.Context, state multistep.StateBag) 
 		addmap(metadataForInstance, metadataNoSSHKeys)
 	}
 
-	errCh, err = d.RunInstance(&InstanceConfig{
+	errCh, err = d.RunInstance(&common.InstanceConfig{
 		AcceleratorType:              c.AcceleratorType,
 		AcceleratorCount:             c.AcceleratorCount,
 		Address:                      c.Address,
@@ -283,7 +284,7 @@ func (s *StepCreateInstance) Cleanup(state multistep.StateBag) {
 	}
 
 	config := state.Get("config").(*Config)
-	driver := state.Get("driver").(Driver)
+	driver := state.Get("driver").(common.Driver)
 	ui := state.Get("ui").(packersdk.Ui)
 
 	ui.Say("Deleting instance...")

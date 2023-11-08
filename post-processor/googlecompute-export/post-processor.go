@@ -15,7 +15,8 @@ import (
 
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/hashicorp/packer-plugin-googlecompute/builder/googlecompute"
-	"github.com/hashicorp/packer-plugin-sdk/common"
+	"github.com/hashicorp/packer-plugin-googlecompute/lib/common"
+	sdk_common "github.com/hashicorp/packer-plugin-sdk/common"
 	"github.com/hashicorp/packer-plugin-sdk/communicator"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/multistep/commonsteps"
@@ -27,7 +28,7 @@ import (
 )
 
 type Config struct {
-	common.PackerConfig `mapstructure:",squash"`
+	sdk_common.PackerConfig `mapstructure:",squash"`
 
 	// Authentication methods
 
@@ -274,7 +275,7 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packersdk.Ui, artifa
 	if p.config.ServiceAccountEmail != "" {
 		exporterConfig.ServiceAccountEmail = p.config.ServiceAccountEmail
 	}
-	cfg := googlecompute.GCEDriverConfig{
+	cfg := common.GCEDriverConfig{
 		Ui:                            ui,
 		ProjectId:                     builderProjectId,
 		AccessToken:                   p.config.AccessToken,
@@ -284,7 +285,7 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packersdk.Ui, artifa
 		Credentials:                   p.config.credentials,
 	}
 
-	driver, err := googlecompute.NewDriverGCE(cfg)
+	driver, err := common.NewDriverGCE(cfg)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Error creating GCE driver: %s", err.Error()))
 		return nil, false, false, err

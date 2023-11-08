@@ -6,6 +6,7 @@ package googlecompute
 import (
 	"testing"
 
+	"github.com/hashicorp/packer-plugin-googlecompute/lib/common"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
 	registryimage "github.com/hashicorp/packer-plugin-sdk/packer/registry/image"
 	"github.com/mitchellh/mapstructure"
@@ -44,7 +45,7 @@ func TestArtifactState_StateData(t *testing.T) {
 func TestArtifactState_RegistryImageMetadata(t *testing.T) {
 	artifact := &Artifact{
 		config: &Config{Zone: "us1"},
-		image:  &Image{Name: "test-image", ProjectId: "5678"},
+		image:  &common.Image{Name: "test-image", ProjectId: "5678"},
 	}
 
 	// Valid state

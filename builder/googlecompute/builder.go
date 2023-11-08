@@ -11,6 +11,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/hcl/v2/hcldec"
+	"github.com/hashicorp/packer-plugin-googlecompute/lib/common"
 	"github.com/hashicorp/packer-plugin-sdk/communicator"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/multistep/commonsteps"
@@ -46,7 +47,7 @@ func (b *Builder) Prepare(raws ...interface{}) ([]string, []string, error) {
 // Run executes a googlecompute Packer build and returns a packersdk.Artifact
 // representing a GCE machine image.
 func (b *Builder) Run(ctx context.Context, ui packersdk.Ui, hook packersdk.Hook) (packersdk.Artifact, error) {
-	cfg := GCEDriverConfig{
+	cfg := common.GCEDriverConfig{
 		Ui:                            ui,
 		ProjectId:                     b.config.ProjectId,
 		AccessToken:                   b.config.AccessToken,
@@ -56,7 +57,7 @@ func (b *Builder) Run(ctx context.Context, ui packersdk.Ui, hook packersdk.Hook)
 		Credentials:                   b.config.credentials,
 	}
 
-	driver, err := NewDriverGCE(cfg)
+	driver, err := common.NewDriverGCE(cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -136,12 +137,10 @@ func (b *Builder) Run(ctx context.Context, ui packersdk.Ui, hook packersdk.Hook)
 	}
 
 	artifact := &Artifact{
-		image:     state.Get("image").(*Image),
+		image:     state.Get("image").(*common.Image),
 		driver:    driver,
 		config:    &b.config,
 		StateData: map[string]interface{}{"generated_data": state.Get("generated_data")},
 	}
 	return artifact, nil
 }
-
-// Cancel.

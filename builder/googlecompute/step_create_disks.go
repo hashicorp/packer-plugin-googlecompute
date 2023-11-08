@@ -10,12 +10,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/packer-plugin-googlecompute/lib/common"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
 )
 
 type StepCreateDisks struct {
-	DiskConfiguration []BlockDevice
+	DiskConfiguration []common.BlockDevice
 }
 
 func (s *StepCreateDisks) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
@@ -26,11 +27,11 @@ func (s *StepCreateDisks) Run(ctx context.Context, state multistep.StateBag) mul
 		return multistep.ActionContinue
 	}
 
-	driver := state.Get("driver").(Driver)
+	driver := state.Get("driver").(common.Driver)
 	config := state.Get("config").(*Config)
 
 	for i, disk := range s.DiskConfiguration {
-		if disk.VolumeType == LocalScratch {
+		if disk.VolumeType == common.LocalScratch {
 			continue
 		}
 
@@ -56,7 +57,7 @@ func (s *StepCreateDisks) Run(ctx context.Context, state multistep.StateBag) mul
 		}
 
 		if len(disk.ReplicaZones) != 0 {
-			region, _ := getRegionFromZone(config.Zone)
+			region, _ := common.GetRegionFromZone(config.Zone)
 			// Generate the source URI for attachment later
 			s.DiskConfiguration[i].SourceVolume = fmt.Sprintf("projects/%s/regions/%s/disks/%s",
 				config.ProjectId,
@@ -76,7 +77,7 @@ func (s *StepCreateDisks) Run(ctx context.Context, state multistep.StateBag) mul
 
 func (s *StepCreateDisks) needToCreateDisks() bool {
 	for _, cfg := range s.DiskConfiguration {
-		if cfg.VolumeType == LocalScratch {
+		if cfg.VolumeType == common.LocalScratch {
 			continue
 		}
 
@@ -93,7 +94,7 @@ func (s *StepCreateDisks) needToCreateDisks() bool {
 func (s *StepCreateDisks) Cleanup(state multistep.StateBag) {
 	ui := state.Get("ui").(packersdk.Ui)
 	config := state.Get("config").(*Config)
-	driver := state.Get("driver").(Driver)
+	driver := state.Get("driver").(common.Driver)
 
 	for _, gceDisk := range s.DiskConfiguration {
 		if gceDisk.KeepDevice {
@@ -103,13 +104,13 @@ func (s *StepCreateDisks) Cleanup(state multistep.StateBag) {
 
 		// Scratch volumes are not to be deleted since they are
 		// linked to the instance and are always automatically deleted.
-		if gceDisk.VolumeType == LocalScratch {
+		if gceDisk.VolumeType == common.LocalScratch {
 			continue
 		}
 
 		zone := config.Zone
 		if len(gceDisk.ReplicaZones) != 0 {
-			zone, _ = getRegionFromZone(zone)
+			zone, _ = common.GetRegionFromZone(zone)
 		}
 
 		_, err := driver.GetDisk(zone, gceDisk.DiskName)

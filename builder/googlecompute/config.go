@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 //go:generate packer-sdc struct-markdown
-//go:generate packer-sdc mapstructure-to-hcl2 -type Config,CustomerEncryptionKey,NodeAffinity
+//go:generate packer-sdc mapstructure-to-hcl2 -type Config
 
 package googlecompute
 
@@ -15,14 +15,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/packer-plugin-sdk/common"
+	"github.com/hashicorp/packer-plugin-googlecompute/lib/common"
+	sdk_common "github.com/hashicorp/packer-plugin-sdk/common"
 	"github.com/hashicorp/packer-plugin-sdk/communicator"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/hashicorp/packer-plugin-sdk/template/config"
 	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
 	"github.com/hashicorp/packer-plugin-sdk/uuid"
 	"golang.org/x/oauth2/google"
-	compute "google.golang.org/api/compute/v1"
 )
 
 // used for ImageName and ImageFamily
@@ -32,8 +32,8 @@ var validImageName = regexp.MustCompile(`^[a-z]([-a-z0-9]{0,61}[a-z0-9])?$`)
 // both the publicly settable state as well as the privately generated
 // state of the config object.
 type Config struct {
-	common.PackerConfig `mapstructure:",squash"`
-	Comm                communicator.Config `mapstructure:",squash"`
+	sdk_common.PackerConfig `mapstructure:",squash"`
+	Comm                    communicator.Config `mapstructure:",squash"`
 
 	// Authentication methods
 
@@ -121,7 +121,7 @@ type Config struct {
 	//     kmsKeyName = "projects/${var.project}/locations/${var.region}/keyRings/computeEngine/cryptoKeys/computeEngine/cryptoKeyVersions/4"
 	//   }
 	//  ```
-	DiskEncryptionKey *CustomerEncryptionKey `mapstructure:"disk_encryption_key" required:"false"`
+	DiskEncryptionKey *common.CustomerEncryptionKey `mapstructure:"disk_encryption_key" required:"false"`
 	// Create a instance with enabling nested virtualization.
 	EnableNestedVirtualization bool `mapstructure:"enable_nested_virtualization" required:"false"`
 	// Create a Shielded VM image with Secure Boot enabled. It helps ensure that
@@ -154,7 +154,7 @@ type Config struct {
 	//
 	// Refer to the [Extra Disk Attachments](#extra-disk-attachments) section for
 	// more information on this configuration type.
-	ExtraBlockDevices []BlockDevice `mapstructure:"disk_attachment" required:"false"`
+	ExtraBlockDevices []common.BlockDevice `mapstructure:"disk_attachment" required:"false"`
 	// Whether to use an IAP proxy.
 	IAPConfig `mapstructure:",squash"`
 	// Skip creating the image. Useful for setting to `true` during a build test stage. Defaults to `false`.
@@ -181,7 +181,7 @@ type Config struct {
 	//     kmsKeyName = "projects/${var.project}/locations/${var.region}/keyRings/computeEngine/cryptoKeys/computeEngine/cryptoKeyVersions/4"
 	//   }
 	//  ```
-	ImageEncryptionKey *CustomerEncryptionKey `mapstructure:"image_encryption_key" required:"false"`
+	ImageEncryptionKey *common.CustomerEncryptionKey `mapstructure:"image_encryption_key" required:"false"`
 	// The name of the image family to which the resulting image belongs. You
 	// can create disks by specifying an image family instead of a specific
 	// image name. The image family always returns its latest image that is not
@@ -264,7 +264,7 @@ type Config struct {
 	//   operator = "IN"
 	//   values = ["packer"]
 	// ```
-	NodeAffinities []NodeAffinity `mapstructure:"node_affinity" required:"false"`
+	NodeAffinities []common.NodeAffinity `mapstructure:"node_affinity" required:"false"`
 	// The time to wait for instance state changes. Defaults to "5m".
 	StateTimeout time.Duration `mapstructure:"state_timeout" required:"false"`
 	// The region in which to launch the instance. Defaults to the region
@@ -465,7 +465,7 @@ func (c *Config) Prepare(raws ...interface{}) ([]string, error) {
 			errs = packersdk.MultiErrorAppend(errs, err...)
 			continue
 		}
-		bd.zone = c.Zone
+		bd.Zone = c.Zone
 		c.ExtraBlockDevices[i] = bd
 	}
 
@@ -722,26 +722,6 @@ func (c *Config) Prepare(raws ...interface{}) ([]string, error) {
 	return warnings, errs
 }
 
-type CustomerEncryptionKey struct {
-	// KmsKeyName: The name of the encryption key that is stored in Google
-	// Cloud KMS.
-	KmsKeyName string `mapstructure:"kmsKeyName" json:"kmsKeyName,omitempty"`
-
-	// RawKey: Specifies a 256-bit customer-supplied encryption key, encoded
-	// in RFC 4648 base64 to either encrypt or decrypt this resource.
-	RawKey string `mapstructure:"rawKey" json:"rawKey,omitempty"`
-}
-
-func (k *CustomerEncryptionKey) ComputeType() *compute.CustomerEncryptionKey {
-	if k == nil {
-		return nil
-	}
-	return &compute.CustomerEncryptionKey{
-		KmsKeyName: k.KmsKeyName,
-		RawKey:     k.RawKey,
-	}
-}
-
 func SupportsIAPTunnel(c *communicator.Config) bool {
 	switch c.Type {
 	case "ssh", "winrm":
@@ -761,29 +741,5 @@ func ApplyIAPTunnel(c *communicator.Config, port int) error {
 		return nil
 	default:
 		return fmt.Errorf("IAP tunnel is not implemented for %s communicator", c.Type)
-	}
-}
-
-// Node affinity label configuration
-type NodeAffinity struct {
-	// Key: Corresponds to the label key of Node resource.
-	Key string `mapstructure:"key" json:"key"`
-
-	// Operator: Defines the operation of node selection. Valid operators are IN for affinity and
-	// NOT_IN for anti-affinity.
-	Operator string `mapstructure:"operator" json:"operator"`
-
-	// Values: Corresponds to the label values of Node resource.
-	Values []string `mapstructure:"values" json:"values"`
-}
-
-func (a *NodeAffinity) ComputeType() *compute.SchedulingNodeAffinity {
-	if a == nil {
-		return nil
-	}
-	return &compute.SchedulingNodeAffinity{
-		Key:      a.Key,
-		Operator: a.Operator,
-		Values:   a.Values,
 	}
 }

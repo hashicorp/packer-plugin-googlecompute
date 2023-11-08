@@ -8,6 +8,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/hashicorp/packer-plugin-googlecompute/lib/common"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/stretchr/testify/assert"
 )
@@ -22,7 +23,7 @@ func TestStepCreateImage(t *testing.T) {
 	defer step.Cleanup(state)
 
 	c := state.Get("config").(*Config)
-	d := state.Get("driver").(*DriverMock)
+	d := state.Get("driver").(*common.DriverMock)
 
 	// These are the values of the image the driver will return.
 	d.CreateImageResultProjectId = "test-project"
@@ -37,7 +38,7 @@ func TestStepCreateImage(t *testing.T) {
 
 	uncastImage, ok := state.GetOk("image")
 	assert.True(t, ok, "State does not have resulting image.")
-	image, ok := uncastImage.(*Image)
+	image, ok := uncastImage.(*common.Image)
 	assert.True(t, ok, "Image in state is not an Image.")
 
 	// Verify created Image results.
@@ -66,7 +67,7 @@ func TestStepCreateImage_errorOnChannel(t *testing.T) {
 	errCh := make(chan error, 1)
 	errCh <- errors.New("error")
 
-	driver := state.Get("driver").(*DriverMock)
+	driver := state.Get("driver").(*common.DriverMock)
 	driver.CreateImageErrCh = errCh
 
 	// run the step

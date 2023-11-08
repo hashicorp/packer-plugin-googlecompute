@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package googlecompute
+package common
 
 import (
 	"context"
@@ -118,7 +118,7 @@ func NewClientOptionGoogle(vaultOauth string, impersonatesa string, accessToken 
 		opts = append(opts, option.WithTokenSource(ts))
 	} else if credentials != nil {
 		// Auth with Credentials if provided
-		log.Printf("[INFO] Requesting Google token via credentials file...")
+		log.Printf("[INFO] Requesting Google token via credentials...")
 		log.Printf("[INFO]   -- Scopes: %s", DriverScopes)
 
 		opts = append(opts, option.WithCredentials(credentials))
@@ -270,7 +270,7 @@ func (d *driverGCE) createRegionalDisk(diskConfig BlockDevice) (<-chan *compute.
 	diskChan := make(chan *compute.Disk, 1)
 	errChan := make(chan error, 1)
 
-	computePayload, err := diskConfig.generateComputeDiskPayload()
+	computePayload, err := diskConfig.GenerateComputeDiskPayload()
 	if err != nil {
 		errChan <- err
 		close(diskChan)
@@ -278,7 +278,7 @@ func (d *driverGCE) createRegionalDisk(diskConfig BlockDevice) (<-chan *compute.
 		return diskChan, errChan
 	}
 
-	region, _ := getRegionFromZone(diskConfig.zone)
+	region, _ := GetRegionFromZone(diskConfig.Zone)
 	op, err := d.service.RegionDisks.Insert(d.projectId, region, computePayload).Do()
 	if err != nil {
 		errChan <- err
@@ -313,12 +313,12 @@ func (d *driverGCE) createZonalDisk(diskConfig BlockDevice) (<-chan *compute.Dis
 	diskChan := make(chan *compute.Disk, 1)
 	errChan := make(chan error, 1)
 
-	zone := diskConfig.zone
+	zone := diskConfig.Zone
 
 	var op *compute.Operation
 	var err error
 
-	computePayload, err := diskConfig.generateComputeDiskPayload()
+	computePayload, err := diskConfig.GenerateComputeDiskPayload()
 	if err != nil {
 		errChan <- err
 		close(diskChan)
@@ -357,7 +357,7 @@ func (d *driverGCE) createZonalDisk(diskConfig BlockDevice) (<-chan *compute.Dis
 }
 
 func (d *driverGCE) DeleteDisk(zoneOrRegion, name string) <-chan error {
-	if isZoneARegion(zoneOrRegion) {
+	if IsZoneARegion(zoneOrRegion) {
 		return d.deleteRegionalDisk(zoneOrRegion, name)
 	}
 
@@ -399,7 +399,7 @@ func (d *driverGCE) deleteRegionalDisk(region, name string) <-chan error {
 }
 
 func (d *driverGCE) GetDisk(zoneOrRegion, name string) (*compute.Disk, error) {
-	if isZoneARegion(zoneOrRegion) {
+	if IsZoneARegion(zoneOrRegion) {
 		return d.service.RegionDisks.Get(d.projectId, zoneOrRegion, name).Do()
 	}
 
@@ -568,7 +568,7 @@ func (d *driverGCE) RunInstance(c *InstanceConfig) (<-chan error, error) {
 	}
 	// TODO(mitchellh): deprecation warnings
 
-	networkId, subnetworkId, err := getNetworking(c)
+	networkId, subnetworkId, err := GetNetworking(c)
 	if err != nil {
 		return nil, err
 	}
@@ -653,7 +653,7 @@ func (d *driverGCE) RunInstance(c *InstanceConfig) (<-chan error, error) {
 	}
 
 	for _, disk := range c.ExtraBlockDevices {
-		computeDisks = append(computeDisks, disk.generateDiskAttachment())
+		computeDisks = append(computeDisks, disk.GenerateDiskAttachment())
 	}
 
 	// Create the instance information
@@ -794,14 +794,14 @@ func (d *driverGCE) createWindowsPassword(errCh chan<- error, name, zone string,
 						errCh <- err
 						return
 					}
-					password, err := rsa.DecryptOAEP(hash, random, c.key, decodedPassword, nil)
+					password, err := rsa.DecryptOAEP(hash, random, c.Key, decodedPassword, nil)
 
 					if err != nil {
 						errCh <- err
 						return
 					}
 
-					c.password = string(password)
+					c.Password = string(password)
 					errCh <- nil
 					return
 				}

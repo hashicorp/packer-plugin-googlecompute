@@ -7,6 +7,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/hashicorp/packer-plugin-googlecompute/lib/common"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 )
 
@@ -22,7 +23,7 @@ func TestStepCheckExistingImage(t *testing.T) {
 	state.Put("instance_name", "foo")
 
 	config := state.Get("config").(*Config)
-	driver := state.Get("driver").(*DriverMock)
+	driver := state.Get("driver").(*common.DriverMock)
 	driver.ImageExistsResult = true
 
 	// run the step

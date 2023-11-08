@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/packer-plugin-googlecompute/lib/common"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
 )
@@ -18,7 +19,7 @@ type StepCheckExistingImage int
 // Run executes the Packer build step that checks if the image already exists.
 func (s *StepCheckExistingImage) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	c := state.Get("config").(*Config)
-	d := state.Get("driver").(Driver)
+	d := state.Get("driver").(common.Driver)
 	ui := state.Get("ui").(packersdk.Ui)
 
 	ui.Say("Checking image does not exist...")

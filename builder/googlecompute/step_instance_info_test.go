@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hashicorp/packer-plugin-googlecompute/lib/common"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 )
 
@@ -24,7 +25,7 @@ func TestStepInstanceInfo(t *testing.T) {
 	state.Put("instance_name", "foo")
 
 	config := state.Get("config").(*Config)
-	driver := state.Get("driver").(*DriverMock)
+	driver := state.Get("driver").(*common.DriverMock)
 	driver.GetNatIPResult = "1.2.3.4"
 
 	// run the step
@@ -63,7 +64,7 @@ func TestStepInstanceInfo_InternalIP(t *testing.T) {
 
 	config := state.Get("config").(*Config)
 	config.UseInternalIP = true
-	driver := state.Get("driver").(*DriverMock)
+	driver := state.Get("driver").(*common.DriverMock)
 	driver.GetNatIPResult = "1.2.3.4"
 	driver.GetInternalIPResult = "5.6.7.8"
 
@@ -101,7 +102,7 @@ func TestStepInstanceInfo_getNatIPError(t *testing.T) {
 
 	state.Put("instance_name", "foo")
 
-	driver := state.Get("driver").(*DriverMock)
+	driver := state.Get("driver").(*common.DriverMock)
 	driver.GetNatIPErr = errors.New("error")
 
 	// run the step
@@ -128,7 +129,7 @@ func TestStepInstanceInfo_waitError(t *testing.T) {
 	errCh := make(chan error, 1)
 	errCh <- errors.New("error")
 
-	driver := state.Get("driver").(*DriverMock)
+	driver := state.Get("driver").(*common.DriverMock)
 	driver.WaitForInstanceErrCh = errCh
 
 	// run the step
@@ -161,7 +162,7 @@ func TestStepInstanceInfo_errorTimeout(t *testing.T) {
 	config := state.Get("config").(*Config)
 	config.StateTimeout = 1 * time.Millisecond
 
-	driver := state.Get("driver").(*DriverMock)
+	driver := state.Get("driver").(*common.DriverMock)
 	driver.WaitForInstanceErrCh = errCh
 
 	// run the step

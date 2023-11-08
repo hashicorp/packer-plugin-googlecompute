@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package googlecompute
+package common
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ import (
 
 // This method will build a network and subnetwork ID from the provided
 // instance config, and return them in that order.
-func getNetworking(c *InstanceConfig) (string, string, error) {
+func GetNetworking(c *InstanceConfig) (string, string, error) {
 	networkId := c.Network
 	subnetworkId := c.Subnetwork
 

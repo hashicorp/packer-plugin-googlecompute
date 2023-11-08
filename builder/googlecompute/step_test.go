@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"testing"
 
+	"github.com/hashicorp/packer-plugin-googlecompute/lib/common"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
 )
@@ -14,7 +15,7 @@ import (
 func testState(t *testing.T) multistep.StateBag {
 	state := new(multistep.BasicStateBag)
 	state.Put("config", testConfigStruct(t))
-	state.Put("driver", &DriverMock{})
+	state.Put("driver", &common.DriverMock{})
 	state.Put("hook", &packersdk.MockHook{})
 	state.Put("ui", &packersdk.BasicUi{
 		Reader: new(bytes.Buffer),

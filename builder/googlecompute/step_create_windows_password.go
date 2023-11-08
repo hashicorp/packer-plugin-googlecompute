@@ -16,6 +16,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/hashicorp/packer-plugin-googlecompute/lib/common"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
 )
@@ -29,7 +30,7 @@ type StepCreateWindowsPassword struct {
 // Run executes the Packer build step that sets the windows password on a Windows GCE instance.
 func (s *StepCreateWindowsPassword) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	ui := state.Get("ui").(packersdk.Ui)
-	d := state.Get("driver").(Driver)
+	d := state.Get("driver").(common.Driver)
 	c := state.Get("config").(*Config)
 	name := state.Get("instance_name").(string)
 
@@ -57,8 +58,8 @@ func (s *StepCreateWindowsPassword) Run(ctx context.Context, state multistep.Sta
 	buf := make([]byte, 4)
 	binary.BigEndian.PutUint32(buf, uint32(priv.E))
 
-	data := WindowsPasswordConfig{
-		key:                    priv,
+	data := common.WindowsPasswordConfig{
+		Key:                    priv,
 		UserName:               c.Comm.WinRMUser,
 		Modulus:                base64.StdEncoding.EncodeToString(priv.N.Bytes()),
 		Exponent:               base64.StdEncoding.EncodeToString(buf[1:]),
@@ -112,11 +113,11 @@ func (s *StepCreateWindowsPassword) Run(ctx context.Context, state multistep.Sta
 
 	if s.Debug {
 		ui.Message(fmt.Sprintf(
-			"Password (since debug is enabled): %s", data.password))
+			"Password (since debug is enabled): %s", data.Password))
 	}
 
-	state.Put("winrm_password", data.password)
-	packersdk.LogSecretFilter.Set(data.password)
+	state.Put("winrm_password", data.Password)
+	packersdk.LogSecretFilter.Set(data.Password)
 
 	return multistep.ActionContinue
 }

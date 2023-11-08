@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hashicorp/packer-plugin-googlecompute/lib/common"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packerbuilderdata"
 	"github.com/hashicorp/packer-plugin-sdk/template/config"
@@ -31,7 +32,7 @@ func TestStepCreateInstance(t *testing.T) {
 	step.GeneratedData = generatedData
 
 	c := state.Get("config").(*Config)
-	d := state.Get("driver").(*DriverMock)
+	d := state.Get("driver").(*common.DriverMock)
 	d.GetImageResult = StubImage("test-image", "test-project", []string{}, 100)
 
 	// run the step
@@ -74,7 +75,7 @@ func TestStepCreateInstance_fromFamily(t *testing.T) {
 		c := state.Get("config").(*Config)
 		c.SourceImage = tc.Name
 		c.SourceImageFamily = tc.Family
-		d := state.Get("driver").(*DriverMock)
+		d := state.Get("driver").(*common.DriverMock)
 		d.GetImageResult = StubImage("test-image", "test-project", []string{}, 100)
 
 		// run the step
@@ -103,7 +104,7 @@ func TestStepCreateInstance_windowsNeedsPassword(t *testing.T) {
 	step.GeneratedData = generatedData
 
 	c := state.Get("config").(*Config)
-	d := state.Get("driver").(*DriverMock)
+	d := state.Get("driver").(*common.DriverMock)
 	d.GetImageResult = StubImage("test-image", "test-project", []string{"windows"}, 100)
 	c.Comm.Type = "winrm"
 	// run the step
@@ -152,7 +153,7 @@ func TestStepCreateInstance_windowsPasswordSet(t *testing.T) {
 	step.GeneratedData = generatedData
 
 	config := state.Get("config").(*Config)
-	driver := state.Get("driver").(*DriverMock)
+	driver := state.Get("driver").(*common.DriverMock)
 	driver.GetImageResult = StubImage("test-image", "test-project", []string{"windows"}, 100)
 	config.Comm.Type = "winrm"
 	config.Comm.WinRMPassword = "password"
@@ -201,7 +202,7 @@ func TestStepCreateInstance_error(t *testing.T) {
 	generatedData := &packerbuilderdata.GeneratedData{State: state}
 	step.GeneratedData = generatedData
 
-	d := state.Get("driver").(*DriverMock)
+	d := state.Get("driver").(*common.DriverMock)
 	d.RunInstanceErr = errors.New("error")
 	d.GetImageResult = StubImage("test-image", "test-project", []string{}, 100)
 
@@ -227,7 +228,7 @@ func TestStepCreateInstance_errorOnChannel(t *testing.T) {
 	errCh := make(chan error, 1)
 	errCh <- errors.New("error")
 
-	d := state.Get("driver").(*DriverMock)
+	d := state.Get("driver").(*common.DriverMock)
 	d.RunInstanceErrCh = errCh
 	d.GetImageResult = StubImage("test-image", "test-project", []string{}, 100)
 
@@ -256,7 +257,7 @@ func TestStepCreateInstance_errorTimeout(t *testing.T) {
 	config := state.Get("config").(*Config)
 	config.StateTimeout = 1 * time.Millisecond
 
-	d := state.Get("driver").(*DriverMock)
+	d := state.Get("driver").(*common.DriverMock)
 	d.RunInstanceErrCh = errCh
 	d.GetImageResult = StubImage("test-image", "test-project", []string{}, 100)
 
@@ -282,7 +283,7 @@ func TestStepCreateInstance_noServiceAccount(t *testing.T) {
 	c := state.Get("config").(*Config)
 	c.DisableDefaultServiceAccount = true
 	c.ServiceAccountEmail = ""
-	d := state.Get("driver").(*DriverMock)
+	d := state.Get("driver").(*common.DriverMock)
 	d.GetImageResult = StubImage("test-image", "test-project", []string{}, 100)
 
 	// run the step
@@ -308,7 +309,7 @@ func TestStepCreateInstance_customServiceAccount(t *testing.T) {
 	c := state.Get("config").(*Config)
 	c.DisableDefaultServiceAccount = true
 	c.ServiceAccountEmail = "custom-service-account"
-	d := state.Get("driver").(*DriverMock)
+	d := state.Get("driver").(*common.DriverMock)
 	d.GetImageResult = StubImage("test-image", "test-project", []string{}, 100)
 
 	// run the step
@@ -444,7 +445,7 @@ func TestStepCreateInstanceWaitToAddSSHKeys(t *testing.T) {
 	step.GeneratedData = generatedData
 
 	c := state.Get("config").(*Config)
-	d := state.Get("driver").(*DriverMock)
+	d := state.Get("driver").(*common.DriverMock)
 	d.GetImageResult = StubImage("test-image", "test-project", []string{}, 100)
 
 	key := "abcdefgh12345678"
@@ -479,7 +480,7 @@ func TestStepCreateInstanceNoWaitToAddSSHKeys(t *testing.T) {
 	step.GeneratedData = generatedData
 
 	c := state.Get("config").(*Config)
-	d := state.Get("driver").(*DriverMock)
+	d := state.Get("driver").(*common.DriverMock)
 	d.GetImageResult = StubImage("test-image", "test-project", []string{}, 100)
 
 	key := "abcdefgh12345678"
@@ -500,4 +501,22 @@ func TestStepCreateInstanceNoWaitToAddSSHKeys(t *testing.T) {
 
 	// cleanup
 	step.Cleanup(state)
+}
+
+func StubImage(name, project string, licenses []string, sizeGb int64) *common.Image {
+	return &common.Image{
+		Licenses:  licenses,
+		Name:      name,
+		ProjectId: project,
+		SelfLink:  fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/images/%s", project, name),
+		SizeGb:    sizeGb,
+	}
+}
+
+func TestImage_IsWindows(t *testing.T) {
+	i := StubImage("foo", "foo-project", []string{"license-foo", "license-bar"}, 100)
+	assert.False(t, i.IsWindows())
+
+	i = StubImage("foo", "foo-project", []string{"license-foo", "windows-license"}, 100)
+	assert.True(t, i.IsWindows())
 }
