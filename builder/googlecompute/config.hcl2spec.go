@@ -19,6 +19,12 @@ type FlatConfig struct {
 	PackerOnError                *string                           `mapstructure:"packer_on_error" cty:"packer_on_error" hcl:"packer_on_error"`
 	PackerUserVars               map[string]string                 `mapstructure:"packer_user_variables" cty:"packer_user_variables" hcl:"packer_user_variables"`
 	PackerSensitiveVars          []string                          `mapstructure:"packer_sensitive_variables" cty:"packer_sensitive_variables" hcl:"packer_sensitive_variables"`
+	AccessToken                  *string                           `mapstructure:"access_token" required:"false" cty:"access_token" hcl:"access_token"`
+	AccountFile                  *string                           `mapstructure:"account_file" required:"false" cty:"account_file" hcl:"account_file"`
+	CredentialsFile              *string                           `mapstructure:"credentials_file" required:"false" cty:"credentials_file" hcl:"credentials_file"`
+	CredentialsJSON              *string                           `mapstructure:"credentials_json" required:"false" cty:"credentials_json" hcl:"credentials_json"`
+	ImpersonateServiceAccount    *string                           `mapstructure:"impersonate_service_account" required:"false" cty:"impersonate_service_account" hcl:"impersonate_service_account"`
+	VaultGCPOauthEngine          *string                           `mapstructure:"vault_gcp_oauth_engine" cty:"vault_gcp_oauth_engine" hcl:"vault_gcp_oauth_engine"`
 	Type                         *string                           `mapstructure:"communicator" cty:"communicator" hcl:"communicator"`
 	PauseBeforeConnect           *string                           `mapstructure:"pause_before_connecting" cty:"pause_before_connecting" hcl:"pause_before_connecting"`
 	SSHHost                      *string                           `mapstructure:"ssh_host" cty:"ssh_host" hcl:"ssh_host"`
@@ -68,12 +74,6 @@ type FlatConfig struct {
 	WinRMUseSSL                  *bool                             `mapstructure:"winrm_use_ssl" cty:"winrm_use_ssl" hcl:"winrm_use_ssl"`
 	WinRMInsecure                *bool                             `mapstructure:"winrm_insecure" cty:"winrm_insecure" hcl:"winrm_insecure"`
 	WinRMUseNTLM                 *bool                             `mapstructure:"winrm_use_ntlm" cty:"winrm_use_ntlm" hcl:"winrm_use_ntlm"`
-	AccessToken                  *string                           `mapstructure:"access_token" required:"false" cty:"access_token" hcl:"access_token"`
-	AccountFile                  *string                           `mapstructure:"account_file" required:"false" cty:"account_file" hcl:"account_file"`
-	CredentialsFile              *string                           `mapstructure:"credentials_file" required:"false" cty:"credentials_file" hcl:"credentials_file"`
-	CredentialsJSON              *string                           `mapstructure:"credentials_json" required:"false" cty:"credentials_json" hcl:"credentials_json"`
-	ImpersonateServiceAccount    *string                           `mapstructure:"impersonate_service_account" required:"false" cty:"impersonate_service_account" hcl:"impersonate_service_account"`
-	VaultGCPOauthEngine          *string                           `mapstructure:"vault_gcp_oauth_engine" cty:"vault_gcp_oauth_engine" hcl:"vault_gcp_oauth_engine"`
 	ProjectId                    *string                           `mapstructure:"project_id" required:"true" cty:"project_id" hcl:"project_id"`
 	AcceleratorType              *string                           `mapstructure:"accelerator_type" required:"false" cty:"accelerator_type" hcl:"accelerator_type"`
 	AcceleratorCount             *int64                            `mapstructure:"accelerator_count" required:"false" cty:"accelerator_count" hcl:"accelerator_count"`
@@ -153,6 +153,12 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"packer_on_error":                 &hcldec.AttrSpec{Name: "packer_on_error", Type: cty.String, Required: false},
 		"packer_user_variables":           &hcldec.AttrSpec{Name: "packer_user_variables", Type: cty.Map(cty.String), Required: false},
 		"packer_sensitive_variables":      &hcldec.AttrSpec{Name: "packer_sensitive_variables", Type: cty.List(cty.String), Required: false},
+		"access_token":                    &hcldec.AttrSpec{Name: "access_token", Type: cty.String, Required: false},
+		"account_file":                    &hcldec.AttrSpec{Name: "account_file", Type: cty.String, Required: false},
+		"credentials_file":                &hcldec.AttrSpec{Name: "credentials_file", Type: cty.String, Required: false},
+		"credentials_json":                &hcldec.AttrSpec{Name: "credentials_json", Type: cty.String, Required: false},
+		"impersonate_service_account":     &hcldec.AttrSpec{Name: "impersonate_service_account", Type: cty.String, Required: false},
+		"vault_gcp_oauth_engine":          &hcldec.AttrSpec{Name: "vault_gcp_oauth_engine", Type: cty.String, Required: false},
 		"communicator":                    &hcldec.AttrSpec{Name: "communicator", Type: cty.String, Required: false},
 		"pause_before_connecting":         &hcldec.AttrSpec{Name: "pause_before_connecting", Type: cty.String, Required: false},
 		"ssh_host":                        &hcldec.AttrSpec{Name: "ssh_host", Type: cty.String, Required: false},
@@ -202,12 +208,6 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"winrm_use_ssl":                   &hcldec.AttrSpec{Name: "winrm_use_ssl", Type: cty.Bool, Required: false},
 		"winrm_insecure":                  &hcldec.AttrSpec{Name: "winrm_insecure", Type: cty.Bool, Required: false},
 		"winrm_use_ntlm":                  &hcldec.AttrSpec{Name: "winrm_use_ntlm", Type: cty.Bool, Required: false},
-		"access_token":                    &hcldec.AttrSpec{Name: "access_token", Type: cty.String, Required: false},
-		"account_file":                    &hcldec.AttrSpec{Name: "account_file", Type: cty.String, Required: false},
-		"credentials_file":                &hcldec.AttrSpec{Name: "credentials_file", Type: cty.String, Required: false},
-		"credentials_json":                &hcldec.AttrSpec{Name: "credentials_json", Type: cty.String, Required: false},
-		"impersonate_service_account":     &hcldec.AttrSpec{Name: "impersonate_service_account", Type: cty.String, Required: false},
-		"vault_gcp_oauth_engine":          &hcldec.AttrSpec{Name: "vault_gcp_oauth_engine", Type: cty.String, Required: false},
 		"project_id":                      &hcldec.AttrSpec{Name: "project_id", Type: cty.String, Required: false},
 		"accelerator_type":                &hcldec.AttrSpec{Name: "accelerator_type", Type: cty.String, Required: false},
 		"accelerator_count":               &hcldec.AttrSpec{Name: "accelerator_count", Type: cty.Number, Required: false},

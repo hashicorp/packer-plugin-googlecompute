@@ -1,0 +1,45 @@
+<!-- Code generated from the comments of the Authentication struct in lib/common/auth.go; DO NOT EDIT MANUALLY -->
+
+- `access_token` (string) - A temporary [OAuth 2.0 access token](https://developers.google.com/identity/protocols/oauth2)
+  obtained from the Google Authorization server, i.e. the `Authorization: Bearer` token used to
+  authenticate HTTP requests to GCP APIs.
+  This is an alternative to `account_file`, and ignores the `scopes` field.
+  If both are specified, `access_token` will be used over the `account_file` field.
+  
+  These access tokens cannot be renewed by Packer and thus will only work until they expire.
+  If you anticipate Packer needing access for longer than a token's lifetime (default `1 hour`),
+  please use a service account key with `account_file` instead.
+
+- `account_file` (string) - The JSON file containing your account credentials. Not required if you
+  run Packer on a GCE instance with a service account. Instructions for
+  creating the file or using service accounts are above.
+
+- `credentials_file` (string) - The JSON file containing your account credentials.
+  
+  The file's contents may be anything supported by the Google Go client, i.e.:
+  
+  * Service account JSON
+  * OIDC-provided token for federation
+  * Gcloud user credentials file (refresh-token JSON)
+  * A Google Developers Console client_credentials.json
+
+- `credentials_json` (string) - The raw JSON payload for credentials.
+  
+  The accepted data formats are same as those described under
+  [credentials_file](#credentials_file).
+
+- `impersonate_service_account` (string) - This allows service account impersonation as per the [docs](https://cloud.google.com/iam/docs/impersonating-service-accounts).
+
+- `vault_gcp_oauth_engine` (string) - Can be set instead of account_file. If set, this builder will use
+  HashiCorp Vault to generate an Oauth token for authenticating against
+  Google Cloud. The value should be the path of the token generator
+  within vault.
+  For information on how to configure your Vault + GCP engine to produce
+  Oauth tokens, see https://www.vaultproject.io/docs/auth/gcp
+  You must have the environment variables VAULT_ADDR and VAULT_TOKEN set,
+  along with any other relevant variables for accessing your vault
+  instance. For more information, see the Vault docs:
+  https://www.vaultproject.io/docs/commands/#environment-variables
+  Example:`"vault_gcp_oauth_engine": "gcp/token/my-project-editor",`
+
+<!-- End of code generated from the comments of the Authentication struct in lib/common/auth.go; -->

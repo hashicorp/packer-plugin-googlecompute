@@ -31,52 +31,7 @@ import (
 
 type Config struct {
 	sdk_common.PackerConfig `mapstructure:",squash"`
-
-	// Authentication methods
-
-	// A temporary [OAuth 2.0 access token](https://developers.google.com/identity/protocols/oauth2)
-	// obtained from the Google Authorization server, i.e. the `Authorization: Bearer` token used to
-	// authenticate HTTP requests to GCP APIs.
-	// This is an alternative to `account_file`, and ignores the `scopes` field.
-	// If both are specified, `access_token` will be used over the `account_file` field.
-	//
-	// These access tokens cannot be renewed by Packer and thus will only work until they expire.
-	// If you anticipate Packer needing access for longer than a token's lifetime (default `1 hour`),
-	// please use a service account key with `account_file` instead.
-	AccessToken string `mapstructure:"access_token" required:"false"`
-	// The JSON file containing your account credentials. Not required if you
-	// run Packer on a GCE instance with a service account. Instructions for
-	// creating the file or using service accounts are above.
-	AccountFile string `mapstructure:"account_file" required:"false"`
-	// The JSON file containing your account credentials.
-	//
-	// The file's contents may be anything supported by the Google Go client, i.e.:
-	//
-	// * Service account JSON
-	// * OIDC-provided token for federation
-	// * Gcloud user credentials file (refresh-token JSON)
-	// * A Google Developers Console client_credentials.json
-	CredentialsFile string `mapstructure:"credentials_file" required:"false"`
-	// The raw JSON payload for credentials.
-	//
-	// The accepted data formats are same as those described under
-	// [credentials_file](#credentials_file).
-	CredentialsJSON string `mapstructure:"credentials_json" required:"false"`
-	// This allows service account impersonation as per the [docs](https://cloud.google.com/iam/docs/impersonating-service-accounts).
-	ImpersonateServiceAccount string `mapstructure:"impersonate_service_account" required:"false"`
-	// Can be set instead of account_file. If set, this builder will use
-	// HashiCorp Vault to generate an Oauth token for authenticating against
-	// Google Cloud. The value should be the path of the token generator
-	// within vault.
-	// For information on how to configure your Vault + GCP engine to produce
-	// Oauth tokens, see https://www.vaultproject.io/docs/auth/gcp
-	// You must have the environment variables VAULT_ADDR and VAULT_TOKEN set,
-	// along with any other relevant variables for accessing your vault
-	// instance. For more information, see the Vault docs:
-	// https://www.vaultproject.io/docs/commands/#environment-variables
-	// Example:`"vault_gcp_oauth_engine": "gcp/token/my-project-editor",`
-	VaultGCPOauthEngine string `mapstructure:"vault_gcp_oauth_engine"`
-	credentials         *google.Credentials
+	common.Authentication   `mapstructure:",squash"`
 
 	// The service account scopes for launched importer post-processor instance.
 	// Defaults to:
@@ -135,17 +90,6 @@ type PostProcessor struct {
 	config Config
 }
 
-func (p *PostProcessor) CheckAuth() error {
-	return googlecompute.CheckAuth(
-		p.config.AccessToken,
-		p.config.AccountFile,
-		p.config.CredentialsFile,
-		p.config.CredentialsJSON,
-		p.config.ImpersonateServiceAccount,
-		p.config.VaultGCPOauthEngine,
-	)
-}
-
 func (p *PostProcessor) ConfigSpec() hcldec.ObjectSpec { return p.config.FlatMapstructure().HCL2Spec() }
 
 func (p *PostProcessor) Configure(raws ...interface{}) error {
@@ -189,37 +133,12 @@ func (p *PostProcessor) Configure(raws ...interface{}) error {
 		}
 	}
 
-	err = p.CheckAuth()
+	warns, err := p.config.Authentication.Prepare()
 	if err != nil {
 		errs = packersdk.MultiErrorAppend(errs, err)
 	}
-
-	// Authenticating via an account file
-	if p.config.AccountFile != "" {
-		log.Printf("account_file is deprecated, please use either credentials_json or credentials_file instead")
-		// Heuristic, but should be good enough to discriminate between
-		// the two somewhat reliably.
-		if strings.HasPrefix(strings.TrimSpace(p.config.AccountFile), "{") {
-			p.config.CredentialsJSON = p.config.AccountFile
-		} else {
-			p.config.CredentialsFile = p.config.AccountFile
-		}
-	}
-
-	if p.config.CredentialsFile != "" {
-		cfg, err := googlecompute.ProcessCredentialsFile(p.config.CredentialsFile)
-		if err != nil {
-			errs = packersdk.MultiErrorAppend(errs, err)
-		}
-		p.config.credentials = cfg
-	}
-
-	if p.config.CredentialsJSON != "" {
-		cfg, err := googlecompute.ProcessCredentials([]byte(p.config.CredentialsJSON))
-		if err != nil {
-			errs = packersdk.MultiErrorAppend(errs, err)
-		}
-		p.config.credentials = cfg
+	for _, warn := range warns {
+		log.Printf("[WARN] - %s", warn)
 	}
 
 	if len(p.config.Scopes) == 0 {
