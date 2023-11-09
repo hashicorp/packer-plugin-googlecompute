@@ -5,8 +5,10 @@ package common
 
 import (
 	"fmt"
+	"io"
 
 	compute "google.golang.org/api/compute/v1"
+	oauth2_svc "google.golang.org/api/oauth2/v2"
 	oslogin "google.golang.org/api/oslogin/v1"
 )
 
@@ -48,6 +50,10 @@ type DriverMock struct {
 	DeleteDiskErrCh chan error
 	DeleteDiskErr   error
 
+	DeleteFromBucketBucket     string
+	DeleteFromBucketObjectName string
+	DeleteFromBucketErr        error
+
 	GetDiskName   string
 	GetDiskZone   string
 	GetDiskResult *compute.Disk
@@ -70,6 +76,9 @@ type DriverMock struct {
 	GetInstanceMetadataKey    string
 	GetInstanceMetadataResult string
 	GetInstanceMetadataErr    error
+
+	GetTokenInfoResult *oauth2_svc.Tokeninfo
+	GetTokenInfoErr    error
 
 	GetNatIPZone   string
 	GetNatIPName   string
@@ -110,6 +119,12 @@ type DriverMock struct {
 	AddToInstanceMetadataKVPairs map[string]string
 	AddToInstanceMetadataErrCh   <-chan error
 	AddToInstanceMetadataErr     error
+
+	UploadToBucketBucket     string
+	UploadToBucketObjectName string
+	UploadToBucketData       io.Reader
+	UploadToBucketResult     string
+	UploadToBucketError      error
 }
 
 func (d *DriverMock) CreateImage(project, name, description, family, zone, disk string, image_labels map[string]string, image_licenses []string, image_features []string, image_encryption_key *compute.CustomerEncryptionKey, imageStorageLocations []string) (<-chan *Image, <-chan error) {
@@ -167,6 +182,24 @@ func (d *DriverMock) CreateImage(project, name, description, family, zone, disk 
 	return resultCh, errCh
 }
 
+// CreateImageFromRaw is very similar to CreateImage, so we'll merge the two together in a later commit.
+//
+// Let's not spend time mocking it now, we'll make it mockable after merging the two functions.
+func (d *DriverMock) CreateImageFromRaw(
+	project string,
+	rawImageURL string,
+	imageName string,
+	imageDescription string,
+	imageFamily string,
+	imageLabels map[string]string,
+	imageGuestOsFeatures []string,
+	shieldedVMStateConfig *compute.InitialStateConfig,
+	imageStorageLocations []string,
+	imageArchitecture string,
+) (<-chan *Image, <-chan error) {
+	return nil, nil
+}
+
 func (d *DriverMock) DeleteImage(project, name string) <-chan error {
 	d.DeleteProjectId = project
 	d.DeleteImageName = name
@@ -193,6 +226,13 @@ func (d *DriverMock) DeleteInstance(zone, name string) (<-chan error, error) {
 	}
 
 	return resultCh, d.DeleteInstanceErr
+}
+
+func (d *DriverMock) DeleteFromBucket(bucket, objectName string) error {
+	d.DeleteFromBucketBucket = bucket
+	d.DeleteFromBucketObjectName = objectName
+
+	return d.DeleteFromBucketErr
 }
 
 func (d *DriverMock) CreateDisk(diskConfig BlockDevice) (<-chan *compute.Disk, <-chan error) {
@@ -365,4 +405,20 @@ func (d *DriverMock) AddToInstanceMetadata(zone string, name string, metadata ma
 	}
 
 	return nil
+}
+
+func (d *DriverMock) GetTokenInfo() (*oauth2_svc.Tokeninfo, error) {
+	if d.GetTokenInfoResult == nil {
+		d.GetTokenInfoErr = fmt.Errorf("no token found")
+	}
+
+	return d.GetTokenInfoResult, d.GetTokenInfoErr
+}
+
+func (d *DriverMock) UploadToBucket(bucket, object string, data io.Reader) (string, error) {
+	d.UploadToBucketBucket = bucket
+	d.UploadToBucketObjectName = object
+	d.UploadToBucketData = data
+
+	return d.UploadToBucketResult, d.UploadToBucketError
 }

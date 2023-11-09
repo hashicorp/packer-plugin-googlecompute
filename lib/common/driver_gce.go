@@ -12,14 +12,17 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"strings"
 	"time"
 
 	compute "google.golang.org/api/compute/v1"
 	impersonate "google.golang.org/api/impersonate"
+	oauth2_svc "google.golang.org/api/oauth2/v2"
 	"google.golang.org/api/option"
 	oslogin "google.golang.org/api/oslogin/v1"
+	"google.golang.org/api/storage/v1"
 
 	"github.com/hashicorp/packer-plugin-googlecompute/version"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
@@ -37,6 +40,8 @@ type driverGCE struct {
 	projectId      string
 	service        *compute.Service
 	osLoginService *oslogin.Service
+	oauth2Service  *oauth2_svc.Service
+	storageService *storage.Service
 	ui             packersdk.Ui
 }
 
@@ -173,10 +178,24 @@ func NewDriverGCE(config GCEDriverConfig) (Driver, error) {
 		return nil, err
 	}
 
+	log.Printf("[INFO] Instantiating Oauth2 client...")
+	oauth2Service, err := oauth2_svc.NewService(context.TODO(), opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Printf("[INFO] Instantiating storage client...")
+	storageService, err := storage.NewService(context.TODO(), opts...)
+	if err != nil {
+		return nil, err
+	}
+
 	return &driverGCE{
 		projectId:      config.ProjectId,
 		service:        service,
 		osLoginService: osLoginService,
+		oauth2Service:  oauth2Service,
+		storageService: storageService,
 		ui:             config.Ui,
 	}, nil
 }
@@ -217,6 +236,68 @@ func (d *driverGCE) CreateImage(project, name, description, family, zone, disk s
 			}
 			var image *Image
 			image, err = d.GetImageFromProject(project, name, false)
+			if err != nil {
+				close(imageCh)
+				errCh <- err
+				return
+			}
+			imageCh <- image
+			close(imageCh)
+		}()
+	}
+
+	return imageCh, errCh
+}
+
+func (d *driverGCE) CreateImageFromRaw(
+	project string,
+	rawImageURL string,
+	imageName string,
+	imageDescription string,
+	imageFamily string,
+	imageLabels map[string]string,
+	imageGuestOsFeatures []string,
+	shieldedVMStateConfig *compute.InitialStateConfig,
+	imageStorageLocations []string,
+	imageArchitecture string,
+) (<-chan *Image, <-chan error) {
+	// Build up the imageFeatures
+	imageFeatures := make([]*compute.GuestOsFeature, len(imageGuestOsFeatures))
+	for _, v := range imageGuestOsFeatures {
+		imageFeatures = append(imageFeatures, &compute.GuestOsFeature{
+			Type: v,
+		})
+	}
+
+	gceImage := &compute.Image{
+		Architecture:                 imageArchitecture,
+		Description:                  imageDescription,
+		Family:                       imageFamily,
+		GuestOsFeatures:              imageFeatures,
+		Labels:                       imageLabels,
+		Name:                         imageName,
+		RawDisk:                      &compute.ImageRawDisk{Source: rawImageURL},
+		SourceType:                   "RAW",
+		ShieldedInstanceInitialState: shieldedVMStateConfig,
+		StorageLocations:             imageStorageLocations,
+	}
+
+	imageCh := make(chan *Image, 1)
+	errCh := make(chan error, 1)
+
+	op, err := d.service.Images.Insert(project, gceImage).Do()
+	if err != nil {
+		errCh <- err
+	} else {
+		go func() {
+			err = waitForState(errCh, "DONE", d.refreshGlobalOp(project, op))
+			if err != nil {
+				close(imageCh)
+				errCh <- err
+				return
+			}
+			var image *Image
+			image, err = d.GetImageFromProject(project, imageName, false)
 			if err != nil {
 				close(imageCh)
 				errCh <- err
@@ -1017,4 +1098,22 @@ func (d *driverGCE) AddToInstanceMetadata(zone string, name string, metadata map
 	}
 
 	return nil
+}
+
+// GetTokenInfo gets the information about the token used for authentication
+func (d *driverGCE) GetTokenInfo() (*oauth2_svc.Tokeninfo, error) {
+	return d.oauth2Service.Tokeninfo().Do()
+}
+
+func (d *driverGCE) UploadToBucket(bucket, objectName string, data io.Reader) (string, error) {
+	storageObject, err := d.storageService.Objects.Insert(bucket, &storage.Object{Name: objectName}).Media(data).Do()
+	if err != nil {
+		return "", err
+	}
+
+	return storageObject.SelfLink, nil
+}
+
+func (d *driverGCE) DeleteFromBucket(bucket, objectName string) error {
+	return d.storageService.Objects.Delete(bucket, objectName).Do()
 }
