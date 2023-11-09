@@ -12,7 +12,6 @@ import (
 	"os"
 	"regexp"
 	"runtime"
-	"strings"
 	"time"
 
 	"github.com/hashicorp/packer-plugin-googlecompute/lib/common"
@@ -22,7 +21,6 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/template/config"
 	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
 	"github.com/hashicorp/packer-plugin-sdk/uuid"
-	"golang.org/x/oauth2/google"
 )
 
 // used for ImageName and ImageFamily
@@ -33,53 +31,9 @@ var validImageName = regexp.MustCompile(`^[a-z]([-a-z0-9]{0,61}[a-z0-9])?$`)
 // state of the config object.
 type Config struct {
 	sdk_common.PackerConfig `mapstructure:",squash"`
-	Comm                    communicator.Config `mapstructure:",squash"`
+	common.Authentication   `mapstructure:",squash"`
 
-	// Authentication methods
-
-	// A temporary [OAuth 2.0 access token](https://developers.google.com/identity/protocols/oauth2)
-	// obtained from the Google Authorization server, i.e. the `Authorization: Bearer` token used to
-	// authenticate HTTP requests to GCP APIs.
-	// This is an alternative to `account_file`, and ignores the `scopes` field.
-	// If both are specified, `access_token` will be used over the `account_file` field.
-	//
-	// These access tokens cannot be renewed by Packer and thus will only work until they expire.
-	// If you anticipate Packer needing access for longer than a token's lifetime (default `1 hour`),
-	// please use a service account key with `account_file` instead.
-	AccessToken string `mapstructure:"access_token" required:"false"`
-	// The JSON file containing your account credentials. Not required if you
-	// run Packer on a GCE instance with a service account. Instructions for
-	// creating the file or using service accounts are above.
-	AccountFile string `mapstructure:"account_file" required:"false"`
-	// The JSON file containing your account credentials.
-	//
-	// The file's contents may be anything supported by the Google Go client, i.e.:
-	//
-	// * Service account JSON
-	// * OIDC-provided token for federation
-	// * Gcloud user credentials file (refresh-token JSON)
-	// * A Google Developers Console client_credentials.json
-	CredentialsFile string `mapstructure:"credentials_file" required:"false"`
-	// The raw JSON payload for credentials.
-	//
-	// The accepted data formats are same as those described under
-	// [credentials_file](#credentials_file).
-	CredentialsJSON string `mapstructure:"credentials_json" required:"false"`
-	// This allows service account impersonation as per the [docs](https://cloud.google.com/iam/docs/impersonating-service-accounts).
-	ImpersonateServiceAccount string `mapstructure:"impersonate_service_account" required:"false"`
-	// Can be set instead of account_file. If set, this builder will use
-	// HashiCorp Vault to generate an Oauth token for authenticating against
-	// Google Cloud. The value should be the path of the token generator
-	// within vault.
-	// For information on how to configure your Vault + GCP engine to produce
-	// Oauth tokens, see https://www.vaultproject.io/docs/auth/gcp
-	// You must have the environment variables VAULT_ADDR and VAULT_TOKEN set,
-	// along with any other relevant variables for accessing your vault
-	// instance. For more information, see the Vault docs:
-	// https://www.vaultproject.io/docs/commands/#environment-variables
-	// Example:`"vault_gcp_oauth_engine": "gcp/token/my-project-editor",`
-	VaultGCPOauthEngine string `mapstructure:"vault_gcp_oauth_engine"`
-	credentials         *google.Credentials
+	Comm communicator.Config `mapstructure:",squash"`
 
 	// The project ID that will be used to launch instances and store images.
 	ProjectId string `mapstructure:"project_id" required:"true"`
@@ -388,58 +342,6 @@ type Config struct {
 	ctx                interpolate.Context
 }
 
-func CheckAuth(
-	accessToken string,
-	accountFile string,
-	credentialsFile string,
-	credentialsJSON string,
-	impersonateSA string,
-	vaultGCPOauthEngine string,
-) error {
-	var authTypes []string
-
-	if accessToken != "" {
-		authTypes = append(authTypes, "access_token")
-	}
-
-	if accountFile != "" {
-		authTypes = append(authTypes, "account_file")
-	}
-
-	if credentialsFile != "" {
-		authTypes = append(authTypes, "credentials_file")
-	}
-
-	if credentialsJSON != "" {
-		authTypes = append(authTypes, "credentials_json")
-	}
-
-	if impersonateSA != "" {
-		authTypes = append(authTypes, "impersonate_service_account")
-	}
-
-	if vaultGCPOauthEngine != "" {
-		authTypes = append(authTypes, "vault_gcp_oauth_engine")
-	}
-
-	if len(authTypes) > 1 {
-		return fmt.Errorf("too many authentication methods specified (%s), choose only one", strings.Join(authTypes, ", "))
-	}
-
-	return nil
-}
-
-func (c *Config) CheckAuth() error {
-	return CheckAuth(
-		c.AccessToken,
-		c.AccountFile,
-		c.CredentialsFile,
-		c.CredentialsJSON,
-		c.ImpersonateServiceAccount,
-		c.VaultGCPOauthEngine,
-	)
-}
-
 func (c *Config) Prepare(raws ...interface{}) ([]string, error) {
 	c.ctx.Funcs = TemplateFuncs
 	err := config.Decode(c, &config.DecodeOpts{
@@ -650,37 +552,12 @@ func (c *Config) Prepare(raws ...interface{}) ([]string, error) {
 		c.Region = region
 	}
 
-	err = c.CheckAuth()
+	warns, err := c.Authentication.Prepare()
 	if err != nil {
 		errs = packersdk.MultiErrorAppend(errs, err)
 	}
-
-	// Authenticating via an account file
-	if c.AccountFile != "" {
-		warnings = append(warnings, "account_file is deprecated, please use either credentials_json or credentials_file instead")
-		// Heuristic, but should be good enough to discriminate between
-		// the two somewhat reliably.
-		if strings.HasPrefix(strings.TrimSpace(c.AccountFile), "{") {
-			c.CredentialsJSON = c.AccountFile
-		} else {
-			c.CredentialsFile = c.AccountFile
-		}
-	}
-
-	if c.CredentialsFile != "" {
-		cfg, err := ProcessCredentialsFile(c.CredentialsFile)
-		if err != nil {
-			errs = packersdk.MultiErrorAppend(errs, err)
-		}
-		c.credentials = cfg
-	}
-
-	if c.CredentialsJSON != "" {
-		cfg, err := ProcessCredentials([]byte(c.CredentialsJSON))
-		if err != nil {
-			errs = packersdk.MultiErrorAppend(errs, err)
-		}
-		c.credentials = cfg
+	if len(warns) > 0 {
+		warnings = append(warnings, warns...)
 	}
 
 	if c.OmitExternalIP && c.Address != "" {

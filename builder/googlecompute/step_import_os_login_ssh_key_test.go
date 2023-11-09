@@ -44,7 +44,7 @@ func TestStepImportOSLoginSSHKey(t *testing.T) {
 		state := testState(t)
 		fakeAccountEmail := "raffi-compute@developer.gserviceaccount.com"
 		step := &StepImportOSLoginSSHKey{
-			TokeninfoFunc: func(_ context.Context, _ *Config) (*oauth2.Tokeninfo, error) {
+			TokeninfoFunc: func() (*oauth2.Tokeninfo, error) {
 				return &oauth2.Tokeninfo{Email: fakeAccountEmail}, nil
 			},
 		}
@@ -76,7 +76,7 @@ func TestStepImportOSLoginSSHKey_withAccountFile(t *testing.T) {
 	state := testState(t)
 	fakeAccountEmail := "raffi-compute@developer.gserviceaccount.com"
 	step := &StepImportOSLoginSSHKey{
-		TokeninfoFunc: func(_ context.Context, _ *Config) (*oauth2.Tokeninfo, error) {
+		TokeninfoFunc: func() (*oauth2.Tokeninfo, error) {
 			return &oauth2.Tokeninfo{Email: fakeAccountEmail}, nil
 		},
 	}
@@ -109,7 +109,7 @@ func TestStepImportOSLoginSSHKey_withNoAccountFile(t *testing.T) {
 	state := testState(t)
 	fakeAccountEmail := "testing@packer.io"
 	step := &StepImportOSLoginSSHKey{
-		TokeninfoFunc: func(_ context.Context, _ *Config) (*oauth2.Tokeninfo, error) {
+		TokeninfoFunc: func() (*oauth2.Tokeninfo, error) {
 			return &oauth2.Tokeninfo{Email: fakeAccountEmail}, nil
 		},
 	}
@@ -176,7 +176,7 @@ func TestStepImportOSLoginSSHKey_withGCEAndAccount(t *testing.T) {
 	fakeGCEEmail := "testing@packer.io"
 	fakeAccountEmail := "raffi-compute@developer.gserviceaccount.com"
 	step := &StepImportOSLoginSSHKey{
-		TokeninfoFunc: func(_ context.Context, _ *Config) (*oauth2.Tokeninfo, error) {
+		TokeninfoFunc: func() (*oauth2.Tokeninfo, error) {
 			return &oauth2.Tokeninfo{Email: fakeAccountEmail}, nil
 		},
 		GCEUserFunc: func() string {
