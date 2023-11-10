@@ -30,6 +30,7 @@ source "googlecompute" "test" {
   source_image_family = "centos-7"
   ssh_username        = var.ssh_username
   skip_create_image   = true
+  machine_type        = "n2-standard-2"
   zone                = var.zone
 
   disk_attachment {
