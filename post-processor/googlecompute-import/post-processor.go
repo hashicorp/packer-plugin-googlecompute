@@ -217,7 +217,26 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packersdk.Ui, artifa
 	var retArtifact *Artifact
 	var retErr error
 
-	imageCh, errCh := driver.CreateImageFromRaw(p.config.ProjectId, rawImageGcsPath, p.config.ImageName, p.config.ImageDescription, p.config.ImageFamily, p.config.ImageLabels, p.config.ImageGuestOsFeatures, shieldedVMStateConfig, p.config.ImageStorageLocations, p.config.ImageArchitecture)
+	imageFeatures := make([]*compute.GuestOsFeature, 0, len(p.config.ImageGuestOsFeatures))
+	for _, v := range p.config.ImageGuestOsFeatures {
+		imageFeatures = append(imageFeatures, &compute.GuestOsFeature{
+			Type: v,
+		})
+	}
+	imageSpec := &compute.Image{
+		Architecture:                 p.config.ImageArchitecture,
+		Description:                  p.config.ImageDescription,
+		Family:                       p.config.ImageFamily,
+		GuestOsFeatures:              imageFeatures,
+		Labels:                       p.config.ImageLabels,
+		Name:                         p.config.ImageName,
+		RawDisk:                      &compute.ImageRawDisk{Source: rawImageGcsPath},
+		SourceType:                   "RAW",
+		ShieldedInstanceInitialState: shieldedVMStateConfig,
+		StorageLocations:             p.config.ImageStorageLocations,
+	}
+
+	imageCh, errCh := driver.CreateImage(p.config.ProjectId, imageSpec)
 	select {
 	case img := <-imageCh:
 		retArtifact = &Artifact{

@@ -22,10 +22,7 @@ type Driver interface {
 
 	// CreateImage creates an image from the given disk in Google Compute
 	// Engine.
-	CreateImage(project, name, description, family, zone, disk string, image_labels map[string]string, image_licenses []string, image_guest_os_features []string, image_encryption_key *compute.CustomerEncryptionKey, imageStorageLocation []string) (<-chan *Image, <-chan error)
-
-	// CreateImageFromRaw creates an image in GCE from a raw disk image.
-	CreateImageFromRaw(project, name, description, family, rawImageLocation string, image_labels map[string]string, image_guest_os_features []string, shielded_vm_state_config *compute.InitialStateConfig, imageStorageLocation []string, architecture string) (<-chan *Image, <-chan error)
+	CreateImage(project string, imageSpec *compute.Image) (<-chan *Image, <-chan error)
 
 	// DeleteImage deletes the image with the given name.
 	DeleteImage(project, name string) <-chan error
