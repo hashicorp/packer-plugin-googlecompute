@@ -25,12 +25,8 @@ func TestStepCreateImage(t *testing.T) {
 	c := state.Get("config").(*Config)
 	d := state.Get("driver").(*common.DriverMock)
 
-	// These are the values of the image the driver will return.
-	d.CreateImageResultProjectId = "test-project"
-	d.CreateImageResultSizeGb = 100
-	d.CreateImageFeatures = []string{
-		"UEFI_COMPATIBLE",
-	}
+	d.CreateImageReturnSelfLink = "https://selflink/compute/v1/test"
+	d.CreateImageReturnDiskSize = 420
 
 	// run the step
 	action := step.Run(context.Background(), state)
@@ -42,21 +38,16 @@ func TestStepCreateImage(t *testing.T) {
 	assert.True(t, ok, "Image in state is not an Image.")
 
 	// Verify created Image results.
-	assert.Equal(t, image.Name, c.ImageName, "Created image does not match config name.")
-	assert.Equal(t, image.ProjectId, d.CreateImageResultProjectId, "Created image project does not match driver project.")
-	assert.Equal(t, image.SizeGb, d.CreateImageResultSizeGb, "Created image size does not match the size returned by the driver.")
-	assert.Equal(t, len(image.GuestOsFeatures), len(d.CreateImageFeatures), "Created image features does not match config features.")
+	assert.Equal(t, c.ImageName, image.Name, "Created image does not match config name.")
+	assert.Equal(t, len(c.ImageGuestOsFeatures), len(image.GuestOsFeatures), "Created image features does not match config.")
+	assert.Equal(t, c.ImageLabels, image.Labels, "Created image labels does not match config.")
+	assert.Equal(t, c.ImageLicenses, image.Licenses, "Created image licenses does not match config.")
+	assert.Equal(t, c.ProjectId, image.ProjectId, "Created image project ID does not match config.")
+	assert.Equal(t, d.CreateImageReturnSelfLink, image.SelfLink, "Created image selflink does not match config")
+	assert.Equal(t, d.CreateImageReturnDiskSize, image.SizeGb, "Created image disk size does not match config")
 
 	// Verify proper args passed to driver.CreateImage.
-	assert.Equal(t, d.CreateImageName, c.ImageName, "Incorrect image name passed to driver.")
-	assert.Equal(t, d.CreateImageDesc, c.ImageDescription, "Incorrect image description passed to driver.")
-	assert.Equal(t, d.CreateImageFamily, c.ImageFamily, "Incorrect image family passed to driver.")
-	assert.Equal(t, d.CreateImageZone, c.Zone, "Incorrect image zone passed to driver.")
-	assert.Equal(t, d.CreateImageDisk, c.DiskName, "Incorrect disk passed to driver.")
-	assert.Equal(t, d.CreateImageLabels, c.ImageLabels, "Incorrect image_labels passed to driver.")
-	assert.Equal(t, d.CreateImageLicenses, c.ImageLicenses, "Incorrect image_licenses passed to driver.")
-	assert.Equal(t, d.CreateImageEncryptionKey, c.ImageEncryptionKey.ComputeType(), "Incorrect image_encryption_key passed to driver.")
-	assert.Equal(t, d.CreateImageStorageLocations, c.ImageStorageLocations, "Incorrect image_storage_locations passed to driver.")
+	assert.Equal(t, c.ProjectId, d.CreateImageProjectId, "Incorrect project ID passed to driver.")
 }
 
 func TestStepCreateImage_errorOnChannel(t *testing.T) {

@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/packer-plugin-googlecompute/lib/common"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
+	"google.golang.org/api/compute/v1"
 )
 
 // StepCreateImage represents a Packer build step that creates GCE machine
@@ -47,10 +48,27 @@ func (s *StepCreateImage) Run(ctx context.Context, state multistep.StateBag) mul
 
 	ui.Say("Creating image...")
 
-	imageCh, errCh := driver.CreateImage(
-		config.ImageProjectId, config.ImageName, config.ImageDescription, config.ImageFamily, config.Zone,
-		config.DiskName, config.ImageLabels, config.ImageLicenses, config.ImageGuestOsFeatures,
-		config.ImageEncryptionKey.ComputeType(), config.ImageStorageLocations)
+	sourceDiskURI := fmt.Sprintf("/compute/v1/projects/%s/zones/%s/disks/%s", config.ProjectId, config.Zone, config.DiskName)
+
+	imageFeatures := make([]*compute.GuestOsFeature, 0, len(config.ImageGuestOsFeatures))
+	for _, v := range config.ImageGuestOsFeatures {
+		imageFeatures = append(imageFeatures, &compute.GuestOsFeature{
+			Type: v,
+		})
+	}
+	imagePayload := &compute.Image{
+		Description:        config.ImageDescription,
+		Name:               config.ImageName,
+		Family:             config.ImageFamily,
+		Labels:             config.ImageLabels,
+		Licenses:           config.ImageLicenses,
+		GuestOsFeatures:    imageFeatures,
+		ImageEncryptionKey: config.ImageEncryptionKey.ComputeType(),
+		SourceDisk:         sourceDiskURI,
+		SourceType:         "RAW",
+		StorageLocations:   config.ImageStorageLocations,
+	}
+	imageCh, errCh := driver.CreateImage(config.ImageProjectId, imagePayload)
 	var err error
 	select {
 	case err = <-errCh:

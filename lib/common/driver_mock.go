@@ -19,22 +19,12 @@ type DriverMock struct {
 	CreateDiskResultCh <-chan *compute.Disk
 	CreateDiskErrCh    <-chan error
 
-	CreateImageProjectId        string
-	CreateImageName             string
-	CreateImageDesc             string
-	CreateImageFamily           string
-	CreateImageEncryptionKey    *compute.CustomerEncryptionKey
-	CreateImageLabels           map[string]string
-	CreateImageLicenses         []string
-	CreateImageFeatures         []string
-	CreateImageStorageLocations []string
-	CreateImageZone             string
-	CreateImageDisk             string
-	CreateImageResultProjectId  string
-	CreateImageResultSelfLink   string
-	CreateImageResultSizeGb     int64
-	CreateImageErrCh            <-chan error
-	CreateImageResultCh         <-chan *Image
+	CreateImageProjectId      string
+	CreateImageSpec           *compute.Image
+	CreateImageReturnDiskSize int64
+	CreateImageReturnSelfLink string
+	CreateImageErrCh          <-chan error
+	CreateImageResultCh       <-chan *Image
 
 	DeleteProjectId  string
 	DeleteImageName  string
@@ -127,46 +117,31 @@ type DriverMock struct {
 	UploadToBucketError      error
 }
 
-func (d *DriverMock) CreateImage(project, name, description, family, zone, disk string, image_labels map[string]string, image_licenses []string, image_features []string, image_encryption_key *compute.CustomerEncryptionKey, imageStorageLocations []string) (<-chan *Image, <-chan error) {
+func (d *DriverMock) CreateImage(project string, imageSpec *compute.Image) (<-chan *Image, <-chan error) {
 	d.CreateImageProjectId = project
-	d.CreateImageName = name
-	d.CreateImageDesc = description
-	d.CreateImageFamily = family
-	d.CreateImageLabels = image_labels
-	d.CreateImageLicenses = image_licenses
-	d.CreateImageFeatures = image_features
-	d.CreateImageStorageLocations = imageStorageLocations
-	d.CreateImageZone = zone
-	d.CreateImageDisk = disk
-	d.CreateImageEncryptionKey = image_encryption_key
-	if d.CreateImageResultProjectId == "" {
-		d.CreateImageResultProjectId = "test"
-	}
-	if d.CreateImageResultSelfLink == "" {
-		d.CreateImageResultSelfLink = fmt.Sprintf(
-			"http://content.googleapis.com/compute/v1/%s/global/licenses/test",
-			d.CreateImageResultProjectId)
-	}
-	if d.CreateImageResultSizeGb == 0 {
-		d.CreateImageResultSizeGb = 10
-	}
-	imageFeatures := make([]*compute.GuestOsFeature, 0, len(image_features))
-	for _, v := range image_features {
-		imageFeatures = append(imageFeatures, &compute.GuestOsFeature{
-			Type: v,
-		})
-	}
+	d.CreateImageSpec = imageSpec
 	resultCh := d.CreateImageResultCh
 	if resultCh == nil {
 		ch := make(chan *Image, 1)
+
+		selfLink := d.CreateImageReturnSelfLink
+		if selfLink == "" {
+			selfLink = fmt.Sprintf("http://content.googleapis.com/compute/v1/%s/global/licenses/test", d.CreateImageProjectId)
+		}
+
+		diskSizeGb := d.CreateImageReturnDiskSize
+		if diskSizeGb == 0 {
+			diskSizeGb = 25
+		}
+
 		ch <- &Image{
-			GuestOsFeatures: imageFeatures,
-			Labels:          d.CreateImageLabels,
-			Licenses:        d.CreateImageLicenses,
-			Name:            name,
-			ProjectId:       d.CreateImageResultProjectId,
-			SelfLink:        d.CreateImageResultSelfLink,
-			SizeGb:          d.CreateImageResultSizeGb,
+			GuestOsFeatures: imageSpec.GuestOsFeatures,
+			Labels:          imageSpec.Labels,
+			Licenses:        imageSpec.Licenses,
+			Name:            imageSpec.Name,
+			ProjectId:       d.CreateImageProjectId,
+			SelfLink:        selfLink,
+			SizeGb:          diskSizeGb,
 		}
 		close(ch)
 		resultCh = ch

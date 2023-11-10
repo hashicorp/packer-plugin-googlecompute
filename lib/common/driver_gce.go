@@ -200,30 +200,10 @@ func NewDriverGCE(config GCEDriverConfig) (Driver, error) {
 	}, nil
 }
 
-func (d *driverGCE) CreateImage(project, name, description, family, zone, disk string, image_labels map[string]string, image_licenses []string, image_guest_os_features []string, image_encryption_key *compute.CustomerEncryptionKey, imageStorageLocations []string) (<-chan *Image, <-chan error) {
-
-	image_features := make([]*compute.GuestOsFeature, 0, len(image_guest_os_features))
-	for _, v := range image_guest_os_features {
-		image_features = append(image_features, &compute.GuestOsFeature{
-			Type: v,
-		})
-	}
-	gce_image := &compute.Image{
-		Description:        description,
-		Name:               name,
-		Family:             family,
-		Labels:             image_labels,
-		Licenses:           image_licenses,
-		GuestOsFeatures:    image_features,
-		ImageEncryptionKey: image_encryption_key,
-		SourceDisk:         fmt.Sprintf("%sprojects/%s/zones/%s/disks/%s", d.service.BasePath, d.projectId, zone, disk),
-		SourceType:         "RAW",
-		StorageLocations:   imageStorageLocations,
-	}
-
+func (d *driverGCE) CreateImage(project string, imageSpec *compute.Image) (<-chan *Image, <-chan error) {
 	imageCh := make(chan *Image, 1)
 	errCh := make(chan error, 1)
-	op, err := d.service.Images.Insert(project, gce_image).Do()
+	op, err := d.service.Images.Insert(project, imageSpec).Do()
 	if err != nil {
 		errCh <- err
 	} else {
@@ -235,69 +215,7 @@ func (d *driverGCE) CreateImage(project, name, description, family, zone, disk s
 				return
 			}
 			var image *Image
-			image, err = d.GetImageFromProject(project, name, false)
-			if err != nil {
-				close(imageCh)
-				errCh <- err
-				return
-			}
-			imageCh <- image
-			close(imageCh)
-		}()
-	}
-
-	return imageCh, errCh
-}
-
-func (d *driverGCE) CreateImageFromRaw(
-	project string,
-	rawImageURL string,
-	imageName string,
-	imageDescription string,
-	imageFamily string,
-	imageLabels map[string]string,
-	imageGuestOsFeatures []string,
-	shieldedVMStateConfig *compute.InitialStateConfig,
-	imageStorageLocations []string,
-	imageArchitecture string,
-) (<-chan *Image, <-chan error) {
-	// Build up the imageFeatures
-	imageFeatures := make([]*compute.GuestOsFeature, len(imageGuestOsFeatures))
-	for _, v := range imageGuestOsFeatures {
-		imageFeatures = append(imageFeatures, &compute.GuestOsFeature{
-			Type: v,
-		})
-	}
-
-	gceImage := &compute.Image{
-		Architecture:                 imageArchitecture,
-		Description:                  imageDescription,
-		Family:                       imageFamily,
-		GuestOsFeatures:              imageFeatures,
-		Labels:                       imageLabels,
-		Name:                         imageName,
-		RawDisk:                      &compute.ImageRawDisk{Source: rawImageURL},
-		SourceType:                   "RAW",
-		ShieldedInstanceInitialState: shieldedVMStateConfig,
-		StorageLocations:             imageStorageLocations,
-	}
-
-	imageCh := make(chan *Image, 1)
-	errCh := make(chan error, 1)
-
-	op, err := d.service.Images.Insert(project, gceImage).Do()
-	if err != nil {
-		errCh <- err
-	} else {
-		go func() {
-			err = waitForState(errCh, "DONE", d.refreshGlobalOp(project, op))
-			if err != nil {
-				close(imageCh)
-				errCh <- err
-				return
-			}
-			var image *Image
-			image, err = d.GetImageFromProject(project, imageName, false)
+			image, err = d.GetImageFromProject(project, imageSpec.Name, false)
 			if err != nil {
 				close(imageCh)
 				errCh <- err
