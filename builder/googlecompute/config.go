@@ -116,6 +116,10 @@ type Config struct {
 	// Scratch (ephemeral) SSDs are always created at launch, and deleted when the
 	// instance is torn-down.
 	//
+	// Note: local SSDs are not supported on all machine types, refer to the
+	// [docs](https://cloud.google.com/compute/docs/disks/local-ssd#choose_number_local_ssds)
+	// for more information on that.
+	//
 	// Refer to the [Extra Disk Attachments](#extra-disk-attachments) section for
 	// more information on this configuration type.
 	ExtraBlockDevices []BlockDevice `mapstructure:"disk_attachment" required:"false"`
