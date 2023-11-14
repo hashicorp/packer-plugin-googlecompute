@@ -92,6 +92,10 @@ type BlockDevice struct {
 	//
 	// For details on the different types, refer to: https://cloud.google.com/compute/docs/disks#disk-types
 	VolumeType BlockDeviceType `mapstructure:"volume_type" required:"true"`
+	// The URI of the image to load
+	//
+	// This cannot be used with SourceVolume.
+	SourceImage string `mapstructure:"source_image" required:"false"`
 	// zone is the zone in which to create the disk in.
 	//
 	// It is not exposed since the parent config already specifies it
@@ -163,6 +167,10 @@ func (bd *BlockDevice) prepareDiskCreate() []error {
 * iops
 * keep_device`),
 		}
+	} else if bd.SourceVolume != "" && bd.SourceImage != "" {
+		return []error{
+			fmt.Errorf("source_volume and source_image are mutually exclusive"),
+		}
 	}
 
 	if bd.SourceVolume != "" {
@@ -196,7 +204,7 @@ func (bd *BlockDevice) prepareDiskCreate() []error {
 		errs = append(errs, fmt.Errorf("Scratch volumes cannot have a name specified."))
 	}
 
-	if bd.VolumeSize == 0 {
+	if bd.VolumeSize == 0 && bd.SourceImage == "" {
 		errs = append(errs, fmt.Errorf("volume_size must be specified"))
 	}
 
@@ -253,6 +261,10 @@ func (bd BlockDevice) generateComputeDiskPayload() (*compute.Disk, error) {
 		Description:       "created by Packer",
 	}
 
+	if bd.SourceImage != "" {
+		payload.SourceImage = bd.SourceImage
+	}
+
 	if bd.IOPS != 0 {
 		payload.ProvisionedIops = int64(bd.IOPS)
 	}
@@ -305,12 +317,13 @@ func (bd BlockDevice) generateDiskAttachment() *compute.AttachedDisk {
 			Mode:              bd.AttachmentMode,
 			Type:              "SCRATCH",
 			InitializeParams: &compute.AttachedDiskInitializeParams{
-				DiskType: fmt.Sprintf("zones/%s/diskTypes/local-ssd", bd.zone),
+				DiskType:    fmt.Sprintf("zones/%s/diskTypes/local-ssd", bd.zone),
+				SourceImage: bd.SourceImage,
 			},
 		}
 	}
 
-	return &compute.AttachedDisk{
+	disk := &compute.AttachedDisk{
 		AutoDelete:        bd.shouldAutoDelete(),
 		Boot:              false,
 		DeviceName:        bd.DeviceName,
@@ -318,6 +331,18 @@ func (bd BlockDevice) generateDiskAttachment() *compute.AttachedDisk {
 		Mode:              bd.AttachmentMode,
 		DiskEncryptionKey: bd.DiskEncryptionKey.ComputeType(),
 		Type:              "PERSISTENT",
-		Source:            bd.SourceVolume,
 	}
+
+	if bd.SourceImage != "" {
+		// `DiskName` here needs to match `compute.Disk` created above
+		// otherwise Google creates another disk.
+		disk.InitializeParams = &compute.AttachedDiskInitializeParams{
+			DiskName:    bd.DiskName,
+			SourceImage: bd.SourceImage,
+		}
+	} else {
+		disk.Source = bd.SourceVolume
+	}
+
+	return disk
 }

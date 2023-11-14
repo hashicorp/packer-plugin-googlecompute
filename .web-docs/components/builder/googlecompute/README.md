@@ -737,4 +737,8 @@ source "googlecompute" "example" {
   
   If this is specified, it won't be deleted after the instance is shut-down.
 
+- `source_image` (string) - The URI of the image to load
+  
+  This cannot be used with SourceVolume.
+
 <!-- End of code generated from the comments of the BlockDevice struct in builder/googlecompute/block_device.go; -->

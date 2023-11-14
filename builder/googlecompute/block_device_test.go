@@ -287,6 +287,15 @@ func TestBlockDevice_Prepare(t *testing.T) {
 			},
 			expectErr: true,
 		},
+		{
+			name: "fail - source volume set along with source image",
+			config: &BlockDevice{
+				SourceImage:  "projects/p/global/images/family/f",
+				SourceVolume: "zones/us-central1-a/disks/source-disk",
+				KeepDevice:   true,
+			},
+			expectErr: true,
+		},
 	}
 
 	for _, tt := range testcases {
@@ -404,6 +413,28 @@ func TestGenerateDiskAttachment(t *testing.T) {
 				Mode:              "READ_ONLY",
 				Type:              "PERSISTENT",
 				DeviceName:        "packer-test",
+			},
+		},
+		{
+			name: "basic persistent disk with source image",
+			config: BlockDevice{
+				SourceImage: "projects/p/global/images/family/f",
+				VolumeType:  "pd-standard",
+				DeviceName:  "packer-test",
+				DiskName:    "packer-test-disk",
+			},
+			expectval: &compute.AttachedDisk{
+				AutoDelete:        true,
+				Boot:              false,
+				DiskEncryptionKey: &compute.CustomerEncryptionKey{},
+				Interface:         "SCSI",
+				Mode:              "READ_WRITE",
+				Type:              "PERSISTENT",
+				DeviceName:        "packer-test",
+				InitializeParams: &compute.AttachedDiskInitializeParams{
+					DiskName:    "packer-test-disk",
+					SourceImage: "projects/p/global/images/family/f",
+				},
 			},
 		},
 	}

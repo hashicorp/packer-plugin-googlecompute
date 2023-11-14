@@ -21,6 +21,7 @@ type FlatBlockDevice struct {
 	SourceVolume      *string                    `mapstructure:"source_volume" cty:"source_volume" hcl:"source_volume"`
 	VolumeSize        *int                       `mapstructure:"volume_size" required:"true" cty:"volume_size" hcl:"volume_size"`
 	VolumeType        *BlockDeviceType           `mapstructure:"volume_type" required:"true" cty:"volume_type" hcl:"volume_type"`
+	SourceImage       *string                    `mapstructure:"source_image" required:"false" cty:"source_image" hcl:"source_image"`
 }
 
 // FlatMapstructure returns a new FlatBlockDevice.
@@ -46,6 +47,7 @@ func (*FlatBlockDevice) HCL2Spec() map[string]hcldec.Spec {
 		"source_volume":       &hcldec.AttrSpec{Name: "source_volume", Type: cty.String, Required: false},
 		"volume_size":         &hcldec.AttrSpec{Name: "volume_size", Type: cty.Number, Required: false},
 		"volume_type":         &hcldec.AttrSpec{Name: "volume_type", Type: cty.String, Required: false},
+		"source_image":        &hcldec.AttrSpec{Name: "source_image", Type: cty.String, Required: false},
 	}
 	return s
 }
