@@ -203,6 +203,9 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packersdk.Ui, artifa
 	}
 
 	tarball, err := p.findTarballFromArtifact(artifact)
+	if err != nil {
+		return nil, false, false, err
+	}
 
 	rawImageGcsPath, err := driver.UploadToBucket(p.config.Bucket, p.config.GCSObjectName, tarball)
 	if err != nil {
