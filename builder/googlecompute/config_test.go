@@ -633,6 +633,58 @@ func TestConfigExtraBlockDevice_zone_forwarded(t *testing.T) {
 	}
 }
 
+func TestConfigExtraBlockDevice_create_image(t *testing.T) {
+	var config Config
+
+	c, _ := testConfig(t)
+
+	c["disk_attachment"] = []map[string]interface{}{
+		{
+			"volume_type":  "pd-standard",
+			"volume_size":  20,
+			"disk_name":    "second-disk",
+			"create_image": true,
+		},
+	}
+
+	_, err := config.Prepare(c)
+
+	if err != nil {
+		t.Fatalf("failed to prepare config: %#s", err)
+	}
+
+	if config.imageSourceDisk != "second-disk" {
+		t.Errorf("Expected imageSourceDisk (%q) to match second disk's disk_name (%q)", config.imageSourceDisk, "second-disk")
+	}
+}
+
+func TestConfigExtraBlockDevice_create_image_multiple(t *testing.T) {
+	var config Config
+
+	c, _ := testConfig(t)
+
+	c["disk_attachment"] = []map[string]interface{}{
+		{
+			"volume_type":  "pd-standard",
+			"volume_size":  20,
+			"disk_name":    "second-disk",
+			"create_image": true,
+		},
+		{
+			"volume_type":  "pd-standard",
+			"volume_size":  20,
+			"disk_name":    "third-disk",
+			"create_image": true,
+		},
+	}
+
+	_, err := config.Prepare(c)
+
+	if err == nil {
+		t.Fatalf("expected an error due to having multiple disks with create_image enabled, got nil")
+	}
+}
+
 // Helper stuff below
 
 func testConfig(t *testing.T) (config map[string]interface{}, tempAccountFile string) {

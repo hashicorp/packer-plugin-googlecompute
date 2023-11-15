@@ -338,8 +338,9 @@ type Config struct {
 	// Example: "us-central1-a"
 	Zone string `mapstructure:"zone" required:"true"`
 
-	imageAlreadyExists bool
 	ctx                interpolate.Context
+	imageSourceDisk    string
+	imageAlreadyExists bool
 }
 
 func (c *Config) Prepare(raws ...interface{}) ([]string, error) {
@@ -470,6 +471,22 @@ func (c *Config) Prepare(raws ...interface{}) ([]string, error) {
 
 	if c.DiskName == "" {
 		c.DiskName = c.InstanceName
+	}
+
+	for _, bd := range c.ExtraBlockDevices {
+		if !bd.CreateImage {
+			continue
+		}
+
+		if c.imageSourceDisk != "" {
+			errs = packersdk.MultiErrorAppend(errs, errors.New("create_image cannot be enabled on multiple disks."))
+		}
+
+		c.imageSourceDisk = bd.DiskName
+	}
+
+	if c.imageSourceDisk == "" {
+		c.imageSourceDisk = c.DiskName
 	}
 
 	if c.MachineType == "" {
