@@ -4,6 +4,11 @@
   
   Can be either READ_ONLY or READ_WRITE (default).
 
+- `create_image` (bool) - If true, an image will be created for this disk, instead of the boot disk.
+  
+  This only applies to non-scratch disks, and can only be specified on one disk at a
+  time.
+
 - `device_name` (string) - The device name as exposed to the OS in the /dev/disk/by-id/google-* directory
   
   If unspecified, the disk will have a default name in the form

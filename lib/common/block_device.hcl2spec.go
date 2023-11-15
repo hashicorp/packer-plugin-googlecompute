@@ -11,6 +11,7 @@ import (
 // Where the contents of a field with a `mapstructure:,squash` tag are bubbled up.
 type FlatBlockDevice struct {
 	AttachmentMode    *string                    `mapstructure:"attachment_mode" cty:"attachment_mode" hcl:"attachment_mode"`
+	CreateImage       *bool                      `mapstructure:"create_image" cty:"create_image" hcl:"create_image"`
 	DeviceName        *string                    `mapstructure:"device_name" cty:"device_name" hcl:"device_name"`
 	DiskEncryptionKey *FlatCustomerEncryptionKey `mapstructure:"disk_encryption_key" cty:"disk_encryption_key" hcl:"disk_encryption_key"`
 	DiskName          *string                    `mapstructure:"disk_name" cty:"disk_name" hcl:"disk_name"`
@@ -37,6 +38,7 @@ func (*BlockDevice) FlatMapstructure() interface{ HCL2Spec() map[string]hcldec.S
 func (*FlatBlockDevice) HCL2Spec() map[string]hcldec.Spec {
 	s := map[string]hcldec.Spec{
 		"attachment_mode":     &hcldec.AttrSpec{Name: "attachment_mode", Type: cty.String, Required: false},
+		"create_image":        &hcldec.AttrSpec{Name: "create_image", Type: cty.Bool, Required: false},
 		"device_name":         &hcldec.AttrSpec{Name: "device_name", Type: cty.String, Required: false},
 		"disk_encryption_key": &hcldec.BlockSpec{TypeName: "disk_encryption_key", Nested: hcldec.ObjectSpec((*FlatCustomerEncryptionKey)(nil).HCL2Spec())},
 		"disk_name":           &hcldec.AttrSpec{Name: "disk_name", Type: cty.String, Required: false},
