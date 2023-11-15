@@ -33,6 +33,11 @@ type BlockDevice struct {
 	//
 	// Can be either READ_ONLY or READ_WRITE (default).
 	AttachmentMode string `mapstructure:"attachment_mode"`
+	// If true, an image will be created for this disk, instead of the boot disk.
+	//
+	// This only applies to non-scratch disks, and can only be specified on one disk at a
+	// time.
+	CreateImage bool `mapstructure:"create_image"`
 	// The device name as exposed to the OS in the /dev/disk/by-id/google-* directory
 	//
 	// If unspecified, the disk will have a default name in the form
@@ -136,6 +141,10 @@ func (bd *BlockDevice) Prepare() []error {
 
 	if bd.DeviceName != "" && bd.VolumeType == LocalScratch {
 		errs = append(errs, fmt.Errorf("Scratch volumes may not have a device_name attached to them"))
+	}
+
+	if bd.CreateImage && bd.VolumeType == LocalScratch {
+		errs = append(errs, fmt.Errorf("Scratch volumes may not have create_image enabled"))
 	}
 
 	if bd.SourceVolume != "" {
@@ -287,7 +296,7 @@ func (bd BlockDevice) shouldAutoDelete() bool {
 		return true
 	}
 
-	if bd.KeepDevice {
+	if bd.CreateImage || bd.KeepDevice {
 		return false
 	}
 

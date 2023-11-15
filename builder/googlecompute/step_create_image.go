@@ -48,7 +48,7 @@ func (s *StepCreateImage) Run(ctx context.Context, state multistep.StateBag) mul
 
 	ui.Say("Creating image...")
 
-	sourceDiskURI := fmt.Sprintf("/compute/v1/projects/%s/zones/%s/disks/%s", config.ProjectId, config.Zone, config.DiskName)
+	sourceDiskURI := fmt.Sprintf("/compute/v1/projects/%s/zones/%s/disks/%s", config.ProjectId, config.Zone, config.imageSourceDisk)
 
 	imageFeatures := make([]*compute.GuestOsFeature, 0, len(config.ImageGuestOsFeatures))
 	for _, v := range config.ImageGuestOsFeatures {
