@@ -338,9 +338,9 @@ type Config struct {
 	// Example: "us-central1-a"
 	Zone string `mapstructure:"zone" required:"true"`
 
-	ctx                interpolate.Context
-	imageSourceDisk    string
-	imageAlreadyExists bool
+	ctx             interpolate.Context
+	imageSourceDisk string
+	//imageAlreadyExists bool
 
 	machineImageAlreadyExists      bool
 	MachineImageName               string `mapstructure:"machine_image_name" required:"true"`

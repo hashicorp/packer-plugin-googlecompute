@@ -24,8 +24,8 @@ func (s *StepCheckExistingMachineImage) Run(ctx context.Context, state multistep
 
 	ui.Say("Checking machine image does not exist...")
 	c.machineImageAlreadyExists = d.MachineImageExists(c.ProjectId, c.MachineImageName)
-	if !c.PackerForce && c.imageAlreadyExists {
-		err := fmt.Errorf("Image %s already exists in project %s.\n"+
+	if !c.PackerForce && c.machineImageAlreadyExists {
+		err := fmt.Errorf("Machine Image %s already exists in project %s.\n"+
 			"Use the force flag to delete it prior to building.", c.MachineImageName, c.ProjectId)
 		state.Put("error", err)
 		ui.Error(err.Error())
