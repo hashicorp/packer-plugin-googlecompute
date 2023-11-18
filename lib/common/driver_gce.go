@@ -1035,3 +1035,77 @@ func (d *driverGCE) UploadToBucket(bucket, objectName string, data io.Reader) (s
 func (d *driverGCE) DeleteFromBucket(bucket, objectName string) error {
 	return d.storageService.Objects.Delete(bucket, objectName).Do()
 }
+
+func (d *driverGCE) CreateMachineImage(project, name, description, source_instance, source_instance_zone string) (<-chan *compute.MachineImage, <-chan error) {
+
+	gce_image := &compute.MachineImage{
+		Description:    description,
+		Name:           name,
+		SourceInstance: source_instance,
+	}
+
+	imageCh := make(chan *compute.MachineImage, 1)
+	errCh := make(chan error, 1)
+	op, err := d.service.MachineImages.Insert(project, gce_image).Do()
+	if err != nil {
+		errCh <- err
+	} else {
+		go func() {
+			err = waitForState(errCh, "DONE", d.refreshGlobalOp(project, op))
+			if err != nil {
+				close(imageCh)
+				errCh <- err
+				return
+			}
+			var image *compute.MachineImage
+			image, err = d.GetMachineImage(project, name)
+			if err != nil {
+				close(imageCh)
+				errCh <- err
+				return
+			}
+			imageCh <- image
+			close(imageCh)
+		}()
+	}
+
+	return imageCh, errCh
+}
+
+func (d *driverGCE) DeleteMachineImage(project, name string) <-chan error {
+	errCh := make(chan error, 1)
+	op, err := d.service.MachineImages.Delete(project, name).Do()
+	if err != nil {
+		errCh <- err
+	} else {
+		go func() {
+			_ = waitForState(errCh, "DONE", d.refreshGlobalOp(project, op))
+		}()
+
+	}
+
+	return errCh
+}
+
+// machine-image
+func (d *driverGCE) GetMachineImage(project, name string) (*compute.MachineImage, error) {
+	var errs error
+	image, err := d.service.MachineImages.Get(project, name).Do()
+	if err != nil {
+		errs = packersdk.MultiErrorAppend(errs, err)
+	}
+	if image != nil {
+		return image, nil
+	}
+
+	return nil, fmt.Errorf(
+		"Could not find machine image, %s, in projects, %s: %s", name, project, errs)
+}
+
+// machine-image
+func (d *driverGCE) MachineImageExists(project, name string) bool {
+	_, err := d.GetMachineImage(project, name)
+	// The API may return an error for reasons other than the image not
+	// existing, but this heuristic is sufficient for now.
+	return err == nil
+}

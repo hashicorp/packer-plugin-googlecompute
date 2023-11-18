@@ -92,6 +92,13 @@ type Driver interface {
 
 	// DeleteFromBucket deletes an object from a bucket on GCS.
 	DeleteFromBucket(bucket, objectName string) error
+
+	//machine-image
+	MachineImageExists(project, name string) bool
+	//
+	GetMachineImage(project, name string) (*compute.MachineImage, error)
+	DeleteMachineImage(project, name string) <-chan error
+	CreateMachineImage(project, name, description, source_instance, source_instance_zone string) (<-chan *compute.MachineImage, <-chan error)
 }
 
 // WindowsPasswordConfig is the data structure that GCE needs to encrypt the created

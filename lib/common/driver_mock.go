@@ -115,6 +115,26 @@ type DriverMock struct {
 	UploadToBucketData       io.Reader
 	UploadToBucketResult     string
 	UploadToBucketError      error
+
+	CreateMachineImageName               string
+	CreateMachineImageDesc               string
+	CreateMachineImageSourceInstance     string
+	CreateMachineImageSourceInstanceZone string
+	CreateMachineImageErrCh              <-chan error
+	CreateMachineImageResultCh           <-chan *compute.MachineImage
+
+	DeleteMachineImageName  string
+	DeleteMachineImageErrCh <-chan error
+
+	GetMachineImageName           string
+	GetMachineImageSourceInstance string
+	GetMachineImageSourceZone     string
+	GetMachineImageResult         *compute.MachineImage
+	GetMachineImageErr            error
+
+	MachineImageExistsProjectId string
+	MachineImageExistsName      string
+	MachineImageExistsResult    bool
 }
 
 func (d *DriverMock) CreateImage(project string, imageSpec *compute.Image) (<-chan *Image, <-chan error) {
@@ -396,4 +416,58 @@ func (d *DriverMock) UploadToBucket(bucket, object string, data io.Reader) (stri
 	d.UploadToBucketData = data
 
 	return d.UploadToBucketResult, d.UploadToBucketError
+}
+
+func (d *DriverMock) CreateMachineImage(project, name, description, source_instance, source_instance_zone string) (<-chan *compute.MachineImage, <-chan error) {
+	//d.CreateImageProjectId = project
+	d.CreateMachineImageName = name
+	d.CreateMachineImageDesc = description
+	d.CreateMachineImageSourceInstance = source_instance
+	d.CreateMachineImageSourceInstanceZone = source_instance_zone
+
+	resultCh := d.CreateMachineImageResultCh
+	if resultCh == nil {
+		ch := make(chan *compute.MachineImage, 1)
+		ch <- &compute.MachineImage{
+			Name:           name,
+			Description:    description,
+			SourceInstance: source_instance,
+		}
+		close(ch)
+		resultCh = ch
+	}
+
+	errCh := d.CreateMachineImageErrCh
+	if errCh == nil {
+		ch := make(chan error)
+		close(ch)
+		errCh = ch
+	}
+
+	return resultCh, errCh
+}
+
+func (d *DriverMock) DeleteMachineImage(project, name string) <-chan error {
+	d.DeleteProjectId = project
+	d.DeleteMachineImageName = name
+
+	resultCh := d.DeleteMachineImageErrCh
+	if resultCh == nil {
+		ch := make(chan error)
+		close(ch)
+		resultCh = ch
+	}
+
+	return resultCh
+}
+
+func (d *DriverMock) MachineImageExists(project, name string) bool {
+	d.MachineImageExistsProjectId = project
+	d.MachineImageExistsName = name
+	return d.MachineImageExistsResult
+}
+
+func (d *DriverMock) GetMachineImage(project, name string) (*compute.MachineImage, error) {
+	d.GetMachineImageName = name
+	return d.GetMachineImageResult, d.GetImageErr
 }
