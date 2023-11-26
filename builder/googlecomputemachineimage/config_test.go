@@ -117,21 +117,6 @@ func TestConfigPrepare(t *testing.T) {
 			true,
 		},
 		{
-			"preemptible",
-			nil,
-			false,
-		},
-		{
-			"preemptible",
-			false,
-			false,
-		},
-		{
-			"preemptible",
-			"SO VERY BAD",
-			true,
-		},
-		{
 			"node_affinity",
 			nil,
 			false,

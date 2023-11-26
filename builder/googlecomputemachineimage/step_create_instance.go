@@ -198,14 +198,14 @@ func (s *StepCreateInstance) Run(ctx context.Context, state multistep.StateBag) 
 		NetworkProjectId:             c.NetworkProjectId,
 		OmitExternalIP:               c.OmitExternalIP,
 		OnHostMaintenance:            c.OnHostMaintenance,
-		Preemptible:                  c.Preemptible,
-		NodeAffinities:               c.NodeAffinities,
-		Region:                       c.Region,
-		ServiceAccountEmail:          c.ServiceAccountEmail,
-		Scopes:                       c.Scopes,
-		Subnetwork:                   c.Subnetwork,
-		Tags:                         c.Tags,
-		Zone:                         c.Zone,
+		//Preemptible:                  c.Preemptible,
+		NodeAffinities:      c.NodeAffinities,
+		Region:              c.Region,
+		ServiceAccountEmail: c.ServiceAccountEmail,
+		Scopes:              c.Scopes,
+		Subnetwork:          c.Subnetwork,
+		Tags:                c.Tags,
+		Zone:                c.Zone,
 	})
 
 	if err == nil {

@@ -93,7 +93,6 @@ type FlatConfig struct {
 	IAPHashBang                    *string                           `mapstructure:"iap_hashbang" required:"false" cty:"iap_hashbang" hcl:"iap_hashbang"`
 	IAPExt                         *string                           `mapstructure:"iap_ext" required:"false" cty:"iap_ext" hcl:"iap_ext"`
 	IAPTunnelLaunchWait            *int                              `mapstructure:"iap_tunnel_launch_wait" required:"false" cty:"iap_tunnel_launch_wait" hcl:"iap_tunnel_launch_wait"`
-	SkipCreateImage                *bool                             `mapstructure:"skip_create_image" required:"false" cty:"skip_create_image" hcl:"skip_create_image"`
 	InstanceName                   *string                           `mapstructure:"instance_name" required:"false" cty:"instance_name" hcl:"instance_name"`
 	Labels                         map[string]string                 `mapstructure:"labels" required:"false" cty:"labels" hcl:"labels"`
 	MachineType                    *string                           `mapstructure:"machine_type" required:"false" cty:"machine_type" hcl:"machine_type"`
@@ -104,7 +103,6 @@ type FlatConfig struct {
 	NetworkProjectId               *string                           `mapstructure:"network_project_id" required:"false" cty:"network_project_id" hcl:"network_project_id"`
 	OmitExternalIP                 *bool                             `mapstructure:"omit_external_ip" required:"false" cty:"omit_external_ip" hcl:"omit_external_ip"`
 	OnHostMaintenance              *string                           `mapstructure:"on_host_maintenance" required:"false" cty:"on_host_maintenance" hcl:"on_host_maintenance"`
-	Preemptible                    *bool                             `mapstructure:"preemptible" required:"false" cty:"preemptible" hcl:"preemptible"`
 	NodeAffinities                 []common.FlatNodeAffinity         `mapstructure:"node_affinity" required:"false" cty:"node_affinity" hcl:"node_affinity"`
 	StateTimeout                   *string                           `mapstructure:"state_timeout" required:"false" cty:"state_timeout" hcl:"state_timeout"`
 	Region                         *string                           `mapstructure:"region" required:"false" cty:"region" hcl:"region"`
@@ -222,7 +220,6 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"iap_hashbang":                    &hcldec.AttrSpec{Name: "iap_hashbang", Type: cty.String, Required: false},
 		"iap_ext":                         &hcldec.AttrSpec{Name: "iap_ext", Type: cty.String, Required: false},
 		"iap_tunnel_launch_wait":          &hcldec.AttrSpec{Name: "iap_tunnel_launch_wait", Type: cty.Number, Required: false},
-		"skip_create_image":               &hcldec.AttrSpec{Name: "skip_create_image", Type: cty.Bool, Required: false},
 		"instance_name":                   &hcldec.AttrSpec{Name: "instance_name", Type: cty.String, Required: false},
 		"labels":                          &hcldec.AttrSpec{Name: "labels", Type: cty.Map(cty.String), Required: false},
 		"machine_type":                    &hcldec.AttrSpec{Name: "machine_type", Type: cty.String, Required: false},
@@ -233,7 +230,6 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"network_project_id":              &hcldec.AttrSpec{Name: "network_project_id", Type: cty.String, Required: false},
 		"omit_external_ip":                &hcldec.AttrSpec{Name: "omit_external_ip", Type: cty.Bool, Required: false},
 		"on_host_maintenance":             &hcldec.AttrSpec{Name: "on_host_maintenance", Type: cty.String, Required: false},
-		"preemptible":                     &hcldec.AttrSpec{Name: "preemptible", Type: cty.Bool, Required: false},
 		"node_affinity":                   &hcldec.BlockListSpec{TypeName: "node_affinity", Nested: hcldec.ObjectSpec((*common.FlatNodeAffinity)(nil).HCL2Spec())},
 		"state_timeout":                   &hcldec.AttrSpec{Name: "state_timeout", Type: cty.String, Required: false},
 		"region":                          &hcldec.AttrSpec{Name: "region", Type: cty.String, Required: false},

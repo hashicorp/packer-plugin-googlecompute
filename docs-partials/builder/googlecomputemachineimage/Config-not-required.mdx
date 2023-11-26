@@ -72,9 +72,9 @@
   Refer to the [Extra Disk Attachments](#extra-disk-attachments) section for
   more information on this configuration type.
 
-- `skip_create_image` (bool) - Skip creating the image. Useful for setting to `true` during a build test stage. Defaults to `false`.
-
-- `instance_name` (string) - The unique name of the resulting image. Defaults to
+- `instance_name` (string) - Skip creating the image. Useful for setting to `true` during a build test stage. Defaults to `false`.
+  SkipCreateImage bool `mapstructure:"skip_create_image" required:"false"`
+  The unique name of the resulting image. Defaults to
   `packer-{{timestamp}}`.
   ImageName string `mapstructure:"image_name" required:"false"`
   The description of the resulting image.
@@ -167,9 +167,9 @@
   If preemptible is true this can only be `TERMINATE`. If preemptible is
   false, it defaults to `MIGRATE`
 
-- `preemptible` (bool) - If true, launch a preemptible instance.
-
-- `node_affinity` ([]common.NodeAffinity) - Sets a node affinity label for the launched instance (eg. for sole tenancy).
+- `node_affinity` ([]common.NodeAffinity) - If true, launch a preemptible instance.
+  Preemptible bool `mapstructure:"preemptible" required:"false"`
+  Sets a node affinity label for the launched instance (eg. for sole tenancy).
   Please see [Provisioning VMs on
   sole-tenant nodes](https://cloud.google.com/compute/docs/nodes/provisioning-sole-tenant-vms)
   for more information.

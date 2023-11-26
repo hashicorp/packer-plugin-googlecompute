@@ -112,7 +112,7 @@ type Config struct {
 	// Whether to use an IAP proxy.
 	IAPConfig `mapstructure:",squash"`
 	// Skip creating the image. Useful for setting to `true` during a build test stage. Defaults to `false`.
-	SkipCreateImage bool `mapstructure:"skip_create_image" required:"false"`
+	//SkipCreateImage bool `mapstructure:"skip_create_image" required:"false"`
 	// The unique name of the resulting image. Defaults to
 	// `packer-{{timestamp}}`.
 	//ImageName string `mapstructure:"image_name" required:"false"`
@@ -207,7 +207,7 @@ type Config struct {
 	// false, it defaults to `MIGRATE`
 	OnHostMaintenance string `mapstructure:"on_host_maintenance" required:"false"`
 	// If true, launch a preemptible instance.
-	Preemptible bool `mapstructure:"preemptible" required:"false"`
+	//Preemptible bool `mapstructure:"preemptible" required:"false"`
 	// Sets a node affinity label for the launched instance (eg. for sole tenancy).
 	// Please see [Provisioning VMs on
 	// sole-tenant nodes](https://cloud.google.com/compute/docs/nodes/provisioning-sole-tenant-vms)
@@ -412,19 +412,8 @@ func (c *Config) Prepare(raws ...interface{}) ([]string, error) {
 	// 	c.ImageDescription = "Created by Packer"
 	// }
 
-	if c.OnHostMaintenance == "MIGRATE" && c.Preemptible {
-		errs = packersdk.MultiErrorAppend(errs,
-			errors.New("on_host_maintenance must be TERMINATE when using preemptible instances."))
-	}
-	// Setting OnHostMaintenance Correct Defaults
-	//   "MIGRATE" : Possible and default if Preemptible is false
-	//   "TERMINATE": Required if Preemptible is true
-	if c.Preemptible {
-		c.OnHostMaintenance = "TERMINATE"
-	} else {
-		if c.OnHostMaintenance == "" {
-			c.OnHostMaintenance = "MIGRATE"
-		}
+	if c.OnHostMaintenance == "" {
+		c.OnHostMaintenance = "MIGRATE"
 	}
 
 	// Make sure user sets a valid value for on_host_maintenance option
