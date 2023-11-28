@@ -122,7 +122,7 @@ type FlatConfig struct {
 	Zone                           *string                           `mapstructure:"zone" required:"true" cty:"zone" hcl:"zone"`
 	MachineImageName               *string                           `mapstructure:"machine_image_name" required:"true" cty:"machine_image_name" hcl:"machine_image_name"`
 	MachineImageDesc               *string                           `mapstructure:"machine_image_desc" required:"true" cty:"machine_image_desc" hcl:"machine_image_desc"`
-	MachineImageSourceInstance     *string                           `mapstructure:"machine_source_instance_name" required:"true" cty:"machine_source_instance_name" hcl:"machine_source_instance_name"`
+	MachineImageSourceInstance     *string                           `mapstructure:"machine_source_instance_name" required:"false" cty:"machine_source_instance_name" hcl:"machine_source_instance_name"`
 	MachineImageSourceInstanceZone *string                           `mapstructure:"machine_source_instance_zone" required:"false" cty:"machine_source_instance_zone" hcl:"machine_source_instance_zone"`
 }
 

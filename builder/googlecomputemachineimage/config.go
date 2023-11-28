@@ -345,7 +345,7 @@ type Config struct {
 	machineImageAlreadyExists      bool
 	MachineImageName               string `mapstructure:"machine_image_name" required:"true"`
 	MachineImageDesc               string `mapstructure:"machine_image_desc" required:"true"`
-	MachineImageSourceInstance     string `mapstructure:"machine_source_instance_name" required:"true"`
+	MachineImageSourceInstance     string `mapstructure:"machine_source_instance_name" required:"false"`
 	MachineImageSourceInstanceZone string `mapstructure:"machine_source_instance_zone" required:"false"`
 }
 
@@ -411,6 +411,8 @@ func (c *Config) Prepare(raws ...interface{}) ([]string, error) {
 	// if c.ImageDescription == "" {
 	// 	c.ImageDescription = "Created by Packer"
 	// }
+	c.MachineImageSourceInstance = "projects/" + c.ProjectId + "/zones/" + c.Zone + "/instances/" + c.InstanceName
+	c.MachineImageSourceInstanceZone = c.Zone
 
 	if c.OnHostMaintenance == "" {
 		c.OnHostMaintenance = "MIGRATE"
