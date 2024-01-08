@@ -7,6 +7,7 @@ integration {
   name = "Google Cloud Platform"
   description = "The googlecompute plugin can be used with HashiCorp Packer to create custom images on GCE."
   identifier = "packer/hashicorp/googlecompute"
+  flags = ["hcp-ready"]
   component {
     type = "builder"
     name = "Google Cloud Platform"
