@@ -104,7 +104,7 @@ The machine type must have a scratch disk, which means you can't use an
 
 ## Extra disk attachments
 
-@include 'builder/googlecompute/BlockDevice.mdx'
+@include 'lib/common/BlockDevice.mdx'
 
 These can be defined using the [disk_attachment](#disk_attachment) block in the configuration.
 
@@ -132,8 +132,25 @@ source "googlecompute" "example" {
 
 ### Required:
 
-@include 'builder/googlecompute/BlockDevice-required.mdx'
+@include 'lib/common/BlockDevice-required.mdx'
 
 ### Optional:
 
-@include 'builder/googlecompute/BlockDevice-not-required.mdx'
+@include 'lib/common/BlockDevice-not-required.mdx'
+
+## Customer Encryption Key
+
+Specifying a custom key allows you to use your own encryption keys to encrypt the data
+of the image you are creating.
+
+Note: you will need to reuse the same key later on when reusing the image.
+
+@include 'lib/common/CustomerEncryptionKey-not-required.mdx'
+
+## Node Affinities
+
+Node affinity configuration allows you to restrict the nodes on which to run the
+instance that Packer will build the image from.
+This requires configuring [sole-tenant node groups](https://cloud.google.com/compute/docs/nodes/provisioning-sole-tenant-vms) first.
+
+@include 'lib/common/NodeAffinity-not-required.mdx'

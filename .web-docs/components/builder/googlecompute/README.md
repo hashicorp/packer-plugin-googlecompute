@@ -86,6 +86,8 @@ builder.
       kmsKeyName = "projects/${var.project}/locations/${var.region}/keyRings/computeEngine/cryptoKeys/computeEngine/cryptoKeyVersions/4"
     }
    ```
+  
+  Refer to the [Customer Encryption Key](#customer-encryption-key) section for more information on the contents of this block.
 
 - `enable_nested_virtualization` (bool) - Create a instance with enabling nested virtualization.
 
@@ -144,6 +146,8 @@ builder.
       kmsKeyName = "projects/${var.project}/locations/${var.region}/keyRings/computeEngine/cryptoKeys/computeEngine/cryptoKeyVersions/4"
     }
    ```
+  
+  Refer to the [Customer Encryption Key](#customer-encryption-key) section for more information on the contents of this block.
 
 - `image_family` (string) - The name of the image family to which the resulting image belongs. You
   can create disks by specifying an image family instead of a specific
@@ -227,6 +231,8 @@ builder.
     operator = "IN"
     values = ["packer"]
   ```
+  
+  Refer to the [Node Affinity](#node-affinities) for more information on affinities.
 
 - `state_timeout` (duration string | ex: "1h5m2s") - The time to wait for instance state changes. Defaults to "5m".
 
@@ -590,11 +596,11 @@ The machine type must have a scratch disk, which means you can't use an
 
 ## Extra disk attachments
 
-<!-- Code generated from the comments of the BlockDevice struct in builder/googlecompute/block_device.go; DO NOT EDIT MANUALLY -->
+<!-- Code generated from the comments of the BlockDevice struct in lib/common/block_device.go; DO NOT EDIT MANUALLY -->
 
 BlockDevice is a block device attachement/creation to an instance when building an image.
 
-<!-- End of code generated from the comments of the BlockDevice struct in builder/googlecompute/block_device.go; -->
+<!-- End of code generated from the comments of the BlockDevice struct in lib/common/block_device.go; -->
 
 
 These can be defined using the [disk_attachment](#disk_attachment) block in the configuration.
@@ -623,7 +629,7 @@ source "googlecompute" "example" {
 
 ### Required:
 
-<!-- Code generated from the comments of the BlockDevice struct in builder/googlecompute/block_device.go; DO NOT EDIT MANUALLY -->
+<!-- Code generated from the comments of the BlockDevice struct in lib/common/block_device.go; DO NOT EDIT MANUALLY -->
 
 - `volume_size` (int) - Size of the volume to request, in gigabytes.
   
@@ -640,16 +646,21 @@ source "googlecompute" "example" {
   
   For details on the different types, refer to: https://cloud.google.com/compute/docs/disks#disk-types
 
-<!-- End of code generated from the comments of the BlockDevice struct in builder/googlecompute/block_device.go; -->
+<!-- End of code generated from the comments of the BlockDevice struct in lib/common/block_device.go; -->
 
 
 ### Optional:
 
-<!-- Code generated from the comments of the BlockDevice struct in builder/googlecompute/block_device.go; DO NOT EDIT MANUALLY -->
+<!-- Code generated from the comments of the BlockDevice struct in lib/common/block_device.go; DO NOT EDIT MANUALLY -->
 
 - `attachment_mode` (string) - How to attach the volume to the instance
   
   Can be either READ_ONLY or READ_WRITE (default).
+
+- `create_image` (bool) - If true, an image will be created for this disk, instead of the boot disk.
+  
+  This only applies to non-scratch disks, and can only be specified on one disk at a
+  time.
 
 - `device_name` (string) - The device name as exposed to the OS in the /dev/disk/by-id/google-* directory
   
@@ -664,6 +675,8 @@ source "googlecompute" "example" {
   Possible values:
   * kmsKeyName -  The name of the encryption key that is stored in Google Cloud KMS.
   * RawKey: - A 256-bit customer-supplied encryption key, encodes in RFC 4648 base64.
+  
+  Refer to the [Customer Encryption Key](#customer-encryption-key) section for more information on the contents of this block.
 
 - `disk_name` (string) - Name of the disk to create.
   This only applies to non-scratch disks. If the disk is persistent, and
@@ -695,4 +708,45 @@ source "googlecompute" "example" {
   
   If this is specified, it won't be deleted after the instance is shut-down.
 
-<!-- End of code generated from the comments of the BlockDevice struct in builder/googlecompute/block_device.go; -->
+- `_` (string) - Zone is the zone in which to create the disk in.
+  
+  It is not exposed since the parent config already specifies it
+  and it will be set for the block device when preparing it.
+
+<!-- End of code generated from the comments of the BlockDevice struct in lib/common/block_device.go; -->
+
+
+## Customer Encryption Key
+
+Specifying a custom key allows you to use your own encryption keys to encrypt the data
+of the image you are creating.
+
+Note: you will need to reuse the same key later on when reusing the image.
+
+<!-- Code generated from the comments of the CustomerEncryptionKey struct in lib/common/client_keys.go; DO NOT EDIT MANUALLY -->
+
+- `kmsKeyName` (string) - KmsKeyName: The name of the encryption key that is stored in Google
+  Cloud KMS.
+
+- `rawKey` (string) - RawKey: Specifies a 256-bit customer-supplied encryption key, encoded
+  in RFC 4648 base64 to either encrypt or decrypt this resource.
+
+<!-- End of code generated from the comments of the CustomerEncryptionKey struct in lib/common/client_keys.go; -->
+
+
+## Node Affinities
+
+Node affinity configuration allows you to restrict the nodes on which to run the
+instance that Packer will build the image from.
+This requires configuring [sole-tenant node groups](https://cloud.google.com/compute/docs/nodes/provisioning-sole-tenant-vms) first.
+
+<!-- Code generated from the comments of the NodeAffinity struct in lib/common/affinities.go; DO NOT EDIT MANUALLY -->
+
+- `key` (string) - Key: Corresponds to the label key of Node resource.
+
+- `operator` (string) - Operator: Defines the operation of node selection. Valid operators are IN for affinity and
+  NOT_IN for anti-affinity.
+
+- `values` ([]string) - Values: Corresponds to the label values of Node resource.
+
+<!-- End of code generated from the comments of the NodeAffinity struct in lib/common/affinities.go; -->

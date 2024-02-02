@@ -75,6 +75,8 @@ type Config struct {
 	//     kmsKeyName = "projects/${var.project}/locations/${var.region}/keyRings/computeEngine/cryptoKeys/computeEngine/cryptoKeyVersions/4"
 	//   }
 	//  ```
+	//
+	// Refer to the [Customer Encryption Key](#customer-encryption-key) section for more information on the contents of this block.
 	DiskEncryptionKey *common.CustomerEncryptionKey `mapstructure:"disk_encryption_key" required:"false"`
 	// Create a instance with enabling nested virtualization.
 	EnableNestedVirtualization bool `mapstructure:"enable_nested_virtualization" required:"false"`
@@ -135,6 +137,8 @@ type Config struct {
 	//     kmsKeyName = "projects/${var.project}/locations/${var.region}/keyRings/computeEngine/cryptoKeys/computeEngine/cryptoKeyVersions/4"
 	//   }
 	//  ```
+	//
+	// Refer to the [Customer Encryption Key](#customer-encryption-key) section for more information on the contents of this block.
 	ImageEncryptionKey *common.CustomerEncryptionKey `mapstructure:"image_encryption_key" required:"false"`
 	// The name of the image family to which the resulting image belongs. You
 	// can create disks by specifying an image family instead of a specific
@@ -218,6 +222,8 @@ type Config struct {
 	//   operator = "IN"
 	//   values = ["packer"]
 	// ```
+	//
+	// Refer to the [Node Affinity](#node-affinities) for more information on affinities.
 	NodeAffinities []common.NodeAffinity `mapstructure:"node_affinity" required:"false"`
 	// The time to wait for instance state changes. Defaults to "5m".
 	StateTimeout time.Duration `mapstructure:"state_timeout" required:"false"`

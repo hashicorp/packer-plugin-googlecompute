@@ -38,6 +38,8 @@
       kmsKeyName = "projects/${var.project}/locations/${var.region}/keyRings/computeEngine/cryptoKeys/computeEngine/cryptoKeyVersions/4"
     }
    ```
+  
+  Refer to the [Customer Encryption Key](#customer-encryption-key) section for more information on the contents of this block.
 
 - `enable_nested_virtualization` (bool) - Create a instance with enabling nested virtualization.
 
@@ -96,6 +98,8 @@
       kmsKeyName = "projects/${var.project}/locations/${var.region}/keyRings/computeEngine/cryptoKeys/computeEngine/cryptoKeyVersions/4"
     }
    ```
+  
+  Refer to the [Customer Encryption Key](#customer-encryption-key) section for more information on the contents of this block.
 
 - `image_family` (string) - The name of the image family to which the resulting image belongs. You
   can create disks by specifying an image family instead of a specific
@@ -179,6 +183,8 @@
     operator = "IN"
     values = ["packer"]
   ```
+  
+  Refer to the [Node Affinity](#node-affinities) for more information on affinities.
 
 - `state_timeout` (duration string | ex: "1h5m2s") - The time to wait for instance state changes. Defaults to "5m".
 
