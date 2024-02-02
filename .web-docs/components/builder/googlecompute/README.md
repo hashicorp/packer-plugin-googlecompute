@@ -13,6 +13,12 @@ and the [Google Compute Import
 Post-Processor](/packer/integrations/hashicorp/googlecompute/latest/components/post-processor/googlecompute-import) for more
 information.
 
+## Authentication
+
+To authenticate with GCE, this builder supports everything the plugin does.
+To get more information on this, refer to the plugin's description page, under
+the [authentication](/packer/integrations/hashicorp/googlecompute#authentication) section.
+
 ## Configuration Reference
 
 Configuration options are organized below into two categories: required and
