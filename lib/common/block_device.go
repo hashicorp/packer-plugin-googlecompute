@@ -51,6 +51,8 @@ type BlockDevice struct {
 	// Possible values:
 	// * kmsKeyName -  The name of the encryption key that is stored in Google Cloud KMS.
 	// * RawKey: - A 256-bit customer-supplied encryption key, encodes in RFC 4648 base64.
+	//
+	// Refer to the [Customer Encryption Key](#customer-encryption-key) section for more information on the contents of this block.
 	DiskEncryptionKey CustomerEncryptionKey `mapstructure:"disk_encryption_key"`
 	// Name of the disk to create.
 	// This only applies to non-scratch disks. If the disk is persistent, and

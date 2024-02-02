@@ -41,11 +41,16 @@ $ packer plugins install github.com/hashicorp/googlecompute
 
 ### Authentication
 
-Authenticating with Google Cloud services requires either a User Application Default Credentials, 
+Authenticating with Google Cloud services requires either a User Application Default Credentials,
 a JSON Service Account Key or an Access Token.  These are **not** required if you are
 running the `googlecompute` Packer builder on Google Cloud with a
 properly-configured [Google Service
 Account](https://cloud.google.com/compute/docs/authentication).
+
+The following options are available for the `googlecompute` builder, the googlecompute-export`, and
+the `googlecompute-import`:
+
+@include 'lib/common/Authentication-not-required.mdx'
 
 #### Running locally on your workstation.
 
