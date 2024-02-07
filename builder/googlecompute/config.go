@@ -306,7 +306,7 @@ type Config struct {
 	//  ...
 	//  primary: true
 	//  uid: '2504818925'
-	//  username: /home/user_example_com
+	//  username: user_example_com
 	//sshPublicKeys:
 	//  000000000000000000000000000000000000000000000000000000000000000a:
 	//    fingerprint: 000000000000000000000000000000000000000000000000000000000000000a
