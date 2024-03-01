@@ -92,10 +92,10 @@ type BlockDevice struct {
 	//
 	// The following values are supported by this builder:
 	// * scratch: local SSD data, always 375 GiB (default)
-	// * pd_standard: persistent, HDD-backed disk
-	// * pd_balanced: persistent, SSD-backed disk
-	// * pd_ssd: persistent, SSD-backed disk, with extra performance guarantees
-	// * pd_extreme: persistent, fastest SSD-backed disk, with custom IOPS
+	// * pd-standard: persistent, HDD-backed disk
+	// * pd-balanced: persistent, SSD-backed disk
+	// * pd-ssd: persistent, SSD-backed disk, with extra performance guarantees
+	// * pd-extreme: persistent, fastest SSD-backed disk, with custom IOPS
 	//
 	// For details on the different types, refer to: https://cloud.google.com/compute/docs/disks#disk-types
 	VolumeType BlockDeviceType `mapstructure:"volume_type" required:"true"`
