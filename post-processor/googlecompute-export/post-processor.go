@@ -68,6 +68,8 @@ type Config struct {
 	Zone                string `mapstructure:"zone"`
 	IAP                 bool   `mapstructure-to-hcl2:",skip"`
 	ServiceAccountEmail string `mapstructure:"service_account_email"`
+	//If true, the exporter instance will not have an external IP.
+	OmitExternalIP bool `mapstructure:"omit_external_ip" required:"false"`
 
 	ctx interpolate.Context
 }
@@ -183,6 +185,7 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packersdk.Ui, artifa
 		SourceImageProjectId: []string{"compute-image-tools"},
 		Subnetwork:           p.config.Subnetwork,
 		Zone:                 p.config.Zone,
+		OmitExternalIP:       p.config.OmitExternalIP,
 		Scopes: []string{
 			"https://www.googleapis.com/auth/compute",
 			"https://www.googleapis.com/auth/devstorage.full_control",
