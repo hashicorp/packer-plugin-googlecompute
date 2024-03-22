@@ -74,6 +74,12 @@ the [authentication](/packer/integrations/hashicorp/googlecompute#authentication
 
 - `service_account_email` (string) - Service Account Email
 
+- `omit_external_ip` (bool) - If true, the export instance will not have an external IP. use_internal_ip must
+  be true if this property is true.
+
+- `use_internal_ip` (bool) - If true, use the export instance's internal IP instead of its external IP
+  during exporting.
+
 <!-- End of code generated from the comments of the Config struct in post-processor/googlecompute-export/post-processor.go; -->
 
 
