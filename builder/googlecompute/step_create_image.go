@@ -57,6 +57,7 @@ func (s *StepCreateImage) Run(ctx context.Context, state multistep.StateBag) mul
 		})
 	}
 	imagePayload := &compute.Image{
+		Architecture:       config.ImageArchitecture,
 		Description:        config.ImageDescription,
 		Name:               config.ImageName,
 		Family:             config.ImageFamily,
