@@ -64,7 +64,6 @@ func TestConfigPrepare(t *testing.T) {
 			"foo",
 			false,
 		},
-
 		{
 			"zone",
 			nil,
@@ -682,6 +681,35 @@ func TestConfigExtraBlockDevice_create_image_multiple(t *testing.T) {
 
 	if err == nil {
 		t.Fatalf("expected an error due to having multiple disks with create_image enabled, got nil")
+	}
+}
+
+func TestConfigPrepareImageArchitecture(t *testing.T) {
+	cases := []struct {
+		Architecture string
+		ExpectValid  bool
+	}{
+		{"X86_64", true},
+		{"ARM64", true},
+		{"arm64", true},
+		{"x86_64", true},
+		{"i386", false}, // Assuming 'i386' is not supported, adjust as needed
+	}
+
+	for _, tc := range cases {
+		raw, tempfile := testConfig(t)
+		defer os.Remove(tempfile)
+
+		raw["image_architecture"] = tc.Architecture
+
+		var c Config
+		_, errs := c.Prepare(raw)
+
+		if tc.ExpectValid && errs != nil {
+			t.Errorf("Expected architecture '%s' to be valid, but got error: %s", tc.Architecture, errs)
+		} else if !tc.ExpectValid && errs == nil {
+			t.Errorf("Expected architecture '%s' to be invalid, but got no error", tc.Architecture)
+		}
 	}
 }
 

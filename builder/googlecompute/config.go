@@ -12,6 +12,7 @@ import (
 	"os"
 	"regexp"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/packer-plugin-googlecompute/lib/common"
@@ -115,6 +116,8 @@ type Config struct {
 	IAPConfig `mapstructure:",squash"`
 	// Skip creating the image. Useful for setting to `true` during a build test stage. Defaults to `false`.
 	SkipCreateImage bool `mapstructure:"skip_create_image" required:"false"`
+	// The architecture of the resulting image. Defaults to "x86_64".
+	ImageArchitecture string `mapstructure:"image_architecture" required:"false"`
 	// The unique name of the resulting image. Defaults to
 	// `packer-{{timestamp}}`.
 	ImageName string `mapstructure:"image_name" required:"false"`
@@ -443,16 +446,28 @@ func (c *Config) Prepare(raws ...interface{}) ([]string, error) {
 		}
 	}
 
+	// Set the default image architecture to X86_64.
+	if c.ImageArchitecture == "" {
+		c.ImageArchitecture = "X86_64"
+	}
+
+	// Ensure the image architecture is uppercase
+	c.ImageArchitecture = strings.ToUpper(c.ImageArchitecture)
+
 	// used for ImageName and ImageFamily
 	imageErrorText := "Invalid image %s %q: The first character must be a lowercase letter, and all following characters must be a dash, lowercase letter, or digit, except the last character, which cannot be a dash"
+	if !validImageName.MatchString(c.ImageName) {
+		errs = packersdk.MultiErrorAppend(errs, fmt.Errorf(imageErrorText, "name", c.ImageName))
+	}
 
 	if len(c.ImageName) > 63 {
 		errs = packersdk.MultiErrorAppend(errs,
 			errors.New("Invalid image name: Must not be longer than 63 characters"))
 	}
 
-	if !validImageName.MatchString(c.ImageName) {
-		errs = packersdk.MultiErrorAppend(errs, fmt.Errorf(imageErrorText, "name", c.ImageName))
+	if !(c.ImageArchitecture == "X86_64" || c.ImageArchitecture == "ARM64") {
+		errs = packersdk.MultiErrorAppend(errs,
+			errors.New("Invalid image architecture: Must be either X86_64 or ARM64"))
 	}
 
 	if len(c.ImageFamily) > 63 {
