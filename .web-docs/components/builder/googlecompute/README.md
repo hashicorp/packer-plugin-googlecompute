@@ -130,6 +130,8 @@ builder.
 
 - `skip_create_image` (bool) - Skip creating the image. Useful for setting to `true` during a build test stage. Defaults to `false`.
 
+- `image_architecture` (string) - The architecture of the resulting image. Defaults to "x86_64".
+
 - `image_name` (string) - The unique name of the resulting image. Defaults to
   `packer-{{timestamp}}`.
 
