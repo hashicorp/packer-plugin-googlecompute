@@ -593,7 +593,7 @@ func (d *driverGCE) RunInstance(c *InstanceConfig) (<-chan error, error) {
 	}
 
 	// Build up the metadata
-	metadata := make([]*compute.MetadataItems, len(c.Metadata))
+	metadata := make([]*compute.MetadataItems, 0, len(c.Metadata))
 	for k, v := range c.Metadata {
 		vCopy := v
 		metadata = append(metadata, &compute.MetadataItems{
@@ -978,7 +978,7 @@ func (d *driverGCE) AddToInstanceMetadata(zone string, name string, metadata map
 	}
 
 	// Build up the metadata
-	metadataForInstance := make([]*compute.MetadataItems, len(metadata))
+	metadataForInstance := make([]*compute.MetadataItems, 0, len(metadata))
 	for k, v := range metadata {
 		vCopy := v
 		metadataForInstance = append(metadataForInstance, &compute.MetadataItems{
