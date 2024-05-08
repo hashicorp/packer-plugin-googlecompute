@@ -17,7 +17,7 @@ jobs:
     outputs:
       go-version: ${{ steps.get-go-version.outputs.go-version }}
     steps:
-      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+      - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
       - name: 'Determine Go version'
         id: get-go-version
         # We use .go-version as our source of truth for current Go
@@ -30,20 +30,20 @@ jobs:
     name: Acceptance Test
     needs: get-go-version
     steps:
-      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
-      - uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753 # v4.0.1
+      - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+      - uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
         with:
           go-version: ${{ needs.get-go-version.outputs.go-version }}
       - name: Install gotestsum
         run: go install gotest.tools/gotestsum@latest
       - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@e30db14379863a8c79331b04a9969f4c1e225e0b # v1.1.1
+        uses: google-github-actions/setup-gcloud@98ddc00a17442e89a24bbf282954a3b65ce6d200 # v2.1.0
       - name: Install Packer
         uses: hashicorp/setup-packer@ae6b3ed3bec089bbfb576ab7d714df7cbc4b88a4 # v2.0.0
         with:
           version: latest
       - name: 'Authenticate to Google Cloud'
-        uses: google-github-actions/auth@35b0e87d162680511bf346c299f71c9c5c379033 # v1.1.1
+        uses: google-github-actions/auth@55bd3a7c6e2ae7cf1877fd1ccb9d54c0503c457c # v2.1.2
         id:   'gcp-auth'
         with:
          credentials_json: '${{ secrets.GOOGLE_CREDENTIALS }}'
