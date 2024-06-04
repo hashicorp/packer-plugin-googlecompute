@@ -6,7 +6,6 @@ package googlecompute
 import (
 	"context"
 	"errors"
-	"io/ioutil"
 	"os"
 
 	"github.com/hashicorp/packer-plugin-googlecompute/lib/common"
@@ -75,7 +74,7 @@ func TestStepCreateOrResetWindowsPassword_dontNeedPassword(t *testing.T) {
 }
 
 func TestStepCreateOrResetWindowsPassword_debug(t *testing.T) {
-	tf, err := ioutil.TempFile("", "packer")
+	tf, err := os.CreateTemp("", "packer")
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}

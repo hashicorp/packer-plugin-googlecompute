@@ -13,7 +13,6 @@ import (
 	"encoding/pem"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"strings"
@@ -283,7 +282,7 @@ func (p PostProcessor) findTarballFromArtifact(artifact packersdk.Artifact) (io.
 }
 
 func FillFileContentBuffer(certOrKeyFile string) (*compute.FileContentBuffer, error) {
-	data, err := ioutil.ReadFile(certOrKeyFile)
+	data, err := os.ReadFile(certOrKeyFile)
 	if err != nil {
 		err := fmt.Errorf("Unable to read Certificate or Key file %s", certOrKeyFile)
 		return nil, err

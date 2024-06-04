@@ -7,8 +7,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
+	"os"
 	"strings"
 	"time"
 
@@ -56,7 +56,7 @@ func (c *Config) createInstanceMetadata(sourceImage *common.Image, sshPublicKey 
 	startupScript := instanceMetadataNoSSHKeys[StartupScriptKey]
 	if c.StartupScriptFile != "" {
 		var content []byte
-		content, err = ioutil.ReadFile(c.StartupScriptFile)
+		content, err = os.ReadFile(c.StartupScriptFile)
 		if err != nil {
 			return nil, instanceMetadataNoSSHKeys, err
 		}
@@ -85,7 +85,7 @@ func (c *Config) createInstanceMetadata(sourceImage *common.Image, sshPublicKey 
 
 	for key, value := range c.MetadataFiles {
 		var content []byte
-		content, err = ioutil.ReadFile(value)
+		content, err = os.ReadFile(value)
 		if err != nil {
 			errs = packersdk.MultiErrorAppend(errs, err)
 		}
