@@ -5,7 +5,6 @@ package googlecompute
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"runtime"
 	"strings"
@@ -779,7 +778,7 @@ func testConfigOk(t *testing.T, warns []string, err error) {
 }
 
 func testAccountFile(t *testing.T) string {
-	tf, err := ioutil.TempFile("", "packer")
+	tf, err := os.CreateTemp("", "packer")
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}
@@ -813,7 +812,7 @@ func testIAPScript(t *testing.T, c *Config) {
 const testMetadataFileContent = `testMetadata`
 
 func testMetadataFile(t *testing.T) string {
-	tf, err := ioutil.TempFile("", "packer")
+	tf, err := os.CreateTemp("", "packer")
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}

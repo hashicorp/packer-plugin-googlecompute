@@ -5,7 +5,6 @@ package googlecompute
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"runtime"
 	"testing"
@@ -60,7 +59,7 @@ func TestStepStartTunnel_CreateTempScript(t *testing.T) {
 	}
 	defer os.Remove(scriptPath)
 
-	f, err := ioutil.ReadFile(scriptPath)
+	f, err := os.ReadFile(scriptPath)
 	if err != nil {
 		t.Fatalf("couldn't read created inventoryfile: %s", err)
 	}
