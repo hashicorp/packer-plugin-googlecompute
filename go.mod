@@ -1,6 +1,6 @@
 module github.com/hashicorp/packer-plugin-googlecompute
 
-go 1.19
+go 1.21.0
 
 require (
 	cloud.google.com/go/compute/metadata v0.2.3
