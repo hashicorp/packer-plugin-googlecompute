@@ -245,7 +245,7 @@ func GetRegionFromZone(zone string) (string, error) {
 	return matches[1], nil
 }
 
-var zoneRegexp = regexp.MustCompile("^[a-z]+-[a-z]+[0-9]-[a-z]$")
+var zoneRegexp = regexp.MustCompile("^[a-z]+-[a-z]+[0-9]{1,2}-[a-z]$")
 
 func IsZoneARegion(zone string) bool {
 	return !zoneRegexp.MatchString(zone)
