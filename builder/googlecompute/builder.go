@@ -99,7 +99,7 @@ func (b *Builder) Run(ctx context.Context, ui packersdk.Ui, hook packersdk.Hook)
 		&StepStartTunnel{
 			IAPConf:            &b.config.IAPConfig,
 			CommConf:           &b.config.Comm,
-			AccountFile:        b.config.AccountFile,
+			AccountFile:        b.config.CredentialsFile,
 			ImpersonateAccount: b.config.ImpersonateServiceAccount,
 			ProjectId:          b.config.ProjectId,
 		},
