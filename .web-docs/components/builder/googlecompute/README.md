@@ -651,8 +651,13 @@ source "googlecompute" "example" {
   * pd_balanced: persistent, SSD-backed disk
   * pd_ssd: persistent, SSD-backed disk, with extra performance guarantees
   * pd_extreme: persistent, fastest SSD-backed disk, with custom IOPS
+  * hyperdisk-balanced: persistent hyperdisk volume, bootable
+  * hyperdisk-extreme: persistent hyperdisk volume, optimised for performance
+  * hyperdisk-ml: persistent, shareable, hyperdisk volume, highest throughput
+  * hyperdisk-throughput: persistent hyperdisk volume with flexible throughput
   
   For details on the different types, refer to: https://cloud.google.com/compute/docs/disks#disk-types
+  For more information on hyperdisk volumes, refer to: https://cloud.google.com/compute/docs/disks/hyperdisks#throughput
 
 <!-- End of code generated from the comments of the BlockDevice struct in lib/common/block_device.go; -->
 

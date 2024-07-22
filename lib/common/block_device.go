@@ -18,11 +18,15 @@ import (
 type BlockDeviceType string
 
 const (
-	LocalScratch  BlockDeviceType = "scratch"
-	ZonalStandard                 = "pd-standard"
-	ZonalBalanced                 = "pd-balanced"
-	ZonalSSD                      = "pd-ssd"
-	ZonalExtreme                  = "pd-extreme"
+	LocalScratch        BlockDeviceType = "scratch"
+	ZonalStandard                       = "pd-standard"
+	ZonalBalanced                       = "pd-balanced"
+	ZonalSSD                            = "pd-ssd"
+	ZonalExtreme                        = "pd-extreme"
+	HyperDiskBalanced                   = "hyperdisk-balanced"
+	HyperDiskExtreme                    = "hyperdisk-extreme"
+	HyperDiskML                         = "hyperdisk-ml"
+	HyperDiskThroughput                 = "hyperdisk-throughput"
 )
 
 var diskNameRegex = regexp.MustCompile("^[a-z]([-a-z0-9]*[a-z0-9])?$")
@@ -96,8 +100,13 @@ type BlockDevice struct {
 	// * pd_balanced: persistent, SSD-backed disk
 	// * pd_ssd: persistent, SSD-backed disk, with extra performance guarantees
 	// * pd_extreme: persistent, fastest SSD-backed disk, with custom IOPS
+	// * hyperdisk-balanced: persistent hyperdisk volume, bootable
+	// * hyperdisk-extreme: persistent hyperdisk volume, optimised for performance
+	// * hyperdisk-ml: persistent, shareable, hyperdisk volume, highest throughput
+	// * hyperdisk-throughput: persistent hyperdisk volume with flexible throughput
 	//
 	// For details on the different types, refer to: https://cloud.google.com/compute/docs/disks#disk-types
+	// For more information on hyperdisk volumes, refer to: https://cloud.google.com/compute/docs/disks/hyperdisks#throughput
 	VolumeType BlockDeviceType `mapstructure:"volume_type" required:"true"`
 	// Zone is the zone in which to create the disk in.
 	//
@@ -107,12 +116,16 @@ type BlockDevice struct {
 }
 
 func volumeTypeError() string {
-	return fmt.Sprintf("valid volume types are: %s, %s, %s, %s and %s",
+	return fmt.Sprintf("valid volume types are: %s, %s, %s, %s, %s, %s, %s, %s or %s",
 		LocalScratch,
 		ZonalStandard,
 		ZonalBalanced,
 		ZonalSSD,
-		ZonalExtreme)
+		ZonalExtreme,
+		HyperDiskBalanced,
+		HyperDiskExtreme,
+		HyperDiskML,
+		HyperDiskThroughput)
 }
 
 func (bd *BlockDevice) Prepare() []error {
@@ -184,7 +197,8 @@ func (bd *BlockDevice) prepareDiskCreate() []error {
 
 	switch bd.VolumeType {
 	case LocalScratch,
-		ZonalStandard, ZonalBalanced, ZonalSSD, ZonalExtreme:
+		ZonalStandard, ZonalBalanced, ZonalSSD, ZonalExtreme,
+		HyperDiskBalanced, HyperDiskExtreme, HyperDiskML, HyperDiskThroughput:
 	default:
 		errs = append(errs, fmt.Errorf("A valid volume type was not specified %q", bd.VolumeType))
 		errs = append(errs, fmt.Errorf("%s", volumeTypeError()))
