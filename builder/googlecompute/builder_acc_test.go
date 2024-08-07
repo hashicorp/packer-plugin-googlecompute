@@ -24,6 +24,8 @@ import (
 var testDataFs embed.FS
 
 func TestAccBuilder_Basic(t *testing.T) {
+	t.Parallel()
+
 	tmpl, err := testDataFs.ReadFile("testdata/basic.pkr.hcl")
 	if err != nil {
 		t.Fatalf("failed to read testdata file %s", err)
@@ -44,6 +46,8 @@ func TestAccBuilder_Basic(t *testing.T) {
 }
 
 func TestAccBuilder_DefaultTokenSource(t *testing.T) {
+	t.Parallel()
+
 	tmpl, err := testDataFs.ReadFile("testdata/oslogin/default-token.pkr.hcl")
 	if err != nil {
 		t.Fatalf("failed to read testdata file %s", err)
@@ -90,6 +94,8 @@ func generateSSHPrivateKey() (string, error) {
 }
 
 func TestAccBuilder_DefaultTokenSourceWithPrivateKey(t *testing.T) {
+	t.Parallel()
+
 	keyFile, err := generateSSHPrivateKey()
 	if err != nil {
 		t.Fatalf("failed to generate SSH private key: %s", err)
@@ -134,6 +140,8 @@ func TestAccBuilder_DefaultTokenSourceWithPrivateKey(t *testing.T) {
 }
 
 func TestAccBuilder_WrappedStartupScriptSuccess(t *testing.T) {
+	t.Parallel()
+
 	tmpl, err := testDataFs.ReadFile("testdata/wrapped-startup-scripts/successful.pkr.hcl")
 	if err != nil {
 		t.Fatalf("failed to read testdata file %s", err)
@@ -154,6 +162,8 @@ func TestAccBuilder_WrappedStartupScriptSuccess(t *testing.T) {
 }
 
 func TestAccBuilder_WrappedStartupScriptError(t *testing.T) {
+	t.Parallel()
+
 	tmpl, err := testDataFs.ReadFile("testdata/wrapped-startup-scripts/errored.pkr.hcl")
 	if err != nil {
 		t.Fatalf("failed to read testdata file %s", err)
@@ -174,6 +184,8 @@ func TestAccBuilder_WrappedStartupScriptError(t *testing.T) {
 }
 
 func TestAccBuilder_WithExtraScratchDisk(t *testing.T) {
+	t.Parallel()
+
 	tmpl, err := testDataFs.ReadFile("testdata/extra_scratch_disk.pkr.hcl")
 	if err != nil {
 		t.Fatalf("failed to read testdata file %s", err)
@@ -195,6 +207,8 @@ func TestAccBuilder_WithExtraScratchDisk(t *testing.T) {
 }
 
 func TestAccBuilder_WithExtraPersistentDisk(t *testing.T) {
+	t.Parallel()
+
 	tmpl, err := testDataFs.ReadFile("testdata/extra_persistent_disk.pkr.hcl")
 	if err != nil {
 		t.Fatalf("failed to read testdata file %s", err)
@@ -226,6 +240,8 @@ func TestAccBuilder_WithExtraPersistentDisk(t *testing.T) {
 }
 
 func TestAccBuilder_WithExtraPersistentDiskAndRegions(t *testing.T) {
+	t.Parallel()
+
 	tmpl, err := testDataFs.ReadFile("testdata/extra_persistent_disk_and_regions.pkr.hcl")
 	if err != nil {
 		t.Fatalf("failed to read testdata file %s", err)
@@ -257,6 +273,8 @@ func TestAccBuilder_WithExtraPersistentDiskAndRegions(t *testing.T) {
 }
 
 func TestAccBuilder_WithMultipleDisks(t *testing.T) {
+	t.Parallel()
+
 	tmpl, err := testDataFs.ReadFile("testdata/multiple_disks.pkr.hcl")
 	if err != nil {
 		t.Fatalf("failed to read testdata file: %s", err)
@@ -288,6 +306,8 @@ func TestAccBuilder_WithMultipleDisks(t *testing.T) {
 }
 
 func TestAccBuilder_ImageArchVariations(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name            string
 		baseImageFamily string
@@ -328,18 +348,21 @@ func TestAccBuilder_ImageArchVariations(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			imageName := fmt.Sprintf("%s-%d", tt.name, time.Now().UTC().Unix())
+		testRun := tt
+		t.Run(testRun.name, func(t *testing.T) {
+			t.Parallel()
+
+			imageName := fmt.Sprintf("%s-%d", testRun.name, time.Now().UTC().Unix())
 
 			tmpl, err := testDataFs.ReadFile("testdata/image_arch_builds.pkr.hcl")
 			if err != nil {
 				t.Fatalf("failed to read testdata file: %s", err)
 			}
 
-			rawTemplate := fmt.Sprintf(string(tmpl), imageName, tt.baseImageFamily, tt.arch, tt.instanceType)
+			rawTemplate := fmt.Sprintf(string(tmpl), imageName, testRun.baseImageFamily, testRun.arch, testRun.instanceType)
 
 			testCase := &acctest.PluginTestCase{
-				Name:     tt.name,
+				Name:     testRun.name,
 				Template: rawTemplate,
 				Teardown: func() error {
 					driver, err := common.NewDriverGCE(common.GCEDriverConfig{})
@@ -372,7 +395,7 @@ func TestAccBuilder_ImageArchVariations(t *testing.T) {
 
 					// Manually uppercase the arch as it cannot be used
 					// for the image name otherwise
-					upperArch := strings.ToUpper(tt.expectedArch)
+					upperArch := strings.ToUpper(testRun.expectedArch)
 					if img.Architecture != upperArch {
 						return fmt.Errorf("image architecture mismatch, expected %q, got %q", upperArch, img.Architecture)
 					}
