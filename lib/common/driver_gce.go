@@ -473,6 +473,7 @@ func (d *driverGCE) GetImageFromProject(project, name string, fromFamily bool) (
 		return nil, fmt.Errorf("Image, %s, could not be found in project: %s", name, project)
 	} else {
 		return &Image{
+			Architecture:    image.Architecture,
 			GuestOsFeatures: image.GuestOsFeatures,
 			Licenses:        image.Licenses,
 			Name:            image.Name,

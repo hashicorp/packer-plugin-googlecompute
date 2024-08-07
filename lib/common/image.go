@@ -10,6 +10,7 @@ import (
 )
 
 type Image struct {
+	Architecture    string
 	GuestOsFeatures []*compute.GuestOsFeature
 	Labels          map[string]string
 	Licenses        []string
