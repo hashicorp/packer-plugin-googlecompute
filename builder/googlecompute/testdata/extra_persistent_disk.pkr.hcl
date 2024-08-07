@@ -25,7 +25,7 @@ locals { timestamp = regex_replace(timestamp(), "[- TZ:]", "") }
 
 source "googlecompute" "test" {
   account_file        = var.service_account_file
-  image_name          = "packer-tester-${local.timestamp}"
+  image_name          = "packer-persistent-disks-test-${local.timestamp}"
   project_id          = var.project
   source_image_family = "centos-stream-9"
   ssh_username        = var.ssh_username
