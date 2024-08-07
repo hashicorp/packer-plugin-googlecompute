@@ -116,7 +116,9 @@ type Config struct {
 	IAPConfig `mapstructure:",squash"`
 	// Skip creating the image. Useful for setting to `true` during a build test stage. Defaults to `false`.
 	SkipCreateImage bool `mapstructure:"skip_create_image" required:"false"`
-	// The architecture of the resulting image. Defaults to "x86_64".
+	// The architecture of the resulting image.
+	//
+	// Defaults to unset: GCE will use the origin image architecture.
 	ImageArchitecture string `mapstructure:"image_architecture" required:"false"`
 	// The unique name of the resulting image. Defaults to
 	// `packer-{{timestamp}}`.
@@ -446,14 +448,6 @@ func (c *Config) Prepare(raws ...interface{}) ([]string, error) {
 		}
 	}
 
-	// Set the default image architecture to X86_64.
-	if c.ImageArchitecture == "" {
-		c.ImageArchitecture = "X86_64"
-	}
-
-	// Ensure the image architecture is uppercase
-	c.ImageArchitecture = strings.ToUpper(c.ImageArchitecture)
-
 	// used for ImageName and ImageFamily
 	imageErrorText := "Invalid image %s %q: The first character must be a lowercase letter, and all following characters must be a dash, lowercase letter, or digit, except the last character, which cannot be a dash"
 	if !validImageName.MatchString(c.ImageName) {
@@ -465,9 +459,13 @@ func (c *Config) Prepare(raws ...interface{}) ([]string, error) {
 			errors.New("Invalid image name: Must not be longer than 63 characters"))
 	}
 
-	if !(c.ImageArchitecture == "X86_64" || c.ImageArchitecture == "ARM64") {
+	// Ensure the image architecture is uppercase
+	c.ImageArchitecture = strings.ToUpper(c.ImageArchitecture)
+	switch c.ImageArchitecture {
+	case "X86_64", "ARM64", "":
+	default:
 		errs = packersdk.MultiErrorAppend(errs,
-			errors.New("Invalid image architecture: Must be either X86_64 or ARM64"))
+			fmt.Errorf("Invalid image architecture %q: Must be either X86_64 or ARM64", c.ImageArchitecture))
 	}
 
 	if len(c.ImageFamily) > 63 {
