@@ -400,7 +400,7 @@ for details.
     {
       "type": "googlecompute",
       "project_id": "my project",
-      "source_image_family": "centos-7",
+      "source_image_family": "centos-stream-9",
       "ssh_username": "packer",
       "zone": "us-central1-a",
       "image_licenses": ["projects/vm-options/global/licenses/enable-vmx"]
@@ -414,7 +414,7 @@ for details.
 ```hcl
 source "googlecompute" "basic-example" {
   project_id = "my project"
-  source_image_family = "centos-7"
+  source_image_family = "centos-stream-9"
   ssh_username = "packer"
   zone = "us-central1-a"
   image_licenses = ["projects/vm-options/global/licenses/enable-vmx"]
@@ -444,7 +444,7 @@ Running on Google Cloud section.
       "type": "googlecompute",
       "project_id": "my project",
       "subnetwork": "default",
-      "source_image_family": "centos-7",
+      "source_image_family": "centos-stream-9",
       "network_project_id": "SHARED_VPC_PROJECT",
       "ssh_username": "packer",
       "zone": "us-central1-a",
@@ -459,7 +459,7 @@ Running on Google Cloud section.
 ```hcl
 source "googlecompute" "sharedvpc-example" {
   project_id = "my project"
-  source_image_family = "centos-7"
+  source_image_family = "centos-stream-9"
   subnetwork = "default"
   network_project_id = "SHARED_VPC_PROJECT"
   ssh_username = "packer"
