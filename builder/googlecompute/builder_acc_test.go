@@ -103,7 +103,7 @@ func TestAccBuilder_DefaultTokenSourceWithPrivateKey(t *testing.T) {
 	}
 
 	testCase := &acctest.PluginTestCase{
-		Name:     "googlecompute-packer-default-ts",
+		Name:     "googlecompute-packer-default-ts-with-pkey",
 		Template: fmt.Sprintf(string(tmpl), keyFile),
 		Check: func(buildCommand *exec.Cmd, logfile string) error {
 			if buildCommand.ProcessState != nil {
