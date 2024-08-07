@@ -14,7 +14,9 @@ import (
 	"os/exec"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/hashicorp/packer-plugin-googlecompute/lib/common"
 	"github.com/hashicorp/packer-plugin-sdk/acctest"
 )
 
@@ -283,4 +285,102 @@ func TestAccBuilder_WithMultipleDisks(t *testing.T) {
 		},
 	}
 	acctest.TestPlugin(t, testCase)
+}
+
+func TestAccBuilder_ImageArchVariations(t *testing.T) {
+	tests := []struct {
+		name            string
+		baseImageFamily string
+		arch            string
+		instanceType    string
+		expectedArch    string
+	}{
+		{
+			name:            "googlecompute-packer-with-x86-64-explicit-image-arch",
+			baseImageFamily: "fedora-cloud-38",
+			arch:            "x86_64",
+			instanceType:    "e2-standard-2",
+			expectedArch:    "x86_64",
+		},
+		{
+			name:            "googlecompute-packer-with-x86-64-implicit-image-arch",
+			baseImageFamily: "fedora-cloud-38",
+			arch:            "",
+			instanceType:    "e2-standard-2",
+			// Empty for this case as the source image has an empty
+			// architecture, so this gets forwarded as-is
+			expectedArch: "",
+		},
+		{
+			name:            "googlecompute-packer-with-arm64-explicit-image-arch",
+			baseImageFamily: "ubuntu-minimal-2204-lts-arm64",
+			arch:            "arm64",
+			instanceType:    "t2a-standard-2",
+			expectedArch:    "arm64",
+		},
+		{
+			name:            "googlecompute-packer-with-arm64-implicit-image-arch",
+			baseImageFamily: "ubuntu-minimal-2204-lts-arm64",
+			arch:            "",
+			instanceType:    "t2a-standard-2",
+			expectedArch:    "arm64",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			imageName := fmt.Sprintf("%s-%d", tt.name, time.Now().UTC().Unix())
+
+			tmpl, err := testDataFs.ReadFile("testdata/image_arch_builds.pkr.hcl")
+			if err != nil {
+				t.Fatalf("failed to read testdata file: %s", err)
+			}
+
+			rawTemplate := fmt.Sprintf(string(tmpl), imageName, tt.baseImageFamily, tt.arch, tt.instanceType)
+
+			testCase := &acctest.PluginTestCase{
+				Name:     tt.name,
+				Template: rawTemplate,
+				Teardown: func() error {
+					driver, err := common.NewDriverGCE(common.GCEDriverConfig{})
+					if err != nil {
+						return fmt.Errorf("failed to create GCE driver: %s", err)
+					}
+
+					chErr := driver.DeleteImage(os.Getenv("GOOGLE_PROJECT_ID"), imageName)
+					for err := range chErr {
+						return err
+					}
+					return nil
+				},
+				Check: func(buildCommand *exec.Cmd, logfile string) error {
+					if buildCommand.ProcessState != nil {
+						if buildCommand.ProcessState.ExitCode() != 0 {
+							return fmt.Errorf("Bad exit code. Logfile: %s", logfile)
+						}
+					}
+
+					driver, err := common.NewDriverGCE(common.GCEDriverConfig{})
+					if err != nil {
+						return fmt.Errorf("failed to create GCE driver: %s", err)
+					}
+
+					img, err := driver.GetImageFromProject(os.Getenv("GOOGLE_PROJECT_ID"), imageName, false)
+					if err != nil {
+						return fmt.Errorf("failed to get image: %s", err)
+					}
+
+					// Manually uppercase the arch as it cannot be used
+					// for the image name otherwise
+					upperArch := strings.ToUpper(tt.expectedArch)
+					if img.Architecture != upperArch {
+						return fmt.Errorf("image architecture mismatch, expected %q, got %q", upperArch, img.Architecture)
+					}
+
+					return nil
+				},
+			}
+			acctest.TestPlugin(t, testCase)
+		})
+	}
 }
