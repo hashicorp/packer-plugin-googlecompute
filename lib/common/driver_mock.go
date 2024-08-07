@@ -135,6 +135,7 @@ func (d *DriverMock) CreateImage(project string, imageSpec *compute.Image) (<-ch
 		}
 
 		ch <- &Image{
+			Architecture:    imageSpec.Architecture,
 			GuestOsFeatures: imageSpec.GuestOsFeatures,
 			Labels:          imageSpec.Labels,
 			Licenses:        imageSpec.Licenses,
