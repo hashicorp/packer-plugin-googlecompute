@@ -435,6 +435,7 @@ func (d *driverGCE) GetImage(name string, fromFamily bool) (*Image, error) {
 		"opensuse-cloud",
 		"ubuntu-os-pro-cloud",
 		"ml-images",
+		"deeplearning-platform-release",
 	}
 	return d.GetImageFromProjects(projects, name, fromFamily)
 }
