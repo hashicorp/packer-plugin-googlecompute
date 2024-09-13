@@ -33,6 +33,8 @@ type FlatConfig struct {
 	Subnetwork                *string           `mapstructure:"subnetwork" cty:"subnetwork" hcl:"subnetwork"`
 	Zone                      *string           `mapstructure:"zone" cty:"zone" hcl:"zone"`
 	ServiceAccountEmail       *string           `mapstructure:"service_account_email" cty:"service_account_email" hcl:"service_account_email"`
+	OmitExternalIP            *bool             `mapstructure:"omit_external_ip" required:"false" cty:"omit_external_ip" hcl:"omit_external_ip"`
+	UseInternalIP             *bool             `mapstructure:"use_internal_ip" required:"false" cty:"use_internal_ip" hcl:"use_internal_ip"`
 }
 
 // FlatMapstructure returns a new FlatConfig.
@@ -70,6 +72,8 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"subnetwork":                  &hcldec.AttrSpec{Name: "subnetwork", Type: cty.String, Required: false},
 		"zone":                        &hcldec.AttrSpec{Name: "zone", Type: cty.String, Required: false},
 		"service_account_email":       &hcldec.AttrSpec{Name: "service_account_email", Type: cty.String, Required: false},
+		"omit_external_ip":            &hcldec.AttrSpec{Name: "omit_external_ip", Type: cty.Bool, Required: false},
+		"use_internal_ip":             &hcldec.AttrSpec{Name: "use_internal_ip", Type: cty.Bool, Required: false},
 	}
 	return s
 }
