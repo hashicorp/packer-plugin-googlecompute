@@ -253,11 +253,11 @@ type Config struct {
 	// The source image to use to create the new image from. You can also
 	// specify source_image_family instead. If both source_image and
 	// source_image_family are specified, source_image takes precedence.
-	// Example: "debian-8-jessie-v20161027"
+	// Example: `"debian-8-jessie-v20161027"`
 	SourceImage string `mapstructure:"source_image" required:"true"`
 	// The source image family to use to create the new image from. The image
 	// family always returns its latest image that is not deprecated. Example:
-	// "debian-8".
+	// `"debian-8"`.
 	SourceImageFamily string `mapstructure:"source_image_family" required:"true"`
 	// A list of project IDs to search for the source image. Packer will search the first
 	// project ID in the list first, and fall back to the next in the list, until it finds the source image.
@@ -346,7 +346,7 @@ type Config struct {
 	// Example value: `5m`.
 	WaitToAddSSHKeys time.Duration `mapstructure:"wait_to_add_ssh_keys"`
 	// The zone in which to launch the instance used to create the image.
-	// Example: "us-central1-a"
+	// Example: `"us-central1-a"`
 	Zone string `mapstructure:"zone" required:"true"`
 
 	ctx                interpolate.Context

@@ -47,7 +47,7 @@ running the `googlecompute` Packer builder on Google Cloud with a
 properly-configured [Google Service
 Account](https://cloud.google.com/compute/docs/authentication).
 
-The following options are available for the `googlecompute` builder, the googlecompute-export`, and
+The following options are available for the `googlecompute` builder, the `googlecompute-export`, and
 the `googlecompute-import`:
 
 <!-- Code generated from the comments of the Authentication struct in lib/common/auth.go; DO NOT EDIT MANUALLY -->
@@ -353,7 +353,7 @@ source "googlecompute" "windows-ssh-ansible" {
   ssh_username            = var.packer_username
   ssh_private_key_file    = var.ssh_key_file_path
   ssh_timeout             = "1h"
-  
+
   metadata = {
     sysprep-specialize-script-cmd = "net user ${var.packer_username} \"${var.packer_user_password}\" /add /y & wmic UserAccount where Name=\"${var.packer_username}\" set PasswordExpires=False & net localgroup administrators ${var.packer_username} /add & powershell Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0 & echo ${var.ssh_pub_key} > C:\\ProgramData\\ssh\\administrators_authorized_keys & icacls.exe \"C:\\ProgramData\\ssh\\administrators_authorized_keys\" /inheritance:r /grant \"Administrators:F\" /grant \"SYSTEM:F\" & powershell New-ItemProperty -Path \"HKLM:\\SOFTWARE\\OpenSSH\" -Name DefaultShell -Value \"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\" -PropertyType String -Force  & powershell Start-Service sshd & powershell Set-Service -Name sshd -StartupType 'Automatic' & powershell New-NetFirewallRule -Name 'OpenSSH-Server-In-TCP' -DisplayName 'OpenSSH Server (sshd)' -Enabled True -Direction Inbound -Protocol TCP -Action Allow -LocalPort 22 & powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"Set-ExecutionPolicy -ExecutionPolicy bypass -Force\""
   }
