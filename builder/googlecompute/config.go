@@ -660,6 +660,9 @@ func ApplyIAPTunnel(c *communicator.Config, port int) error {
 func (c *Config) AreLabelsValid() bool {
 	labelRegex := regexp.MustCompile(`^[a-z][a-z0-9_-]{0,62}$`)
 	for key, value := range c.ImageLabels {
+		if len(key) < 1 || len(key) > 63 || len(value) > 63 {
+			return false
+		}
 		if !labelRegex.MatchString(key) || !labelRegex.MatchString(value) {
 			return false
 		}
