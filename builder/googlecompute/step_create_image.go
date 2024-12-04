@@ -46,6 +46,13 @@ func (s *StepCreateImage) Run(ctx context.Context, state multistep.StateBag) mul
 		}
 	}
 
+	if !config.AreLabelsValid() {
+		err := fmt.Errorf("Image: %s has invalid labels. The keys and values must start with a lowercase character, can only contain lowercase letters, numeric characters, underscores and dashes. They can be at most 63 characters long. International characters are allowed.", config.ImageName)
+		state.Put("error", err)
+		ui.Error(err.Error())
+		return multistep.ActionHalt
+	}
+
 	ui.Say("Creating image...")
 
 	sourceDiskURI := fmt.Sprintf("/compute/v1/projects/%s/zones/%s/disks/%s", config.ProjectId, config.Zone, config.imageSourceDisk)

@@ -69,3 +69,22 @@ func TestStepCreateImage_errorOnChannel(t *testing.T) {
 	_, ok = state.GetOk("image_name")
 	assert.False(t, ok, "State should not have a resulting image.")
 }
+
+func TestStepCreateImage_invalidLabels(t *testing.T) {
+	state := testState(t)
+	step := new(StepCreateImage)
+	defer step.Cleanup(state)
+
+	c := state.Get("config").(*Config)
+	c.ImageLabels = map[string]string{
+		"Invalid Label": "value",
+	}
+
+	// run the step
+	action := step.Run(context.Background(), state)
+	assert.Equal(t, action, multistep.ActionHalt, "Step should not have passed with invalid labels.")
+	_, ok := state.GetOk("error")
+	assert.True(t, ok, "State should have an error due to invalid labels.")
+	_, ok = state.GetOk("image")
+	assert.False(t, ok, "State should not have a resulting image due to invalid labels.")
+}

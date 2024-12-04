@@ -656,3 +656,13 @@ func ApplyIAPTunnel(c *communicator.Config, port int) error {
 		return fmt.Errorf("IAP tunnel is not implemented for %s communicator", c.Type)
 	}
 }
+
+func (c *Config) AreLabelsValid() bool {
+	labelRegex := regexp.MustCompile(`^[a-z][a-z0-9_-]{0,62}$`)
+	for key, value := range c.ImageLabels {
+		if !labelRegex.MatchString(key) || !labelRegex.MatchString(value) {
+			return false
+		}
+	}
+	return true
+}
