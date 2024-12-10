@@ -656,6 +656,13 @@ func (d *driverGCE) RunInstance(c *InstanceConfig) (<-chan error, error) {
 		computeDisks = append(computeDisks, disk.GenerateDiskAttachment())
 	}
 
+	var maxRunDuration *compute.Duration
+	if c.MaxRunDurationSeconds > 0 {
+		maxRunDuration = &compute.Duration{
+			Seconds: c.MaxRunDurationSeconds,
+		}
+	}
+
 	// Create the instance information
 	instance := compute.Instance{
 		AdvancedMachineFeatures: &compute.AdvancedMachineFeatures{
@@ -679,8 +686,10 @@ func (d *driverGCE) RunInstance(c *InstanceConfig) (<-chan error, error) {
 			},
 		},
 		Scheduling: &compute.Scheduling{
-			OnHostMaintenance: c.OnHostMaintenance,
-			Preemptible:       c.Preemptible,
+			OnHostMaintenance:         c.OnHostMaintenance,
+			Preemptible:               c.Preemptible,
+			MaxRunDuration:            maxRunDuration,
+			InstanceTerminationAction: c.TerminationAction,
 		},
 		ServiceAccounts: []*compute.ServiceAccount{
 			serviceAccount,

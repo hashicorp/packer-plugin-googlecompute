@@ -712,6 +712,72 @@ func TestConfigPrepareImageArchitecture(t *testing.T) {
 	}
 }
 
+func TestConfigInstanceMaxRunDurationSeconds(t *testing.T) {
+	cases := []struct {
+		Keys   []string
+		Values []interface{}
+		Err    bool
+	}{
+		{
+			[]string{"instance_max_run_duration_seconds", "instance_termination_action"},
+			[]interface{}{5, "STOP"},
+			false,
+		},
+		{
+			[]string{"instance_max_run_duration_seconds", "instance_termination_action"},
+			[]interface{}{5, "DELETE"},
+			false,
+		},
+		{
+			[]string{"instance_max_run_duration_seconds"},
+			[]interface{}{1},
+			true,
+		},
+		{
+			[]string{"instance_max_run_duration_seconds"},
+			[]interface{}{-1},
+			false,
+		},
+		{
+			[]string{"instance_max_run_duration_seconds", "instance_termination_action"},
+			[]interface{}{5, "BAD_VALUE"},
+			true,
+		},
+		{
+			[]string{"instance_max_run_duration_seconds", "instance_termination_action"},
+			[]interface{}{5, ""},
+			true,
+		},
+	}
+
+	for _, tc := range cases {
+		raw, tempfile := testConfig(t)
+		defer os.Remove(tempfile)
+
+		errStr := ""
+		for k := range tc.Keys {
+
+			// Create the string for error reporting
+			// convert value to string if it can be converted
+			errStr += fmt.Sprintf("%s:%v, ", tc.Keys[k], tc.Values[k])
+			if tc.Values[k] == nil {
+				delete(raw, tc.Keys[k])
+			} else {
+				raw[tc.Keys[k]] = tc.Values[k]
+			}
+		}
+
+		var c Config
+		warns, errs := c.Prepare(raw)
+
+		if tc.Err {
+			testConfigErr(t, warns, errs, strings.TrimRight(errStr, ", "))
+		} else {
+			testConfigOk(t, warns, errs)
+		}
+	}
+}
+
 // Helper stuff below
 
 func testConfig(t *testing.T) (config map[string]interface{}, tempAccountFile string) {
