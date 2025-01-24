@@ -723,6 +723,10 @@ source "googlecompute" "example" {
   
   If this is specified, it won't be deleted after the instance is shut-down.
 
+- `source_image` (string) - The URI of the image to load
+  
+  This cannot be used with SourceVolume.
+
 - `_` (string) - Zone is the zone in which to create the disk in.
   
   It is not exposed since the parent config already specifies it
