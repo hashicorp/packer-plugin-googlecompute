@@ -29,6 +29,8 @@ type InstanceConfig struct {
 	OmitExternalIP               bool
 	OnHostMaintenance            string
 	Preemptible                  bool
+	MaxRunDurationSeconds        int64
+	TerminationAction            string
 	NodeAffinities               []NodeAffinity
 	Region                       string
 	ServiceAccountEmail          string

@@ -217,6 +217,11 @@ type Config struct {
 	OnHostMaintenance string `mapstructure:"on_host_maintenance" required:"false"`
 	// If true, launch a preemptible instance.
 	Preemptible bool `mapstructure:"preemptible" required:"false"`
+	// If set, the instance will be automatically terminated after the specified amount of seconds.
+	// instance_termination_action must be set if this property is set.
+	InstanceMaxRunDurationSeconds int64 `mapstructure:"instance_max_run_duration_seconds" required:"false"`
+	// The termination action for this VM, which can be either STOP or DELETE.
+	InstanceTerminationAction string `mapstructure:"instance_termination_action" required:"false"`
 	// Sets a node affinity label for the launched instance (eg. for sole tenancy).
 	// Please see [Provisioning VMs on
 	// sole-tenant nodes](https://cloud.google.com/compute/docs/nodes/provisioning-sole-tenant-vms)
@@ -630,6 +635,18 @@ func (c *Config) Prepare(raws ...interface{}) ([]string, error) {
 	// Check windows password timeout is provided
 	if c.WindowsPasswordTimeout == 0 {
 		c.WindowsPasswordTimeout = 3 * time.Minute
+	}
+
+	if c.InstanceMaxRunDurationSeconds < 0 {
+		errs = packersdk.MultiErrorAppend(fmt.Errorf("'instance_max_run_duration_seconds' must be positive"))
+	}
+
+	if c.InstanceMaxRunDurationSeconds > 0 && c.InstanceTerminationAction == "" {
+		errs = packersdk.MultiErrorAppend(fmt.Errorf("'instance_termination_action' must be set if 'instance_max_run_duration_seconds' is set"))
+	}
+
+	if c.InstanceTerminationAction != "" && !(c.InstanceTerminationAction == "STOP" || c.InstanceTerminationAction == "DELETE") {
+		errs = packersdk.MultiErrorAppend(fmt.Errorf("'instance_termination_action' must be 'STOP' or 'DELETE'"))
 	}
 
 	return warnings, errs

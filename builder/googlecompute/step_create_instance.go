@@ -199,6 +199,8 @@ func (s *StepCreateInstance) Run(ctx context.Context, state multistep.StateBag) 
 		OmitExternalIP:               c.OmitExternalIP,
 		OnHostMaintenance:            c.OnHostMaintenance,
 		Preemptible:                  c.Preemptible,
+		MaxRunDurationSeconds:        c.InstanceMaxRunDurationSeconds,
+		TerminationAction:            c.InstanceTerminationAction,
 		NodeAffinities:               c.NodeAffinities,
 		Region:                       c.Region,
 		ServiceAccountEmail:          c.ServiceAccountEmail,

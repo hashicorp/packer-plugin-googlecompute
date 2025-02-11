@@ -177,6 +177,11 @@
 
 - `preemptible` (bool) - If true, launch a preemptible instance.
 
+- `instance_max_run_duration_seconds` (int64) - If set, the instance will be automatically terminated after the specified amount of seconds.
+  instance_termination_action must be set if this property is set.
+
+- `instance_termination_action` (string) - The termination action for this VM, which can be either STOP or DELETE.
+
 - `node_affinity` ([]common.NodeAffinity) - Sets a node affinity label for the launched instance (eg. for sole tenancy).
   Please see [Provisioning VMs on
   sole-tenant nodes](https://cloud.google.com/compute/docs/nodes/provisioning-sole-tenant-vms)
