@@ -83,7 +83,11 @@ func TestStepCreateImage_invalidLabels(t *testing.T) {
 	// run the step
 	action := step.Run(context.Background(), state)
 	assert.Equal(t, action, multistep.ActionHalt, "Step should not have passed with invalid labels.")
-	_, ok := state.GetOk("error")
+	uncastErr, ok := state.GetOk("error")
+	assert.True(t, ok, "State should have an error due to invalid labels.")
+	err, ok := uncastErr.(error)
+	assert.True(t, ok, "Error in state is not an error type.")
+	assert.Contains(t, err.Error(), "key \"Invalid Label\" must match regex", "Error message does not contain expected text.")
 	assert.True(t, ok, "State should have an error due to invalid labels.")
 	_, ok = state.GetOk("image")
 	assert.False(t, ok, "State should not have a resulting image due to invalid labels.")

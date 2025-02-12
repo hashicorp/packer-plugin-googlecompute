@@ -657,15 +657,25 @@ func ApplyIAPTunnel(c *communicator.Config, port int) error {
 	}
 }
 
-func (c *Config) AreLabelsValid() bool {
+func (c *Config) AreLabelsValid() []error {
+	var errs []error
 	labelRegex := regexp.MustCompile(`^[a-z][a-z0-9_-]{0,62}$`)
 	for key, value := range c.ImageLabels {
-		if len(key) < 1 || len(key) > 63 || len(value) > 63 {
-			return false
+		if len(key) < 1 {
+			errs = append(errs, fmt.Errorf("key %q must be at least 1 character long", key))
 		}
-		if !labelRegex.MatchString(key) || !labelRegex.MatchString(value) {
-			return false
+		if len(key) > 63 {
+			errs = append(errs, fmt.Errorf("key %q must be at most 63 characters long", key))
+		}
+		if len(value) > 63 {
+			errs = append(errs, fmt.Errorf("value %q for key %q must be at most 63 characters long", value, key))
+		}
+		if !labelRegex.MatchString(key) {
+			errs = append(errs, fmt.Errorf("key %q must match regex %q", key, labelRegex))
+		}
+		if !labelRegex.MatchString(value) {
+			errs = append(errs, fmt.Errorf("value %q for key %q must match regex %q", value, key, labelRegex))
 		}
 	}
-	return true
+	return errs
 }
