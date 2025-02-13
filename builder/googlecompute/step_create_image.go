@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/hashicorp/packer-plugin-googlecompute/lib/common"
@@ -45,18 +44,6 @@ func (s *StepCreateImage) Run(ctx context.Context, state multistep.StateBag) mul
 			ui.Error(err.Error())
 			return multistep.ActionHalt
 		}
-	}
-
-	if err := config.AreLabelsValid(); err != nil {
-		var sb strings.Builder
-		sb.WriteString(fmt.Sprintf("Image: %s has invalid labels: ", config.ImageName))
-		for _, e := range err {
-			sb.WriteString(fmt.Sprintf("%s, ", e))
-		}
-		err := fmt.Errorf(sb.String())
-		state.Put("error", err)
-		ui.Error(err.Error())
-		return multistep.ActionHalt
 	}
 
 	ui.Say("Creating image...")

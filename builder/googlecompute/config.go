@@ -632,6 +632,12 @@ func (c *Config) Prepare(raws ...interface{}) ([]string, error) {
 		c.WindowsPasswordTimeout = 3 * time.Minute
 	}
 
+	if labelErrs := c.AreLabelsValid(); len(labelErrs) > 0 {
+		for _, err := range labelErrs {
+			errs = packersdk.MultiErrorAppend(err)
+		}
+	}
+
 	return warnings, errs
 }
 
@@ -657,24 +663,17 @@ func ApplyIAPTunnel(c *communicator.Config, port int) error {
 	}
 }
 
+var labelKeyRegex = regexp.MustCompile(`^\p{Ll}[\p{Ll}0-9_-]{0,62}$`)
+var labelValueRegex = regexp.MustCompile(`^[\p{Ll}0-9_-]{0,63}$`)
+
 func (c *Config) AreLabelsValid() []error {
 	var errs []error
-	labelRegex := regexp.MustCompile(`^[a-z][a-z0-9_-]{0,62}$`)
 	for key, value := range c.ImageLabels {
-		if len(key) < 1 {
-			errs = append(errs, fmt.Errorf("key %q must be at least 1 character long", key))
+		if !labelKeyRegex.MatchString(key) {
+			errs = append(errs, fmt.Errorf("key %q must match regex %q", key, labelKeyRegex))
 		}
-		if len(key) > 63 {
-			errs = append(errs, fmt.Errorf("key %q must be at most 63 characters long", key))
-		}
-		if len(value) > 63 {
-			errs = append(errs, fmt.Errorf("value %q for key %q must be at most 63 characters long", value, key))
-		}
-		if !labelRegex.MatchString(key) {
-			errs = append(errs, fmt.Errorf("key %q must match regex %q", key, labelRegex))
-		}
-		if !labelRegex.MatchString(value) {
-			errs = append(errs, fmt.Errorf("value %q for key %q must match regex %q", value, key, labelRegex))
+		if !labelValueRegex.MatchString(value) {
+			errs = append(errs, fmt.Errorf("value %q for key %q must match regex %q", value, key, labelValueRegex))
 		}
 	}
 	return errs

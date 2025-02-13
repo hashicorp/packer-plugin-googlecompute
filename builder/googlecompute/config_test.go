@@ -712,6 +712,122 @@ func TestConfigPrepareImageArchitecture(t *testing.T) {
 	}
 }
 
+func TestLabelsValidity(t *testing.T) {
+	cases := []struct {
+		Name        string
+		Labels      map[string]string
+		ExpectError bool
+	}{
+		{
+			"valid empty labels map, should not error",
+			map[string]string{},
+			false,
+		},
+		{
+			"valid non-empty keys/values, should not error",
+			map[string]string{
+				"label-1": "value",
+			},
+			false,
+		},
+		{
+			"valid non-empty key, empty value, should not error",
+			map[string]string{
+				"label-1": "",
+			},
+			false,
+		},
+		{
+			"valid non-empty key, value starting with a non a-z character, should not error",
+			map[string]string{
+				"label-1": "0644",
+			},
+			false,
+		},
+		{
+			"valid international-letter key and value, should not error",
+			map[string]string{
+				"lābêl-1": "žžž",
+			},
+			false,
+		},
+		{
+			"valid international key and value, at the limit of what is supported for both, should not error",
+			map[string]string{
+				"āāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāā": "āāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāā",
+			},
+			false,
+		},
+		{
+			"invalid key with upper-case international character in it, non-empty value, should error",
+			map[string]string{
+				"Ā": "abcd",
+			},
+			true,
+		},
+		{
+			"invalid key with lower-case international character in it, but upper-case character in value, should error",
+			map[string]string{
+				"ã": "Abcd",
+			},
+			true,
+		},
+		{
+			"invalid empty key, non-empty value, should error",
+			map[string]string{
+				"": "abcd",
+			},
+			true,
+		},
+		{
+			"invalid key too long, non-empty value, should error",
+			map[string]string{
+				"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa": "abcd",
+			},
+			true,
+		},
+		{
+			"invalid value too long, key OK, should error",
+			map[string]string{
+				"aaa": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+			},
+			true,
+		},
+		{
+			"invalid international key too long, should error",
+			map[string]string{
+				"āāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāā": "āāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāā",
+			},
+			true,
+		},
+		{
+			"invalid international value too long, should error",
+			map[string]string{
+				"āāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāā": "āāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāāā",
+			},
+			true,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.Name, func(t *testing.T) {
+			cfg, tmp := testConfig(t)
+			defer os.RemoveAll(tmp)
+
+			cfg["image_labels"] = tc.Labels
+			var c Config
+			_, errs := c.Prepare(cfg)
+
+			if tc.ExpectError && errs == nil {
+				t.Errorf("expected errors with labels, got none")
+			}
+			if !tc.ExpectError && errs != nil {
+				t.Errorf("expected no error, got some: %+v", errs)
+			}
+		})
+	}
+}
+
 // Helper stuff below
 
 func testConfig(t *testing.T) (config map[string]interface{}, tempAccountFile string) {
