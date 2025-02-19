@@ -181,7 +181,7 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packersdk.Ui, artifa
 		Network:              p.config.Network,
 		NetworkProjectId:     builderProjectId,
 		StateTimeout:         5 * time.Minute,
-		SourceImageFamily:    "debian-9-worker",
+		SourceImageFamily:    "debian-12-worker",
 		SourceImageProjectId: []string{"compute-image-tools"},
 		Subnetwork:           p.config.Subnetwork,
 		Zone:                 p.config.Zone,
