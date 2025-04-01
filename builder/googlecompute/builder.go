@@ -50,6 +50,7 @@ func (b *Builder) Run(ctx context.Context, ui packersdk.Ui, hook packersdk.Hook)
 	cfg := &common.GCEDriverConfig{
 		Ui:        ui,
 		ProjectId: b.config.ProjectId,
+		Scopes:    b.config.Scopes,
 	}
 	b.config.Authentication.ApplyDriverConfig(cfg)
 
