@@ -48,7 +48,7 @@ type Config struct {
 	DiskType string `mapstructure:"disk_type"`
 	//The export instance machine type. Defaults to `"n1-highcpu-4"`.
 	MachineType string `mapstructure:"machine_type"`
-	// The export instance OS type. Defaults to `"debian-12-worker"`.Config
+	// Image used to launch a temp VM for export. Defaults to `"debian-12-worker"`
 	SourceImageFamily string `mapstructure:"source_image_family"`
 	//The Google Compute network id or URL to use for the export instance.
 	//Defaults to `"default"`. If the value is not a URL, it
