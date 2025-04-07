@@ -28,6 +28,7 @@ type FlatConfig struct {
 	DiskSizeGb                *int64            `mapstructure:"disk_size" cty:"disk_size" hcl:"disk_size"`
 	DiskType                  *string           `mapstructure:"disk_type" cty:"disk_type" hcl:"disk_type"`
 	MachineType               *string           `mapstructure:"machine_type" cty:"machine_type" hcl:"machine_type"`
+	SourceImageFamily         *string           `mapstructure:"source_image_family" cty:"source_image_family" hcl:"source_image_family"`
 	Network                   *string           `mapstructure:"network" cty:"network" hcl:"network"`
 	Paths                     []string          `mapstructure:"paths" required:"true" cty:"paths" hcl:"paths"`
 	Subnetwork                *string           `mapstructure:"subnetwork" cty:"subnetwork" hcl:"subnetwork"`
@@ -66,6 +67,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"disk_size":                   &hcldec.AttrSpec{Name: "disk_size", Type: cty.Number, Required: false},
 		"disk_type":                   &hcldec.AttrSpec{Name: "disk_type", Type: cty.String, Required: false},
 		"machine_type":                &hcldec.AttrSpec{Name: "machine_type", Type: cty.String, Required: false},
+		"source_image_family":         &hcldec.AttrSpec{Name: "source_image_family", Type: cty.String, Required: false},
 		"network":                     &hcldec.AttrSpec{Name: "network", Type: cty.String, Required: false},
 		"paths":                       &hcldec.AttrSpec{Name: "paths", Type: cty.List(cty.String), Required: false},
 		"subnetwork":                  &hcldec.AttrSpec{Name: "subnetwork", Type: cty.String, Required: false},

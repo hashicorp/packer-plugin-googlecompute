@@ -57,6 +57,8 @@ the [authentication](/packer/integrations/hashicorp/googlecompute#authentication
 
 - `machine_type` (string) - The export instance machine type. Defaults to `"n1-highcpu-4"`.
 
+- `source_image_family` (string) - Image used to launch a temp VM for export. Defaults to `"debian-12-worker"`
+
 - `network` (string) - The Google Compute network id or URL to use for the export instance.
   Defaults to `"default"`. If the value is not a URL, it
   will be interpolated to `projects/((builder_project_id))/global/networks/((network))`.
