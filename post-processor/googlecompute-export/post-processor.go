@@ -48,6 +48,8 @@ type Config struct {
 	DiskType string `mapstructure:"disk_type"`
 	//The export instance machine type. Defaults to `"n1-highcpu-4"`.
 	MachineType string `mapstructure:"machine_type"`
+	// Image used to launch a temp VM for export. Defaults to `"debian-12-worker"`
+	SourceImageFamily string `mapstructure:"source_image_family"`
 	//The Google Compute network id or URL to use for the export instance.
 	//Defaults to `"default"`. If the value is not a URL, it
 	//will be interpolated to `projects/((builder_project_id))/global/networks/((network))`.
@@ -113,6 +115,10 @@ func (p *PostProcessor) Configure(raws ...interface{}) error {
 
 	if p.config.Network == "" && p.config.Subnetwork == "" {
 		p.config.Network = "default"
+	}
+
+	if p.config.SourceImageFamily == "" {
+		p.config.SourceImageFamily = "debian-12-worker"
 	}
 
 	warns, err := p.config.Authentication.Prepare()
@@ -181,7 +187,7 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packersdk.Ui, artifa
 		Network:              p.config.Network,
 		NetworkProjectId:     builderProjectId,
 		StateTimeout:         5 * time.Minute,
-		SourceImageFamily:    "debian-9-worker",
+		SourceImageFamily:    p.config.SourceImageFamily,
 		SourceImageProjectId: []string{"compute-image-tools"},
 		Subnetwork:           p.config.Subnetwork,
 		Zone:                 p.config.Zone,
