@@ -891,7 +891,7 @@ func (d *driverGCE) refreshGlobalOp(project string, op *compute.Operation) state
 		if newOp.Status == "DONE" {
 			if newOp.Error != nil {
 				for _, e := range newOp.Error.Errors {
-					err = packersdk.MultiErrorAppend(err, fmt.Errorf(e.Message))
+					err = packersdk.MultiErrorAppend(err, errors.New(e.Message))
 				}
 			}
 		}
@@ -912,7 +912,7 @@ func (d *driverGCE) refreshZoneOp(zone string, op *compute.Operation) stateRefre
 		if newOp.Status == "DONE" {
 			if newOp.Error != nil {
 				for _, e := range newOp.Error.Errors {
-					err = packersdk.MultiErrorAppend(err, fmt.Errorf(e.Message))
+					err = packersdk.MultiErrorAppend(err, errors.New(e.Message))
 				}
 			}
 		}
@@ -933,7 +933,7 @@ func (d *driverGCE) refreshRegionOp(region string, op *compute.Operation) stateR
 		if newOp.Status == "DONE" {
 			if newOp.Error != nil {
 				for _, e := range newOp.Error.Errors {
-					err = packersdk.MultiErrorAppend(err, fmt.Errorf(e.Message))
+					err = packersdk.MultiErrorAppend(err, errors.New(e.Message))
 				}
 			}
 		}
