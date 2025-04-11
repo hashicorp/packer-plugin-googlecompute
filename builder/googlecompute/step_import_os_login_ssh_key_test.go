@@ -11,7 +11,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
-	"google.golang.org/api/oauth2/v2"
+	oauth2 "google.golang.org/api/oauth2/v2"
 )
 
 func TestStepImportOSLoginSSHKey_impl(t *testing.T) {
