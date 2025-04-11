@@ -17,8 +17,8 @@ import (
 	"os"
 	"strings"
 
-	"google.golang.org/api/compute/v1"
-	"google.golang.org/api/storage/v1"
+	compute "google.golang.org/api/compute/v1"
+	storage "google.golang.org/api/storage/v1"
 
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/hashicorp/packer-plugin-googlecompute/lib/common"

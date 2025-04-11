@@ -22,7 +22,7 @@ import (
 	oauth2_svc "google.golang.org/api/oauth2/v2"
 	"google.golang.org/api/option"
 	oslogin "google.golang.org/api/oslogin/v1"
-	"google.golang.org/api/storage/v1"
+	storage "google.golang.org/api/storage/v1"
 
 	"github.com/hashicorp/packer-plugin-googlecompute/version"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"

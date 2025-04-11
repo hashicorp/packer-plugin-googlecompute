@@ -23,7 +23,7 @@ import (
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/hashicorp/packer-plugin-sdk/template/config"
 	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
-	"google.golang.org/api/storage/v1"
+	storage "google.golang.org/api/storage/v1"
 )
 
 type Config struct {

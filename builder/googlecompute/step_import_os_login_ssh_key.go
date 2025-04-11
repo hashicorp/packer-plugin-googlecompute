@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/packer-plugin-googlecompute/lib/common"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
-	"google.golang.org/api/oauth2/v2"
+	oauth2 "google.golang.org/api/oauth2/v2"
 )
 
 // StepImportOSLoginSSHKey imports a temporary SSH key pair into a GCE login profile.
