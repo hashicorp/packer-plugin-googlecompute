@@ -110,11 +110,11 @@ func (d *Datasource) Execute() (cty.Value, error) {
 	payload := secret.GetPayload()
 	checksum := int64(0)
 	if secret.Payload.DataCrc32C != nil {
-		checksum = *secret.Payload.DataCrc32C
+		checksum = *payload.DataCrc32C
 	}
 	computedChecksum := crc32.Checksum(payload.Data, crc32.MakeTable(crc32.Castagnoli))
 
-	if payload.DataCrc32C != nil && int64(computedChecksum) != *payload.DataCrc32C {
+	if payload.DataCrc32C != nil && int64(computedChecksum) != checksum {
 		return cty.NullVal(cty.EmptyObject), fmt.Errorf("data integrity check failed: expected crc32c %d but got %d", *payload.DataCrc32C, computedChecksum)
 	}
 
