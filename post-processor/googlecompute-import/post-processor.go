@@ -60,7 +60,7 @@ type Config struct {
 	ImageFamily string `mapstructure:"image_family"`
 	//A list of features to enable on the guest operating system. Applicable only for bootable images. Valid
 	//values are `MULTI_IP_SUBNET`, `UEFI_COMPATIBLE`,
-	//`VIRTIO_SCSI_MULTIQUEUE`, `GVNIC` and `WINDOWS` currently.
+	//`VIRTIO_SCSI_MULTIQUEUE`, `GVNIC`, `WINDOWS`, `IDPF`, `SEV_CAPABLE`, `SEV_SNP_CAPABLE`, `SEV_LIVE_MIGRATABLE_V2`, `TDX_CAPABLE` and `SUSPEND_RESUME_COMPATIBLE` currently.
 	ImageGuestOsFeatures []string `mapstructure:"image_guest_os_features"`
 	//Key/value pair labels to apply to the created image.
 	ImageLabels map[string]string `mapstructure:"image_labels"`
