@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
+	configsdk "github.com/hashicorp/packer-plugin-sdk/template/config"
 	"google.golang.org/api/oauth2/v2"
 )
 
@@ -21,7 +22,7 @@ func TestStepImportOSLoginSSHKey_impl(t *testing.T) {
 func TestStepImportOSLoginSSHKey(t *testing.T) {
 	tt := []struct {
 		Name           string
-		UseOSLogin     bool
+		UseOSLogin     configsdk.Trilean
 		ExpectedEmail  string
 		ExpectedAction multistep.StepAction
 		PubKeyExpected bool
@@ -32,7 +33,7 @@ func TestStepImportOSLoginSSHKey(t *testing.T) {
 		},
 		{
 			Name:           "UseOSLoginWithAccountFile",
-			UseOSLogin:     true,
+			UseOSLogin:     configsdk.TriTrue,
 			ExpectedAction: multistep.ActionContinue,
 			ExpectedEmail:  "raffi-compute@developer.gserviceaccount.com",
 			PubKeyExpected: true,
@@ -83,7 +84,7 @@ func TestStepImportOSLoginSSHKey_withAccountFile(t *testing.T) {
 	defer step.Cleanup(state)
 
 	config := state.Get("config").(*Config)
-	config.UseOSLogin = true
+	config.UseOSLogin = configsdk.TriTrue
 	config.Comm.SSHPublicKey = []byte{'k', 'e', 'y'}
 
 	if action := step.Run(context.Background(), state); action != multistep.ActionContinue {
@@ -116,7 +117,7 @@ func TestStepImportOSLoginSSHKey_withNoAccountFile(t *testing.T) {
 	defer step.Cleanup(state)
 
 	config := state.Get("config").(*Config)
-	config.UseOSLogin = true
+	config.UseOSLogin = configsdk.TriTrue
 	config.Comm.SSHPublicKey = []byte{'k', 'e', 'y'}
 
 	if action := step.Run(context.Background(), state); action != multistep.ActionContinue {
@@ -149,7 +150,7 @@ func TestStepImportOSLoginSSHKey_withGCEAndNoAccount(t *testing.T) {
 	defer step.Cleanup(state)
 
 	config := state.Get("config").(*Config)
-	config.UseOSLogin = true
+	config.UseOSLogin = configsdk.TriTrue
 	config.Comm.SSHPublicKey = []byte{'k', 'e', 'y'}
 
 	if action := step.Run(context.Background(), state); action != multistep.ActionContinue {
@@ -186,7 +187,7 @@ func TestStepImportOSLoginSSHKey_withGCEAndAccount(t *testing.T) {
 	defer step.Cleanup(state)
 
 	config := state.Get("config").(*Config)
-	config.UseOSLogin = true
+	config.UseOSLogin = configsdk.TriTrue
 	config.Comm.SSHPublicKey = []byte{'k', 'e', 'y'}
 
 	if action := step.Run(context.Background(), state); action != multistep.ActionContinue {
@@ -221,7 +222,7 @@ func TestStepImportOSLoginSSHKey_withPrivateSSHKey(t *testing.T) {
 	defer os.Remove(pkey)
 
 	config := state.Get("config").(*Config)
-	config.UseOSLogin = true
+	config.UseOSLogin = configsdk.TriTrue
 	config.Comm.SSHPrivateKeyFile = pkey
 
 	if action := step.Run(context.Background(), state); action != multistep.ActionContinue {

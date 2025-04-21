@@ -67,6 +67,11 @@ type DriverMock struct {
 	GetInstanceMetadataResult string
 	GetInstanceMetadataErr    error
 
+	GetProjectMetadataZone   string
+	GetProjectMetadataKey    string
+	GetProjectMetadataResult string
+	GetProjectMetadataErr    error
+
 	GetTokenInfoResult *oauth2_svc.Tokeninfo
 	GetTokenInfoErr    error
 
@@ -274,6 +279,12 @@ func (d *DriverMock) GetImageFromProject(project, name string, fromFamily bool) 
 	d.GetImageFromProjectName = name
 	d.GetImageFromProjectFromFamily = fromFamily
 	return d.GetImageFromProjectResult, d.GetImageFromProjectErr
+}
+
+func (d *DriverMock) GetProjectMetadata(zone, key string) (string, error) {
+	d.GetProjectMetadataZone = zone
+	d.GetProjectMetadataKey = key
+	return d.GetProjectMetadataResult, d.GetProjectMetadataErr
 }
 
 func (d *DriverMock) GetInstanceMetadata(zone, name, key string) (string, error) {

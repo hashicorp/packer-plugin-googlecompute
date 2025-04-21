@@ -79,8 +79,12 @@ func (c *Config) createInstanceMetadata(sourceImage *common.Image, sshPublicKey 
 
 	// If UseOSLogin is true, force `enable-oslogin` in metadata
 	// In the event that `enable-oslogin` is not enabled at project level
-	if c.UseOSLogin {
+	if c.UseOSLogin.True() {
 		instanceMetadataNoSSHKeys[EnableOSLoginKey] = "TRUE"
+	}
+
+	if c.UseOSLogin.False() {
+		instanceMetadataNoSSHKeys[EnableOSLoginKey] = "FALSE"
 	}
 
 	for key, value := range c.MetadataFiles {

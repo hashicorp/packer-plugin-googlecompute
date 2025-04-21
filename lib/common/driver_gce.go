@@ -484,6 +484,21 @@ func (d *driverGCE) GetImageFromProject(project, name string, fromFamily bool) (
 	}
 }
 
+func (d *driverGCE) GetProjectMetadata(zone, key string) (string, error) {
+	project, err := d.service.Projects.Get(d.projectId).Do()
+	if err != nil {
+		return "", err
+	}
+
+	for _, item := range project.CommonInstanceMetadata.Items {
+		if item.Key == key {
+			return *item.Value, nil
+		}
+	}
+
+	return "", fmt.Errorf("Project metadata key, %s, not found.", key)
+}
+
 func (d *driverGCE) GetInstanceMetadata(zone, name, key string) (string, error) {
 	instance, err := d.service.Instances.Get(d.projectId, zone, name).Do()
 	if err != nil {

@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	metadata "cloud.google.com/go/compute/metadata"
@@ -34,7 +35,12 @@ func (s *StepImportOSLoginSSHKey) Run(ctx context.Context, state multistep.State
 	driver := state.Get("driver").(common.Driver)
 	ui := state.Get("ui").(packersdk.Ui)
 
-	if !config.UseOSLogin {
+	osLoginEnabledAtProject, err := driver.GetProjectMetadata(config.Zone, EnableOSLoginKey)
+	if err != nil {
+		log.Printf("failed to get project metadata: %s", err)
+	}
+
+	if config.UseOSLogin.False() || (config.UseOSLogin.ToBoolPointer() == nil && strings.EqualFold(osLoginEnabledAtProject, "false")) {
 		return multistep.ActionContinue
 	}
 
