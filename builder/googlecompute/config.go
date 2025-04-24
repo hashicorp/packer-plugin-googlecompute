@@ -335,7 +335,7 @@ type Config struct {
 	//  000000000000000000000000000000000000000000000000000000000000000a:
 	//    fingerprint: 000000000000000000000000000000000000000000000000000000000000000a
 	//```
-	UseOSLogin bool `mapstructure:"use_os_login" required:"false"`
+	UseOSLogin config.Trilean `mapstructure:"use_os_login" required:"false"`
 	// The time to wait between the creation of the instance used to create the image,
 	// and the addition of SSH configuration, including SSH keys, to that instance.
 	// The delay is intended to protect packer from anything in the instance boot

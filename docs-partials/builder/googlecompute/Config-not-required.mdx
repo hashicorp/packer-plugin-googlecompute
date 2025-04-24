@@ -243,7 +243,7 @@
 - `use_internal_ip` (bool) - If true, use the instance's internal IP instead of its external IP
   during building.
 
-- `use_os_login` (bool) - If true, OSLogin will be used to manage SSH access to the compute instance by
+- `use_os_login` (boolean) - If true, OSLogin will be used to manage SSH access to the compute instance by
   dynamically importing a temporary SSH key to the Google account's login profile,
   and setting the `enable-oslogin` to `TRUE` in the instance metadata.
   Optionally, `use_os_login` can be used with an existing `ssh_username` and `ssh_private_key_file`

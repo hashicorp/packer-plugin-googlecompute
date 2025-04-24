@@ -50,6 +50,9 @@ type Driver interface {
 	// is true, name designates an image family instead of a particular image.
 	GetImageFromProject(project, name string, fromFamily bool) (*Image, error)
 
+	// GetProjectMetadata gets a metadata variable for the project.
+	GetProjectMetadata(zone, key string) (string, error)
+
 	// GetInstanceMetadata gets a metadata variable for the instance, name.
 	GetInstanceMetadata(zone, name, key string) (string, error)
 
