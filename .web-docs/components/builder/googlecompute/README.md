@@ -350,6 +350,8 @@ builder.
   during it's creation.
   Example value: `5m`.
 
+- `oslogin_ssh_username` (string) - OS Login SSH Username
+
 <!-- End of code generated from the comments of the Config struct in builder/googlecompute/config.go; -->
 
 

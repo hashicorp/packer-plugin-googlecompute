@@ -132,6 +132,7 @@ type FlatConfig struct {
 	UseOSLogin                   *bool                             `mapstructure:"use_os_login" required:"false" cty:"use_os_login" hcl:"use_os_login"`
 	WaitToAddSSHKeys             *string                           `mapstructure:"wait_to_add_ssh_keys" cty:"wait_to_add_ssh_keys" hcl:"wait_to_add_ssh_keys"`
 	Zone                         *string                           `mapstructure:"zone" required:"true" cty:"zone" hcl:"zone"`
+	OSLoginSSHUsername           *string                           `mapstructure:"oslogin_ssh_username" required:"false" cty:"oslogin_ssh_username" hcl:"oslogin_ssh_username"`
 }
 
 // FlatMapstructure returns a new FlatConfig.
@@ -267,6 +268,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"use_os_login":                    &hcldec.AttrSpec{Name: "use_os_login", Type: cty.Bool, Required: false},
 		"wait_to_add_ssh_keys":            &hcldec.AttrSpec{Name: "wait_to_add_ssh_keys", Type: cty.String, Required: false},
 		"zone":                            &hcldec.AttrSpec{Name: "zone", Type: cty.String, Required: false},
+		"oslogin_ssh_username":            &hcldec.AttrSpec{Name: "oslogin_ssh_username", Type: cty.String, Required: false},
 	}
 	return s
 }

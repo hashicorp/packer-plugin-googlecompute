@@ -53,6 +53,10 @@ func (c *Config) createInstanceMetadata(sourceImage *common.Image, sshPublicKey 
 		instanceMetadataSSHKeys[sshMetaKey] = sshKeys
 	}
 
+	if c.OSLoginSSHUsername != "" {
+		c.Comm.SSHUsername = c.OSLoginSSHUsername
+	}
+
 	startupScript := instanceMetadataNoSSHKeys[StartupScriptKey]
 	if c.StartupScriptFile != "" {
 		var content []byte

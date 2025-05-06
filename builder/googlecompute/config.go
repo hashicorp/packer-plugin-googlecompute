@@ -349,6 +349,8 @@ type Config struct {
 	// Example: `"us-central1-a"`
 	Zone string `mapstructure:"zone" required:"true"`
 
+	OSLoginSSHUsername string `mapstructure:"oslogin_ssh_username" required:"false"`
+
 	ctx                interpolate.Context
 	imageSourceDisk    string
 	imageAlreadyExists bool
