@@ -229,6 +229,14 @@ func (d *driverGCE) CreateImage(project string, imageSpec *compute.Image) (<-cha
 	return imageCh, errCh
 }
 
+func (d *driverGCE) SetImageDeprecationStatus(project, name string, deprecationStatus *compute.DeprecationStatus) error {
+	if deprecationStatus == nil {
+		return errors.New("deprecationStatus cannot be nil")
+	}
+	_, err := d.service.Images.Deprecate(project, name, deprecationStatus).Do()
+	return err
+}
+
 func (d *driverGCE) DeleteImage(project, name string) <-chan error {
 	errCh := make(chan error, 1)
 	op, err := d.service.Images.Delete(project, name).Do()

@@ -296,4 +296,17 @@
   during it's creation.
   Example value: `5m`.
 
+- `deprecate_at` (string) - Time when the image is considered as deprecated.
+  In UTC, in the following RFC3339 format: YYYY-MM-DDTHH:MM:SSZ.
+  You can’t specify a date in the past.
+
+- `obsolete_at` (string) - Time when the image is considered obsolete.
+  In UTC, in the following RFC3339 format: YYYY-MM-DDTHH:MM:SSZ.
+  You can’t specify a date in the past.
+
+- `delete_at` (string) - Time when the image is scheduled for deletion.
+  GCP won’t auto-delete it, but it should be cleaned up manually.
+  In UTC, in the following RFC3339 format: YYYY-MM-DDTHH:MM:SSZ.
+  You can’t specify a date in the past.
+
 <!-- End of code generated from the comments of the Config struct in builder/googlecompute/config.go; -->
