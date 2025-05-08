@@ -349,6 +349,22 @@ type Config struct {
 	// Example: `"us-central1-a"`
 	Zone string `mapstructure:"zone" required:"true"`
 
+	// Time when the image is considered as deprecated.
+	// In UTC, in the following RFC3339 format: YYYY-MM-DDTHH:MM:SSZ.
+	// You can’t specify a date in the past.
+	DeprecateAt string `mapstructure:"deprecate_at" required:"false"`
+
+	// Time when the image is considered obsolete.
+	// In UTC, in the following RFC3339 format: YYYY-MM-DDTHH:MM:SSZ.
+	// You can’t specify a date in the past.
+	ObsoleteAt string `mapstructure:"obsolete_at" required:"false"`
+
+	// Time when the image is scheduled for deletion.
+	// GCP won’t auto-delete it, but it should be cleaned up manually.
+	// In UTC, in the following RFC3339 format: YYYY-MM-DDTHH:MM:SSZ.
+	// You can’t specify a date in the past.
+	DeleteAt string `mapstructure:"delete_at" required:"false"`
+
 	ctx                interpolate.Context
 	imageSourceDisk    string
 	imageAlreadyExists bool

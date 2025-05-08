@@ -132,6 +132,9 @@ type FlatConfig struct {
 	UseOSLogin                   *bool                             `mapstructure:"use_os_login" required:"false" cty:"use_os_login" hcl:"use_os_login"`
 	WaitToAddSSHKeys             *string                           `mapstructure:"wait_to_add_ssh_keys" cty:"wait_to_add_ssh_keys" hcl:"wait_to_add_ssh_keys"`
 	Zone                         *string                           `mapstructure:"zone" required:"true" cty:"zone" hcl:"zone"`
+	DeprecateAt                  *string                           `mapstructure:"deprecate_at" required:"false" cty:"deprecate_at" hcl:"deprecate_at"`
+	ObsoleteAt                   *string                           `mapstructure:"obsolete_at" required:"false" cty:"obsolete_at" hcl:"obsolete_at"`
+	DeleteAt                     *string                           `mapstructure:"delete_at" required:"false" cty:"delete_at" hcl:"delete_at"`
 }
 
 // FlatMapstructure returns a new FlatConfig.
@@ -267,6 +270,9 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"use_os_login":                    &hcldec.AttrSpec{Name: "use_os_login", Type: cty.Bool, Required: false},
 		"wait_to_add_ssh_keys":            &hcldec.AttrSpec{Name: "wait_to_add_ssh_keys", Type: cty.String, Required: false},
 		"zone":                            &hcldec.AttrSpec{Name: "zone", Type: cty.String, Required: false},
+		"deprecate_at":                    &hcldec.AttrSpec{Name: "deprecate_at", Type: cty.String, Required: false},
+		"obsolete_at":                     &hcldec.AttrSpec{Name: "obsolete_at", Type: cty.String, Required: false},
+		"delete_at":                       &hcldec.AttrSpec{Name: "delete_at", Type: cty.String, Required: false},
 	}
 	return s
 }
