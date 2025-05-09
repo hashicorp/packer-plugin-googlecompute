@@ -336,6 +336,26 @@ type Config struct {
 	//    fingerprint: 000000000000000000000000000000000000000000000000000000000000000a
 	//```
 	UseOSLogin config.Trilean `mapstructure:"use_os_login" required:"false"`
+	// OSLoginSSHUsername specifies the username to be used with OS Login when importing the SSH public key.
+	//
+	// This value controls which username is associated with the SSH key during provisioning.
+	//
+	// Valid values:
+	//   - "" or "__auto__": Use the username from the OS Login profile as-is,
+	//                       unless it starts with "sa_" or "ext_" (in which case it's used unchanged).
+	//   - "__external__": Normalize the profile username (lowercase, replace special chars, truncate to 32),
+	//                     then prepend "ext_".
+	//
+	// Alternatively, you may provide an explicit username string.
+	//
+	// Example:
+	//   oslogin_ssh_username = "__external__"
+	//
+	// This is useful when authenticating with an external (federated) identity, where GCP prepends
+	// "ext_" to the canonical username in the browser, but omits it when using ADC in Packer.
+	//
+	// Note: Invalid or unsupported values will result in an error during provisioning.
+	OSLoginSSHUsername string `mapstructure:"oslogin_ssh_username" required:"false"`
 	// The time to wait between the creation of the instance used to create the image,
 	// and the addition of SSH configuration, including SSH keys, to that instance.
 	// The delay is intended to protect packer from anything in the instance boot
@@ -349,11 +369,10 @@ type Config struct {
 	// Example: `"us-central1-a"`
 	Zone string `mapstructure:"zone" required:"true"`
 
-	OSLoginSSHUsername string `mapstructure:"oslogin_ssh_username" required:"false"`
-
-	ctx                interpolate.Context
-	imageSourceDisk    string
-	imageAlreadyExists bool
+	ctx                  interpolate.Context
+	imageSourceDisk      string
+	imageAlreadyExists   bool
+	loginProfileUsername string
 }
 
 func (c *Config) Prepare(raws ...interface{}) ([]string, error) {
