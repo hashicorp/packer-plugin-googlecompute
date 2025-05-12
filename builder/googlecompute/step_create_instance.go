@@ -46,7 +46,7 @@ func (c *Config) createInstanceMetadata(sourceImage *common.Image, sshPublicKey 
 	if c.Comm.SSHPrivateKeyFile == "" && sshPublicKey != "" {
 		sshMetaKey := "ssh-keys"
 		sshPublicKey = strings.TrimSuffix(sshPublicKey, "\n")
-		sshKeys := fmt.Sprintf("%s:%s %s", c.Comm.SSHUsername, sshPublicKey, c.Comm.SSHUsername)
+		sshKeys := fmt.Sprintf("%s:%s %s", c.loginProfileUsername, sshPublicKey, c.loginProfileUsername)
 		if confSSHKeys, exists := instanceMetadataSSHKeys[sshMetaKey]; exists {
 			sshKeys = fmt.Sprintf("%s\n%s", sshKeys, confSSHKeys)
 		}

@@ -20,6 +20,11 @@ import (
 	"google.golang.org/api/oauth2/v2"
 )
 
+const (
+	AutoOSLoginUser     = "__auto__"
+	ExternalOSLoginUser = "__external__"
+)
+
 // StepImportOSLoginSSHKey imports a temporary SSH key pair into a GCE login profile.
 type StepImportOSLoginSSHKey struct {
 	Debug         bool
@@ -120,6 +125,25 @@ func (s *StepImportOSLoginSSHKey) Run(ctx context.Context, state multistep.State
 			username = account.Username
 			break
 		}
+	}
+
+	// The SSH keys uses the `loginProfile` username
+	config.loginProfileUsername = username
+
+	switch config.OSLoginSSHUsername {
+	case AutoOSLoginUser, "":
+		ui.Say("Using SSH Username for OSLogin...")
+	case ExternalOSLoginUser:
+		ui.Say("Using External SSH Username for OSLogin...")
+		if config.OSLoginSSHUsername == ExternalOSLoginUser && !strings.HasPrefix(username, "sa_") && !strings.HasPrefix(username, "ext_") {
+			username = "ext_" + username
+		}
+	default:
+		username = config.OSLoginSSHUsername
+	}
+
+	if len(username) > 32 {
+		username = username[:32]
 	}
 
 	log.Printf("[DEBUG] OSLogin step, setting ssh_username: %s", username)
