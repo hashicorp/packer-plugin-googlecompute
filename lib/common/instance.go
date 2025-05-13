@@ -36,4 +36,5 @@ type InstanceConfig struct {
 	Subnetwork                   string
 	Tags                         []string
 	Zone                         string
+	NetworkIP                    string
 }

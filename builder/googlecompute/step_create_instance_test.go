@@ -503,6 +503,17 @@ func TestStepCreateInstanceNoWaitToAddSSHKeys(t *testing.T) {
 	step.Cleanup(state)
 }
 
+func TestConfigPrepare_invalidNetworkIP(t *testing.T) {
+	config := &Config{
+		NetworkIP: "not-an-ip",
+	}
+
+	_, errs := config.Prepare(nil)
+
+	assert.NotEmpty(t, errs, "Prepare should return an error for invalid network_ip")
+	assert.Contains(t, errs.Error(), "network_ip must be a valid IP address", "Error message should mention network_ip validation")
+}
+
 func StubImage(name, project string, licenses []string, sizeGb int64) *common.Image {
 	return &common.Image{
 		Licenses:  licenses,

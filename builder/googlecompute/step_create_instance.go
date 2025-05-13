@@ -210,6 +210,7 @@ func (s *StepCreateInstance) Run(ctx context.Context, state multistep.StateBag) 
 		Subnetwork:                   c.Subnetwork,
 		Tags:                         c.Tags,
 		Zone:                         c.Zone,
+		NetworkIP:                    c.NetworkIP,
 	})
 
 	if err == nil {
