@@ -643,8 +643,10 @@ func (c *Config) Prepare(raws ...interface{}) ([]string, error) {
 	}
 
 	if c.NetworkIP != "" {
-		if net.ParseIP(c.NetworkIP) == nil {
-			errs = packer.MultiErrorAppend(errs, fmt.Errorf("network_ip must be a valid IP address"))
+		if ip := net.ParseIP(c.NetworkIP); ip == nil || ip.To4() == nil {
+			// Check if the IP is a valid IPv4 address
+			// If not, return an error
+			errs = packer.MultiErrorAppend(errs, fmt.Errorf("network_ip must be a valid IPv4 address"))
 		}
 	}
 
