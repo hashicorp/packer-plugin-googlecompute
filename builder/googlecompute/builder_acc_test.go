@@ -407,3 +407,67 @@ func TestAccBuilder_ImageArchVariations(t *testing.T) {
 		})
 	}
 }
+
+func TestAccBuilder_NetworkIP(t *testing.T) {
+	t.Parallel()
+	state := testState(t)
+
+	zone := "asia-east1-a"
+	networkIP := "10.140.0.13"
+	imageName := fmt.Sprintf("%s-%d", "packer-network-ip", time.Now().UTC().Unix())
+
+	extraArgs := []string{
+		"-var", fmt.Sprintf("zone=%s", zone),
+		"-var", fmt.Sprintf("network_ip=%s", networkIP),
+		"-var", fmt.Sprintf("image_name=%s", imageName),
+	}
+
+	tmpl, err := testDataFs.ReadFile("testdata/network_ip.pkr.hcl")
+	if err != nil {
+		t.Fatalf("failed to read testdata file %s", err)
+	}
+	testCase := &acctest.PluginTestCase{
+		Name:           "googlecompute-packer-network-ip",
+		Template:       string(tmpl),
+		BuildExtraArgs: extraArgs,
+		Setup: func() error {
+			step := new(StepCreateImage)
+			defer step.Cleanup(state)
+
+			return nil
+		},
+		Teardown: func() error {
+			driver, err := common.NewDriverGCE(common.GCEDriverConfig{})
+			if err != nil {
+				return fmt.Errorf("failed to create GCE driver: %s", err)
+			}
+
+			chErr := driver.DeleteImage(os.Getenv("GOOGLE_PROJECT_ID"), imageName)
+			for err := range chErr {
+				return err
+			}
+			return nil
+		},
+		Check: func(buildCommand *exec.Cmd, logfile string) error {
+			if buildCommand.ProcessState != nil {
+				if buildCommand.ProcessState.ExitCode() != 0 {
+					return fmt.Errorf("Bad exit code. Logfile: %s", logfile)
+				}
+			}
+
+			rawLogs, err := os.ReadFile(logfile)
+			if err != nil {
+				return fmt.Errorf("failed to read logfile %q: %s", logfile, err)
+			}
+
+			logs := string(rawLogs)
+
+			if !strings.Contains(logs, networkIP) {
+				return fmt.Errorf("did not find message stating that a network IP was specified")
+			}
+
+			return nil
+		},
+	}
+	acctest.TestPlugin(t, testCase)
+}
