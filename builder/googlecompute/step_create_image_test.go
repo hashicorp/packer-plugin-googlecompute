@@ -69,3 +69,26 @@ func TestStepCreateImage_errorOnChannel(t *testing.T) {
 	_, ok = state.GetOk("image_name")
 	assert.False(t, ok, "State should not have a resulting image.")
 }
+
+func TestStepCreateImage_setsDeprecationFields(t *testing.T) {
+	state := testState(t)
+	step := new(StepCreateImage)
+	defer step.Cleanup(state)
+
+	c := state.Get("config").(*Config)
+	d := state.Get("driver").(*common.DriverMock)
+
+	// Set deprecation timestamps in config
+	c.DeprecateAt = "2125-06-01T00:00:00Z"
+	c.ObsoleteAt = "2125-07-01T00:00:00Z"
+	c.DeleteAt = "2125-08-01T00:00:00Z"
+
+	// Run step
+	action := step.Run(context.Background(), state)
+	assert.Equal(t, multistep.ActionContinue, action, "Step did not pass.")
+
+	assert.Equal(t, c.DeprecateAt, d.DeprecatedImageStatus.Deprecated, "DeprecateAt mismatch")
+	assert.Equal(t, c.ObsoleteAt, d.DeprecatedImageStatus.Obsolete, "ObsoleteAt mismatch")
+	assert.Equal(t, c.DeleteAt, d.DeprecatedImageStatus.Deleted, "DeleteAt mismatch")
+	assert.Equal(t, "DEPRECATED", d.DeprecatedImageStatus.State, "State should be DEPRECATED")
+}

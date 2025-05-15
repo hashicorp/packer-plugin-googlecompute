@@ -26,6 +26,10 @@ type DriverMock struct {
 	CreateImageErrCh          <-chan error
 	CreateImageResultCh       <-chan *Image
 
+	DeprecatedProjectName string
+	DeprecatedImageName   string
+	DeprecatedImageStatus *compute.DeprecationStatus
+
 	DeleteProjectId  string
 	DeleteImageName  string
 	DeleteImageErrCh <-chan error
@@ -179,6 +183,13 @@ func (d *DriverMock) CreateImageFromRaw(
 	imageArchitecture string,
 ) (<-chan *Image, <-chan error) {
 	return nil, nil
+}
+
+func (d *DriverMock) SetImageDeprecationStatus(project, name string, deprecationStatus *compute.DeprecationStatus) error {
+	d.DeprecatedProjectName = project
+	d.DeprecatedImageName = name
+	d.DeprecatedImageStatus = deprecationStatus
+	return nil
 }
 
 func (d *DriverMock) DeleteImage(project, name string) <-chan error {
