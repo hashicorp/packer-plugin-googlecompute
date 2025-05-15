@@ -287,6 +287,8 @@
      fingerprint: 000000000000000000000000000000000000000000000000000000000000000a
   ```
 
+- `network_ip` (string) - The network IP address reserved to use for the launched instance.
+
 - `wait_to_add_ssh_keys` (duration string | ex: "1h5m2s") - The time to wait between the creation of the instance used to create the image,
   and the addition of SSH configuration, including SSH keys, to that instance.
   The delay is intended to protect packer from anything in the instance boot

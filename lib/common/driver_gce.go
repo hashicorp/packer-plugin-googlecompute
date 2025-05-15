@@ -691,6 +691,7 @@ func (d *driverGCE) RunInstance(c *InstanceConfig) (<-chan error, error) {
 				AccessConfigs: []*compute.AccessConfig{accessconfig},
 				Network:       networkId,
 				Subnetwork:    subnetworkId,
+				NetworkIP:     c.NetworkIP,
 			},
 		},
 		Scheduling: &compute.Scheduling{

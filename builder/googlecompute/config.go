@@ -9,6 +9,7 @@ package googlecompute
 import (
 	"errors"
 	"fmt"
+	"net"
 	"os"
 	"regexp"
 	"runtime"
@@ -18,6 +19,7 @@ import (
 	"github.com/hashicorp/packer-plugin-googlecompute/lib/common"
 	sdk_common "github.com/hashicorp/packer-plugin-sdk/common"
 	"github.com/hashicorp/packer-plugin-sdk/communicator"
+	"github.com/hashicorp/packer-plugin-sdk/packer"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/hashicorp/packer-plugin-sdk/template/config"
 	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
@@ -336,6 +338,8 @@ type Config struct {
 	//    fingerprint: 000000000000000000000000000000000000000000000000000000000000000a
 	//```
 	UseOSLogin config.Trilean `mapstructure:"use_os_login" required:"false"`
+	// The network IP address reserved to use for the launched instance.
+	NetworkIP string `mapstructure:"network_ip" required:"false"`
 	// The time to wait between the creation of the instance used to create the image,
 	// and the addition of SSH configuration, including SSH keys, to that instance.
 	// The delay is intended to protect packer from anything in the instance boot
@@ -635,6 +639,14 @@ func (c *Config) Prepare(raws ...interface{}) ([]string, error) {
 	if labelErrs := c.AreLabelsValid(); len(labelErrs) > 0 {
 		for _, err := range labelErrs {
 			errs = packersdk.MultiErrorAppend(err)
+		}
+	}
+
+	if c.NetworkIP != "" {
+		if ip := net.ParseIP(c.NetworkIP); ip == nil || ip.To4() == nil {
+			// Check if the IP is a valid IPv4 address
+			// If not, return an error
+			errs = packer.MultiErrorAppend(errs, fmt.Errorf("network_ip must be a valid IPv4 address"))
 		}
 	}
 
