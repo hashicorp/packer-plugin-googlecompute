@@ -130,24 +130,8 @@ func (s *StepImportOSLoginSSHKey) Run(ctx context.Context, state multistep.State
 	// The SSH keys uses the `loginProfile` username
 	config.loginProfileUsername = username
 
-	switch config.OSLoginSSHUsername {
-	case AutoOSLoginUser, "":
-		ui.Say("Using SSH Username for OSLogin...")
-	case ExternalOSLoginUser:
-		ui.Say("Using External SSH Username for OSLogin...")
-		if config.OSLoginSSHUsername == ExternalOSLoginUser && !strings.HasPrefix(username, "sa_") && !strings.HasPrefix(username, "ext_") {
-			username = "ext_" + username
-		}
-	default:
-		username = config.OSLoginSSHUsername
-	}
-
-	if len(username) > 32 {
-		username = username[:32]
-	}
-
-	log.Printf("[DEBUG] OSLogin step, setting ssh_username: %s", username)
-	config.Comm.SSHUsername = username
+	config.Comm.SSHUsername = getUsername(username, config.OSLoginSSHUsername)
+	log.Printf("[DEBUG] OSLogin step, setting ssh_username: %s", config.Comm.SSHUsername)
 
 	return multistep.ActionContinue
 }
@@ -170,6 +154,23 @@ func (s *StepImportOSLoginSSHKey) Cleanup(state multistep.StateBag) {
 	}
 
 	ui.Message("SSH public key for OSLogin has been deleted!")
+}
+
+func getUsername(username, osLoginSSHUsername string) string {
+	switch osLoginSSHUsername {
+	case AutoOSLoginUser, "":
+	case ExternalOSLoginUser:
+		if !strings.HasPrefix(username, "sa_") && !strings.HasPrefix(username, "ext_") {
+			username = "ext_" + username
+		}
+	default:
+		username = osLoginSSHUsername
+	}
+
+	if len(username) > 32 {
+		username = username[:32]
+	}
+	return username
 }
 
 // getGCEUser determines if we're running packer on a GCE, and if we are, gets the associated service account email for subsequent use with OSLogin.
