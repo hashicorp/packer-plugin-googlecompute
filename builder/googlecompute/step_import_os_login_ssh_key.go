@@ -20,6 +20,11 @@ import (
 	"google.golang.org/api/oauth2/v2"
 )
 
+const (
+	AutoOSLoginUser     = "__auto__"
+	ExternalOSLoginUser = "__external__"
+)
+
 // StepImportOSLoginSSHKey imports a temporary SSH key pair into a GCE login profile.
 type StepImportOSLoginSSHKey struct {
 	Debug         bool
@@ -122,8 +127,11 @@ func (s *StepImportOSLoginSSHKey) Run(ctx context.Context, state multistep.State
 		}
 	}
 
-	log.Printf("[DEBUG] OSLogin step, setting ssh_username: %s", username)
-	config.Comm.SSHUsername = username
+	// The SSH keys uses the `loginProfile` username
+	config.loginProfileUsername = username
+
+	config.Comm.SSHUsername = getUsername(username, config.OSLoginSSHUsername)
+	log.Printf("[DEBUG] OSLogin step, setting ssh_username: %s", config.Comm.SSHUsername)
 
 	return multistep.ActionContinue
 }
@@ -146,6 +154,23 @@ func (s *StepImportOSLoginSSHKey) Cleanup(state multistep.StateBag) {
 	}
 
 	ui.Message("SSH public key for OSLogin has been deleted!")
+}
+
+func getUsername(username, osLoginSSHUsername string) string {
+	switch osLoginSSHUsername {
+	case AutoOSLoginUser, "":
+	case ExternalOSLoginUser:
+		if !strings.HasPrefix(username, "sa_") && !strings.HasPrefix(username, "ext_") {
+			username = "ext_" + username
+		}
+	default:
+		username = osLoginSSHUsername
+	}
+
+	if len(username) > 32 {
+		username = username[:32]
+	}
+	return username
 }
 
 // getGCEUser determines if we're running packer on a GCE, and if we are, gets the associated service account email for subsequent use with OSLogin.

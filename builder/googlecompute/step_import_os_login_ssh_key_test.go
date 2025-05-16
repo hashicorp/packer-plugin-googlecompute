@@ -238,3 +238,74 @@ func TestStepImportOSLoginSSHKey_withPrivateSSHKey(t *testing.T) {
 		t.Errorf("expected to not see a public key when using a dedicated private key, but got %q", pubKey)
 	}
 }
+
+func TestGetOSLoginUsername(t *testing.T) {
+	tests := []struct {
+		name             string
+		usernameFromAPI  string
+		configUsername   string
+		expectedUsername string
+		shouldPrependExt bool
+	}{
+		{
+			name:             "Auto mode returns API username",
+			usernameFromAPI:  "apiuser",
+			configUsername:   "__auto__",
+			expectedUsername: "apiuser",
+		},
+		{
+			name:             "Empty config returns API username",
+			usernameFromAPI:  "apiuser",
+			configUsername:   "",
+			expectedUsername: "apiuser",
+		},
+		{
+			name:             "External mode prepends ext_",
+			usernameFromAPI:  "userabc",
+			configUsername:   "__external__",
+			shouldPrependExt: true,
+			expectedUsername: "ext_userabc",
+		},
+		{
+			name:             "External mode truncates overlength name",
+			usernameFromAPI:  "averyveryverylongusernamethatexceedsthemax",
+			configUsername:   "__external__",
+			shouldPrependExt: true,
+			expectedUsername: "ext_averyveryverylongusernametha",
+		},
+		{
+			name:             "Custom username returned directly",
+			usernameFromAPI:  "ignored",
+			configUsername:   "my_custom_user",
+			expectedUsername: "my_custom_user",
+		},
+		{
+			name:             "Custom username is truncated",
+			usernameFromAPI:  "ignored",
+			configUsername:   "averyveryveryveryverylongcustomusername",
+			expectedUsername: "averyveryveryveryverylongcustomu",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			username := getUsername(tc.usernameFromAPI, tc.configUsername)
+			if username != tc.expectedUsername {
+				t.Errorf("Expected username %q, got %q", tc.expectedUsername, username)
+			}
+			if tc.shouldPrependExt {
+				if len(username) > 0 && username[:4] != "ext_" {
+					t.Errorf("Expected username to start with 'ext_', got %q", username)
+				}
+			} else {
+				if len(username) > 0 && username[:4] == "ext_" {
+					t.Errorf("Expected username to not start with 'ext_', got %q", username)
+				}
+			}
+
+			if len(username) > 32 {
+				t.Errorf("Expected username to be truncated to 32 characters, got %q", username)
+			}
+		})
+	}
+}
