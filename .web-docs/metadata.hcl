@@ -9,6 +9,16 @@ integration {
   identifier = "packer/hashicorp/googlecompute"
   flags = ["hcp-ready"]
   component {
+    type = "data-source"
+    name = "Secrets Manager"
+    slug = "secretsmanager"
+  }
+  component {
+    type = "data-source"
+    name = "GCE Image"
+    slug = "image"
+  }
+  component {
     type = "builder"
     name = "Google Cloud Platform"
     slug = "googlecompute"
