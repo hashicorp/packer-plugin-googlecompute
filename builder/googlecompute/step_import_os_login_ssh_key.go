@@ -45,7 +45,8 @@ func (s *StepImportOSLoginSSHKey) Run(ctx context.Context, state multistep.State
 		log.Printf("failed to get project metadata: %s", err)
 	}
 
-	if config.UseOSLogin.False() || (config.UseOSLogin.ToBoolPointer() == nil && strings.EqualFold(osLoginEnabledAtProject, "false")) {
+	if config.UseOSLogin.False() || (config.UseOSLogin.ToBoolPointer() == nil && (err != nil || strings.EqualFold(osLoginEnabledAtProject, "false"))) {
+		config.loginProfileUsername = config.Comm.SSHUsername
 		return multistep.ActionContinue
 	}
 
