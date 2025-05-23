@@ -1,0 +1,43 @@
+---
+description: |
+  The Google Compute Image data source filters and fetches a GCE image and outputs relevant image metadata.
+
+page_title: Google Compute Image - Data Source
+nav_title: Google Compute Image
+---
+
+# Google Compute Image Data Source
+
+Type: `googlecompute-image`
+
+The Google Compute Image data source filters and fetches a GCE image and outputs relevant image metadata for
+use with [Google Compute builders](/packer/integrations/hashicorp/googlecompute).
+
+-> **Note:** Data sources is a feature exclusively available to HCL2 templates.
+
+Basic example of usage:
+
+```hcl
+data "googlecompute-image" "basic-example" {
+  project_id = "debian-cloud"
+  filters = "family=debian-12 AND labels.public-image=true"
+  most_recent = true
+}
+```
+
+This configuration selects the most recent GCE image from the `debian-cloud` project that belongs to the`debian-12` family and has the `public-image` label set to `true`.
+The data source will fail unless exactly one image is matched. Setting `most_recent = true` ensures only the newest image is selected when multiple matches exist.
+
+## Configuration Reference
+
+@include 'datasource/image/Config-not-required.mdx'
+
+## Output Data
+
+@include 'datasource/image/DatasourceOutput.mdx'
+
+## Authentication
+
+To authenticate with GCE, this data-source supports everything the plugin does.
+To get more information on this, refer to the plugin's description page, under
+the [authentication](/packer/integrations/hashicorp/googlecompute#authentication) section.
