@@ -24,6 +24,10 @@ type Driver interface {
 	// Engine.
 	CreateImage(project string, imageSpec *compute.Image) (<-chan *Image, <-chan error)
 
+	// SetImageDeprecationStatus sets the deprecation, obsolete and deletion date
+	// for the image with the given name.
+	SetImageDeprecationStatus(project, name string, deprecationStatus *compute.DeprecationStatus) error
+
 	// DeleteImage deletes the image with the given name.
 	DeleteImage(project, name string) <-chan error
 
@@ -49,6 +53,9 @@ type Driver interface {
 	// GetImageFromProject gets an image from a specific project. If fromFamily
 	// is true, name designates an image family instead of a particular image.
 	GetImageFromProject(project, name string, fromFamily bool) (*Image, error)
+
+	// GetProjectMetadata gets a metadata variable for the project.
+	GetProjectMetadata(zone, key string) (string, error)
 
 	// GetInstanceMetadata gets a metadata variable for the instance, name.
 	GetInstanceMetadata(zone, name, key string) (string, error)

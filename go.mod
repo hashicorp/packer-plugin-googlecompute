@@ -6,6 +6,7 @@ toolchain go1.23.7
 
 require (
 	cloud.google.com/go/compute/metadata v0.2.3
+	cloud.google.com/go/secretmanager v1.11.2
 	github.com/gofrs/uuid v4.0.0+incompatible
 	github.com/google/go-cmp v0.6.0
 	github.com/hashicorp/hcl/v2 v2.19.1
@@ -16,6 +17,7 @@ require (
 	github.com/zclconf/go-cty v1.13.3
 	golang.org/x/oauth2 v0.13.0
 	google.golang.org/api v0.150.0
+	google.golang.org/grpc v1.59.0
 )
 
 require (
@@ -100,7 +102,6 @@ require (
 	google.golang.org/genproto v0.0.0-20231016165738-49dd2c1f3d0b // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20231016165738-49dd2c1f3d0b // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20231030173426-d783a09b4405 // indirect
-	google.golang.org/grpc v1.59.0 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/yaml.v2 v2.3.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

@@ -59,3 +59,12 @@ jobs:
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.gcp-auth.outputs.credentials_file_path }}
           GOOGLE_PROJECT_ID: ${{ secrets.GOOGLE_PROJECT_ID }}
+      - run: find ./ -type f -name "*.txt" | zip acc_failure_logs.zip -@
+        if: ${{ failure() }}
+      - uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
+        if: ${{ failure() }}
+        with:
+          name: "acc_failure_logs.zip"
+          path: "acc_failure_logs.zip"
+          retention-days: 5
+      

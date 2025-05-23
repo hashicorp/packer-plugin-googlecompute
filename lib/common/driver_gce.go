@@ -229,6 +229,14 @@ func (d *driverGCE) CreateImage(project string, imageSpec *compute.Image) (<-cha
 	return imageCh, errCh
 }
 
+func (d *driverGCE) SetImageDeprecationStatus(project, name string, deprecationStatus *compute.DeprecationStatus) error {
+	if deprecationStatus == nil {
+		return errors.New("deprecationStatus cannot be nil")
+	}
+	_, err := d.service.Images.Deprecate(project, name, deprecationStatus).Do()
+	return err
+}
+
 func (d *driverGCE) DeleteImage(project, name string) <-chan error {
 	errCh := make(chan error, 1)
 	op, err := d.service.Images.Delete(project, name).Do()
@@ -484,6 +492,21 @@ func (d *driverGCE) GetImageFromProject(project, name string, fromFamily bool) (
 	}
 }
 
+func (d *driverGCE) GetProjectMetadata(zone, key string) (string, error) {
+	project, err := d.service.Projects.Get(d.projectId).Do()
+	if err != nil {
+		return "", err
+	}
+
+	for _, item := range project.CommonInstanceMetadata.Items {
+		if item.Key == key {
+			return *item.Value, nil
+		}
+	}
+
+	return "", fmt.Errorf("Project metadata key, %s, not found.", key)
+}
+
 func (d *driverGCE) GetInstanceMetadata(zone, name, key string) (string, error) {
 	instance, err := d.service.Instances.Get(d.projectId, zone, name).Do()
 	if err != nil {
@@ -676,6 +699,7 @@ func (d *driverGCE) RunInstance(c *InstanceConfig) (<-chan error, error) {
 				AccessConfigs: []*compute.AccessConfig{accessconfig},
 				Network:       networkId,
 				Subnetwork:    subnetworkId,
+				NetworkIP:     c.NetworkIP,
 			},
 		},
 		Scheduling: &compute.Scheduling{

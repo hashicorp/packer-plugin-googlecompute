@@ -1,0 +1,14 @@
+<!-- Code generated from the comments of the Config struct in datasource/image/data.go; DO NOT EDIT MANUALLY -->
+
+- `project_id` (string) - The Google Cloud project ID to search for images.
+
+- `filters` (string) - The filter expression to narrow down the image search.
+  For example: "name=ubuntu" or "family=ubuntu-2004".
+  The exrpressions can be combined with AND/OR like this:
+  "name=ubuntu AND family=ubuntu-2004".
+  See https://cloud.google.com/sdk/gcloud/reference/topic/filters
+
+- `most_recent` (bool) - If true, the most recent image will be returned.
+  If false, an error will be returned if more than one image matches the filters.
+
+<!-- End of code generated from the comments of the Config struct in datasource/image/data.go; -->

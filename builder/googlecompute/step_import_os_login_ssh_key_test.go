@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
+	configsdk "github.com/hashicorp/packer-plugin-sdk/template/config"
 	"google.golang.org/api/oauth2/v2"
 )
 
@@ -21,7 +22,7 @@ func TestStepImportOSLoginSSHKey_impl(t *testing.T) {
 func TestStepImportOSLoginSSHKey(t *testing.T) {
 	tt := []struct {
 		Name           string
-		UseOSLogin     bool
+		UseOSLogin     configsdk.Trilean
 		ExpectedEmail  string
 		ExpectedAction multistep.StepAction
 		PubKeyExpected bool
@@ -32,7 +33,7 @@ func TestStepImportOSLoginSSHKey(t *testing.T) {
 		},
 		{
 			Name:           "UseOSLoginWithAccountFile",
-			UseOSLogin:     true,
+			UseOSLogin:     configsdk.TriTrue,
 			ExpectedAction: multistep.ActionContinue,
 			ExpectedEmail:  "raffi-compute@developer.gserviceaccount.com",
 			PubKeyExpected: true,
@@ -83,7 +84,7 @@ func TestStepImportOSLoginSSHKey_withAccountFile(t *testing.T) {
 	defer step.Cleanup(state)
 
 	config := state.Get("config").(*Config)
-	config.UseOSLogin = true
+	config.UseOSLogin = configsdk.TriTrue
 	config.Comm.SSHPublicKey = []byte{'k', 'e', 'y'}
 
 	if action := step.Run(context.Background(), state); action != multistep.ActionContinue {
@@ -116,7 +117,7 @@ func TestStepImportOSLoginSSHKey_withNoAccountFile(t *testing.T) {
 	defer step.Cleanup(state)
 
 	config := state.Get("config").(*Config)
-	config.UseOSLogin = true
+	config.UseOSLogin = configsdk.TriTrue
 	config.Comm.SSHPublicKey = []byte{'k', 'e', 'y'}
 
 	if action := step.Run(context.Background(), state); action != multistep.ActionContinue {
@@ -149,7 +150,7 @@ func TestStepImportOSLoginSSHKey_withGCEAndNoAccount(t *testing.T) {
 	defer step.Cleanup(state)
 
 	config := state.Get("config").(*Config)
-	config.UseOSLogin = true
+	config.UseOSLogin = configsdk.TriTrue
 	config.Comm.SSHPublicKey = []byte{'k', 'e', 'y'}
 
 	if action := step.Run(context.Background(), state); action != multistep.ActionContinue {
@@ -186,7 +187,7 @@ func TestStepImportOSLoginSSHKey_withGCEAndAccount(t *testing.T) {
 	defer step.Cleanup(state)
 
 	config := state.Get("config").(*Config)
-	config.UseOSLogin = true
+	config.UseOSLogin = configsdk.TriTrue
 	config.Comm.SSHPublicKey = []byte{'k', 'e', 'y'}
 
 	if action := step.Run(context.Background(), state); action != multistep.ActionContinue {
@@ -221,7 +222,7 @@ func TestStepImportOSLoginSSHKey_withPrivateSSHKey(t *testing.T) {
 	defer os.Remove(pkey)
 
 	config := state.Get("config").(*Config)
-	config.UseOSLogin = true
+	config.UseOSLogin = configsdk.TriTrue
 	config.Comm.SSHPrivateKeyFile = pkey
 
 	if action := step.Run(context.Background(), state); action != multistep.ActionContinue {
@@ -235,5 +236,76 @@ func TestStepImportOSLoginSSHKey_withPrivateSSHKey(t *testing.T) {
 	pubKey, ok := state.GetOk("ssh_key_public_sha256")
 	if ok {
 		t.Errorf("expected to not see a public key when using a dedicated private key, but got %q", pubKey)
+	}
+}
+
+func TestGetOSLoginUsername(t *testing.T) {
+	tests := []struct {
+		name             string
+		usernameFromAPI  string
+		configUsername   string
+		expectedUsername string
+		shouldPrependExt bool
+	}{
+		{
+			name:             "Auto mode returns API username",
+			usernameFromAPI:  "apiuser",
+			configUsername:   "__auto__",
+			expectedUsername: "apiuser",
+		},
+		{
+			name:             "Empty config returns API username",
+			usernameFromAPI:  "apiuser",
+			configUsername:   "",
+			expectedUsername: "apiuser",
+		},
+		{
+			name:             "External mode prepends ext_",
+			usernameFromAPI:  "userabc",
+			configUsername:   "__external__",
+			shouldPrependExt: true,
+			expectedUsername: "ext_userabc",
+		},
+		{
+			name:             "External mode truncates overlength name",
+			usernameFromAPI:  "averyveryverylongusernamethatexceedsthemax",
+			configUsername:   "__external__",
+			shouldPrependExt: true,
+			expectedUsername: "ext_averyveryverylongusernametha",
+		},
+		{
+			name:             "Custom username returned directly",
+			usernameFromAPI:  "ignored",
+			configUsername:   "my_custom_user",
+			expectedUsername: "my_custom_user",
+		},
+		{
+			name:             "Custom username is truncated",
+			usernameFromAPI:  "ignored",
+			configUsername:   "averyveryveryveryverylongcustomusername",
+			expectedUsername: "averyveryveryveryverylongcustomu",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			username := getUsername(tc.usernameFromAPI, tc.configUsername)
+			if username != tc.expectedUsername {
+				t.Errorf("Expected username %q, got %q", tc.expectedUsername, username)
+			}
+			if tc.shouldPrependExt {
+				if len(username) > 0 && username[:4] != "ext_" {
+					t.Errorf("Expected username to start with 'ext_', got %q", username)
+				}
+			} else {
+				if len(username) > 0 && username[:4] == "ext_" {
+					t.Errorf("Expected username to not start with 'ext_', got %q", username)
+				}
+			}
+
+			if len(username) > 32 {
+				t.Errorf("Expected username to be truncated to 32 characters, got %q", username)
+			}
+		})
 	}
 }

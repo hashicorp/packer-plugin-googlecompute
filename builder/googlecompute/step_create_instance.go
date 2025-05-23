@@ -46,7 +46,7 @@ func (c *Config) createInstanceMetadata(sourceImage *common.Image, sshPublicKey 
 	if c.Comm.SSHPrivateKeyFile == "" && sshPublicKey != "" {
 		sshMetaKey := "ssh-keys"
 		sshPublicKey = strings.TrimSuffix(sshPublicKey, "\n")
-		sshKeys := fmt.Sprintf("%s:%s %s", c.Comm.SSHUsername, sshPublicKey, c.Comm.SSHUsername)
+		sshKeys := fmt.Sprintf("%s:%s %s", c.loginProfileUsername, sshPublicKey, c.loginProfileUsername)
 		if confSSHKeys, exists := instanceMetadataSSHKeys[sshMetaKey]; exists {
 			sshKeys = fmt.Sprintf("%s\n%s", sshKeys, confSSHKeys)
 		}
@@ -79,8 +79,12 @@ func (c *Config) createInstanceMetadata(sourceImage *common.Image, sshPublicKey 
 
 	// If UseOSLogin is true, force `enable-oslogin` in metadata
 	// In the event that `enable-oslogin` is not enabled at project level
-	if c.UseOSLogin {
+	if c.UseOSLogin.True() {
 		instanceMetadataNoSSHKeys[EnableOSLoginKey] = "TRUE"
+	}
+
+	if c.UseOSLogin.False() {
+		instanceMetadataNoSSHKeys[EnableOSLoginKey] = "FALSE"
 	}
 
 	for key, value := range c.MetadataFiles {
@@ -206,6 +210,7 @@ func (s *StepCreateInstance) Run(ctx context.Context, state multistep.StateBag) 
 		Subnetwork:                   c.Subnetwork,
 		Tags:                         c.Tags,
 		Zone:                         c.Zone,
+		NetworkIP:                    c.NetworkIP,
 	})
 
 	if err == nil {

@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	metadata "cloud.google.com/go/compute/metadata"
@@ -17,6 +18,11 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
 	"google.golang.org/api/oauth2/v2"
+)
+
+const (
+	AutoOSLoginUser     = "__auto__"
+	ExternalOSLoginUser = "__external__"
 )
 
 // StepImportOSLoginSSHKey imports a temporary SSH key pair into a GCE login profile.
@@ -34,7 +40,12 @@ func (s *StepImportOSLoginSSHKey) Run(ctx context.Context, state multistep.State
 	driver := state.Get("driver").(common.Driver)
 	ui := state.Get("ui").(packersdk.Ui)
 
-	if !config.UseOSLogin {
+	osLoginEnabledAtProject, err := driver.GetProjectMetadata(config.Zone, EnableOSLoginKey)
+	if err != nil {
+		log.Printf("failed to get project metadata: %s", err)
+	}
+
+	if config.UseOSLogin.False() || (config.UseOSLogin.ToBoolPointer() == nil && strings.EqualFold(osLoginEnabledAtProject, "false")) {
 		return multistep.ActionContinue
 	}
 
@@ -116,8 +127,11 @@ func (s *StepImportOSLoginSSHKey) Run(ctx context.Context, state multistep.State
 		}
 	}
 
-	log.Printf("[DEBUG] OSLogin step, setting ssh_username: %s", username)
-	config.Comm.SSHUsername = username
+	// The SSH keys uses the `loginProfile` username
+	config.loginProfileUsername = username
+
+	config.Comm.SSHUsername = getUsername(username, config.OSLoginSSHUsername)
+	log.Printf("[DEBUG] OSLogin step, setting ssh_username: %s", config.Comm.SSHUsername)
 
 	return multistep.ActionContinue
 }
@@ -140,6 +154,23 @@ func (s *StepImportOSLoginSSHKey) Cleanup(state multistep.StateBag) {
 	}
 
 	ui.Message("SSH public key for OSLogin has been deleted!")
+}
+
+func getUsername(username, osLoginSSHUsername string) string {
+	switch osLoginSSHUsername {
+	case AutoOSLoginUser, "":
+	case ExternalOSLoginUser:
+		if !strings.HasPrefix(username, "sa_") && !strings.HasPrefix(username, "ext_") {
+			username = "ext_" + username
+		}
+	default:
+		username = osLoginSSHUsername
+	}
+
+	if len(username) > 32 {
+		username = username[:32]
+	}
+	return username
 }
 
 // getGCEUser determines if we're running packer on a GCE, and if we are, gets the associated service account email for subsequent use with OSLogin.

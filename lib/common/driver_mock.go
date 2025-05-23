@@ -26,6 +26,10 @@ type DriverMock struct {
 	CreateImageErrCh          <-chan error
 	CreateImageResultCh       <-chan *Image
 
+	DeprecatedProjectName string
+	DeprecatedImageName   string
+	DeprecatedImageStatus *compute.DeprecationStatus
+
 	DeleteProjectId  string
 	DeleteImageName  string
 	DeleteImageErrCh <-chan error
@@ -66,6 +70,11 @@ type DriverMock struct {
 	GetInstanceMetadataKey    string
 	GetInstanceMetadataResult string
 	GetInstanceMetadataErr    error
+
+	GetProjectMetadataZone   string
+	GetProjectMetadataKey    string
+	GetProjectMetadataResult string
+	GetProjectMetadataErr    error
 
 	GetTokenInfoResult *oauth2_svc.Tokeninfo
 	GetTokenInfoErr    error
@@ -176,6 +185,13 @@ func (d *DriverMock) CreateImageFromRaw(
 	return nil, nil
 }
 
+func (d *DriverMock) SetImageDeprecationStatus(project, name string, deprecationStatus *compute.DeprecationStatus) error {
+	d.DeprecatedProjectName = project
+	d.DeprecatedImageName = name
+	d.DeprecatedImageStatus = deprecationStatus
+	return nil
+}
+
 func (d *DriverMock) DeleteImage(project, name string) <-chan error {
 	d.DeleteProjectId = project
 	d.DeleteImageName = name
@@ -274,6 +290,12 @@ func (d *DriverMock) GetImageFromProject(project, name string, fromFamily bool) 
 	d.GetImageFromProjectName = name
 	d.GetImageFromProjectFromFamily = fromFamily
 	return d.GetImageFromProjectResult, d.GetImageFromProjectErr
+}
+
+func (d *DriverMock) GetProjectMetadata(zone, key string) (string, error) {
+	d.GetProjectMetadataZone = zone
+	d.GetProjectMetadataKey = key
+	return d.GetProjectMetadataResult, d.GetProjectMetadataErr
 }
 
 func (d *DriverMock) GetInstanceMetadata(zone, name, key string) (string, error) {
