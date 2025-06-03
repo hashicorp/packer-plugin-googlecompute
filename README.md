@@ -19,7 +19,7 @@ Then, run [`packer init`](https://www.packer.io/docs/commands/init).
 packer {
   required_plugins {
     googlecompute = {
-      version = ">= 1.1.9"
+      version = ">= 1.2.0"
       source  = "github.com/hashicorp/googlecompute"
     }
   }
