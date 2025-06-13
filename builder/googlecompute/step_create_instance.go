@@ -202,6 +202,8 @@ func (s *StepCreateInstance) Run(ctx context.Context, state multistep.StateBag) 
 		NetworkProjectId:             c.NetworkProjectId,
 		OmitExternalIP:               c.OmitExternalIP,
 		OnHostMaintenance:            c.OnHostMaintenance,
+		MaxRunDurationInSeconds:      c.MaxRunDurationInSeconds,
+		InstanceTerminationAction:    c.InstanceTerminationAction,
 		Preemptible:                  c.Preemptible,
 		NodeAffinities:               c.NodeAffinities,
 		Region:                       c.Region,
