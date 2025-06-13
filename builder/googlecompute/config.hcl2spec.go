@@ -114,6 +114,8 @@ type FlatConfig struct {
 	NetworkProjectId             *string                           `mapstructure:"network_project_id" required:"false" cty:"network_project_id" hcl:"network_project_id"`
 	OmitExternalIP               *bool                             `mapstructure:"omit_external_ip" required:"false" cty:"omit_external_ip" hcl:"omit_external_ip"`
 	OnHostMaintenance            *string                           `mapstructure:"on_host_maintenance" required:"false" cty:"on_host_maintenance" hcl:"on_host_maintenance"`
+	MaxRunDurationInSeconds      *int64                            `mapstructure:"max_run_duration_in_seconds" required:"false" cty:"max_run_duration_in_seconds" hcl:"max_run_duration_in_seconds"`
+	InstanceTerminationAction    *string                           `mapstructure:"instance_termination_action" required:"false" cty:"instance_termination_action" hcl:"instance_termination_action"`
 	Preemptible                  *bool                             `mapstructure:"preemptible" required:"false" cty:"preemptible" hcl:"preemptible"`
 	NodeAffinities               []common.FlatNodeAffinity         `mapstructure:"node_affinity" required:"false" cty:"node_affinity" hcl:"node_affinity"`
 	StateTimeout                 *string                           `mapstructure:"state_timeout" required:"false" cty:"state_timeout" hcl:"state_timeout"`
@@ -254,6 +256,8 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"network_project_id":              &hcldec.AttrSpec{Name: "network_project_id", Type: cty.String, Required: false},
 		"omit_external_ip":                &hcldec.AttrSpec{Name: "omit_external_ip", Type: cty.Bool, Required: false},
 		"on_host_maintenance":             &hcldec.AttrSpec{Name: "on_host_maintenance", Type: cty.String, Required: false},
+		"max_run_duration_in_seconds":     &hcldec.AttrSpec{Name: "max_run_duration_in_seconds", Type: cty.Number, Required: false},
+		"instance_termination_action":     &hcldec.AttrSpec{Name: "instance_termination_action", Type: cty.String, Required: false},
 		"preemptible":                     &hcldec.AttrSpec{Name: "preemptible", Type: cty.Bool, Required: false},
 		"node_affinity":                   &hcldec.BlockListSpec{TypeName: "node_affinity", Nested: hcldec.ObjectSpec((*common.FlatNodeAffinity)(nil).HCL2Spec())},
 		"state_timeout":                   &hcldec.AttrSpec{Name: "state_timeout", Type: cty.String, Required: false},

@@ -714,6 +714,20 @@ func (d *driverGCE) RunInstance(c *InstanceConfig) (<-chan error, error) {
 		},
 	}
 
+	if c.MaxRunDurationInSeconds > 0 {
+		log.Printf("[DEBUG] setting max run duration to %d seconds", c.MaxRunDurationInSeconds)
+		instance.Scheduling.MaxRunDuration = &compute.Duration{
+			Seconds: c.MaxRunDurationInSeconds,
+		}
+	}
+	if c.InstanceTerminationAction != "" {
+		log.Printf("[DEBUG] setting instance termination action to %s", c.InstanceTerminationAction)
+		instance.Scheduling.InstanceTerminationAction = c.InstanceTerminationAction
+	} else {
+		log.Printf("[DEBUG] using default instance termination action: STOP")
+		instance.Scheduling.InstanceTerminationAction = "STOP"
+	}
+
 	// Shielded VMs configuration. If the user has set at least one of the
 	// options, the shielded VM configuration will reflect that. If they
 	// don't set any of the options the settings will default to the ones
