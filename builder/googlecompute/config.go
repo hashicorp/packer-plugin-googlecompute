@@ -414,6 +414,10 @@ func (c *Config) Prepare(raws ...interface{}) ([]string, error) {
 	var warnings []string
 	var errs error
 
+	if v, exists := c.Metadata[EnableOSLoginKey]; exists && c.UseOSLogin.ToBoolPointer() == nil {
+		c.UseOSLogin, _ = config.TrileanFromString(v)
+	}
+
 	for i, bd := range c.ExtraBlockDevices {
 		err := bd.Prepare()
 		if err != nil {
