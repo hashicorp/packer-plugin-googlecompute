@@ -28,6 +28,8 @@ type InstanceConfig struct {
 	NetworkProjectId             string
 	OmitExternalIP               bool
 	OnHostMaintenance            string
+	MaxRunDurationInSeconds      int64
+	InstanceTerminationAction    string
 	Preemptible                  bool
 	NodeAffinities               []NodeAffinity
 	Region                       string

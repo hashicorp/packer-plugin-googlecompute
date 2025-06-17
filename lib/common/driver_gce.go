@@ -34,6 +34,11 @@ import (
 	"golang.org/x/oauth2/google"
 )
 
+const (
+	InstanceTerminationActionStop   = "STOP"
+	InstanceTerminationActionDelete = "DELETE"
+)
+
 // driverGCE is a Driver implementation that actually talks to GCE.
 // Create an instance using NewDriverGCE.
 type driverGCE struct {
@@ -712,6 +717,15 @@ func (d *driverGCE) RunInstance(c *InstanceConfig) (<-chan error, error) {
 		Tags: &compute.Tags{
 			Items: c.Tags,
 		},
+	}
+
+	if c.MaxRunDurationInSeconds > 0 {
+		log.Printf("[DEBUG] setting max run duration to %d seconds", c.MaxRunDurationInSeconds)
+		instance.Scheduling.MaxRunDuration = &compute.Duration{
+			Seconds: c.MaxRunDurationInSeconds,
+		}
+		log.Printf("[DEBUG] setting instance termination action to %s", c.InstanceTerminationAction)
+		instance.Scheduling.InstanceTerminationAction = c.InstanceTerminationAction
 	}
 
 	// Shielded VMs configuration. If the user has set at least one of the

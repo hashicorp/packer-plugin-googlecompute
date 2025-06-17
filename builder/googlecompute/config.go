@@ -217,6 +217,15 @@ type Config struct {
 	// If preemptible is true this can only be `TERMINATE`. If preemptible is
 	// false, it defaults to `MIGRATE`
 	OnHostMaintenance string `mapstructure:"on_host_maintenance" required:"false"`
+	// The maximum duration for the instance to run. This value is in seconds.
+	// Please see [GCE Limit VM Runtime](https://cloud.google.com/compute/docs/instances/limit-vm-runtime)
+	MaxRunDurationInSeconds int64 `mapstructure:"max_run_duration_in_seconds" required:"false"`
+	// InstanceTerminationAction sets the action to take when the instance
+	// is terminated. Valid choices are `STOP` and `DELETE`. If set to `STOP`,
+	// the instance will be stopped and can be restarted later. If set to `DELETE`,
+	// the instance will be deleted. Defaults to `STOP` when max_run_duration_in_seconds is specified.
+	// Please see [GCE Limit VM Runtime](https://cloud.google.com/compute/docs/instances/limit-vm-runtime)
+	InstanceTerminationAction string `mapstructure:"instance_termination_action" required:"false"`
 	// If true, launch a preemptible instance.
 	Preemptible bool `mapstructure:"preemptible" required:"false"`
 	// Sets a node affinity label for the launched instance (eg. for sole tenancy).
@@ -477,6 +486,23 @@ func (c *Config) Prepare(raws ...interface{}) ([]string, error) {
 	if !(c.OnHostMaintenance == "MIGRATE" || c.OnHostMaintenance == "TERMINATE") {
 		errs = packersdk.MultiErrorAppend(errs,
 			errors.New("on_host_maintenance must be one of MIGRATE or TERMINATE."))
+	}
+
+	if c.MaxRunDurationInSeconds < 0 {
+		errs = packersdk.MultiErrorAppend(errs,
+			errors.New("max_run_duration must be greater than 0"))
+	}
+
+	if c.MaxRunDurationInSeconds > 0 && c.InstanceTerminationAction == "" {
+		warnings = append(warnings,
+			"max_run_duration is set, but instance_termination_action is not set. Defaulting to 'STOP'.")
+		// If max_run_duration is set, we default to STOP.
+		c.InstanceTerminationAction = common.InstanceTerminationActionStop
+	}
+
+	if c.InstanceTerminationAction != "" && !(strings.ToUpper(c.InstanceTerminationAction) == common.InstanceTerminationActionStop || strings.ToUpper(c.InstanceTerminationAction) == common.InstanceTerminationActionDelete) {
+		errs = packersdk.MultiErrorAppend(errs,
+			errors.New("instance_termination_action must be one of STOP or DELETE."))
 	}
 
 	if c.ImageName == "" {

@@ -229,6 +229,15 @@ builder.
   If preemptible is true this can only be `TERMINATE`. If preemptible is
   false, it defaults to `MIGRATE`
 
+- `max_run_duration_in_seconds` (int64) - The maximum duration for the instance to run. This value is in seconds.
+  Please see [GCE Limit VM Runtime](https://cloud.google.com/compute/docs/instances/limit-vm-runtime)
+
+- `instance_termination_action` (string) - InstanceTerminationAction sets the action to take when the instance
+  is terminated. Valid choices are `STOP` and `DELETE`. If set to `STOP`,
+  the instance will be stopped and can be restarted later. If set to `DELETE`,
+  the instance will be deleted. Defaults to `STOP` when max_run_duration_in_seconds is specified.
+  Please see [GCE Limit VM Runtime](https://cloud.google.com/compute/docs/instances/limit-vm-runtime)
+
 - `preemptible` (bool) - If true, launch a preemptible instance.
 
 - `node_affinity` ([]common.NodeAffinity) - Sets a node affinity label for the launched instance (eg. for sole tenancy).
