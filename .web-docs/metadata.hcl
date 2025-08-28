@@ -15,6 +15,11 @@ integration {
   }
   component {
     type = "data-source"
+    name = "Parameter Manager"
+    slug = "parametermanager"
+  }
+  component {
+    type = "data-source"
     name = "GCE Image"
     slug = "image"
   }
