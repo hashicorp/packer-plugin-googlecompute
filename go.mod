@@ -6,6 +6,7 @@ toolchain go1.23.7
 
 require (
 	cloud.google.com/go/compute/metadata v0.7.0
+	cloud.google.com/go/parametermanager v0.3.0
 	cloud.google.com/go/secretmanager v1.14.7
 	github.com/gofrs/uuid v4.0.0+incompatible
 	github.com/google/go-cmp v0.7.0
@@ -27,7 +28,6 @@ require (
 	cloud.google.com/go/auth/oauth2adapt v0.2.8 // indirect
 	cloud.google.com/go/iam v1.5.2 // indirect
 	cloud.google.com/go/monitoring v1.24.2 // indirect
-	cloud.google.com/go/parametermanager v0.3.0 // indirect
 	cloud.google.com/go/storage v1.50.0 // indirect
 	github.com/Azure/go-ntlmssp v0.0.0-20200615164410-66371956d46c // indirect
 	github.com/ChrisTrenkamp/goxpath v0.0.0-20210404020558-97928f7e12b6 // indirect
