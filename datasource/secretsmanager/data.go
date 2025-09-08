@@ -22,6 +22,7 @@ import (
 
 	secretmanager "cloud.google.com/go/secretmanager/apiv1"
 	secretmanagerpb "cloud.google.com/go/secretmanager/apiv1/secretmanagerpb"
+	"google.golang.org/api/option"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -40,6 +41,19 @@ type Config struct {
 
 	// The version of the secret to access. Defaults to "latest" if not specified.
 	Version string `mapstructure:"version"`
+
+	// Specify the GCP universe to deploy in. The default is "googleapis.com".
+	UniverseDomain string `mapstructure:"universe_domain"`
+	// Custom service endpoints, typically used to configure the Google provider to
+	// communicate with GCP-like APIs such as the Cloud Functions emulator.
+	//  Supported keys are `secretmanager`.
+	//
+	// Example:
+	//   custom_endpoints = {
+	//     secretmanager = "https://{your-endpoint}/"
+	//   }
+	//
+	CustomEndpoints map[string]string `mapstructure:"custom_endpoints"`
 }
 
 type Datasource struct {
@@ -91,7 +105,17 @@ func (d *Datasource) Configure(raws ...interface{}) error {
 func (d *Datasource) Execute() (cty.Value, error) {
 	ctx := context.Background()
 
-	client, err := secretmanager.NewClient(ctx)
+	var opts []option.ClientOption
+	if d.config.UniverseDomain != "" {
+		opts = append(opts, option.WithUniverseDomain(d.config.UniverseDomain))
+	}
+	if len(d.config.CustomEndpoints) > 0 {
+		if endpoint, ok := d.config.CustomEndpoints["secretmanager"]; ok {
+			opts = append(opts, option.WithEndpoint(endpoint))
+		}
+	}
+
+	client, err := secretmanager.NewClient(ctx, opts...)
 	if err != nil {
 		return cty.NullVal(cty.EmptyObject), fmt.Errorf("failed to create secret manager client: %w", err)
 	}

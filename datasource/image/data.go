@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/template/config"
 	"github.com/zclconf/go-cty/cty"
 	"google.golang.org/api/compute/v1"
+	"google.golang.org/api/option"
 )
 
 type Datasource struct {
@@ -35,6 +36,19 @@ type Config struct {
 	// If true, the most recent image will be returned.
 	// If false, an error will be returned if more than one image matches the filters.
 	MostRecent bool `mapstructure:"most_recent"`
+
+	// Specify the GCP universe to deploy in. The default is "googleapis.com".
+	UniverseDomain string `mapstructure:"universe_domain"`
+	// Custom service endpoints, typically used to configure the Google provider to
+	// communicate with GCP-like APIs such as the Cloud Functions emulator.
+	//  Supported keys are `compute`.
+	//
+	// Example:
+	//   custom_endpoints = {
+	//     compute = "https://{your-endpoint}/"
+	//   }
+	//
+	CustomEndpoints map[string]string `mapstructure:"custom_endpoints"`
 }
 
 type DatasourceOutput struct {
@@ -68,7 +82,17 @@ func (d *Datasource) Configure(raws ...interface{}) error {
 func (d *Datasource) Execute() (cty.Value, error) {
 	ctx := context.Background()
 
-	service, err := compute.NewService(ctx)
+	var opts []option.ClientOption
+	if d.config.UniverseDomain != "" {
+		opts = append(opts, option.WithUniverseDomain(d.config.UniverseDomain))
+	}
+	if len(d.config.CustomEndpoints) > 0 {
+		if endpoint, ok := d.config.CustomEndpoints["compute"]; ok {
+			opts = append(opts, option.WithEndpoint(endpoint))
+		}
+	}
+
+	service, err := compute.NewService(ctx, opts...)
 	if err != nil {
 		return cty.NullVal(cty.EmptyObject), fmt.Errorf("failed to create compute client: %w", err)
 	}

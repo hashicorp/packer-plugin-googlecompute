@@ -78,6 +78,17 @@ the [authentication](/packer/integrations/hashicorp/googlecompute#authentication
 
 - `omit_external_ip` (bool) - If true, the exporter instance will not have an external IP.
 
+- `universe_domain` (string) - Specify the GCP universe to deploy in. The default is "googleapis.com".
+
+- `custom_endpoints` (map[string]string) - Custom service endpoints, typically used to configure the Google provider to
+  communicate with GCP-like APIs such as the Cloud Functions emulator.
+  
+  Example:
+    custom_endpoints = {
+      compute = "https://{your-endpoint}/"
+      storage = "https://{your-endpoint}/"
+    }
+
 <!-- End of code generated from the comments of the Config struct in post-processor/googlecompute-export/post-processor.go; -->
 
 
