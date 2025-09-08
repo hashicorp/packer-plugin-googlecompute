@@ -11,4 +11,15 @@
 - `most_recent` (bool) - If true, the most recent image will be returned.
   If false, an error will be returned if more than one image matches the filters.
 
+- `universe_domain` (string) - Specify the GCP universe to deploy in. The default is "googleapis.com".
+
+- `custom_endpoints` (map[string]string) - Custom service endpoints, typically used to configure the Google provider to
+  communicate with GCP-like APIs such as the Cloud Functions emulator.
+   Supported keys are `compute`.
+  
+  Example:
+    custom_endpoints = {
+      compute = "https://{your-endpoint}/"
+    }
+
 <!-- End of code generated from the comments of the Config struct in datasource/image/data.go; -->

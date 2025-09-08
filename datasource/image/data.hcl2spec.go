@@ -10,9 +10,11 @@ import (
 // FlatConfig is an auto-generated flat version of Config.
 // Where the contents of a field with a `mapstructure:,squash` tag are bubbled up.
 type FlatConfig struct {
-	ProjectID  *string `mapstructure:"project_id" cty:"project_id" hcl:"project_id"`
-	Filters    *string `mapstructure:"filters" cty:"filters" hcl:"filters"`
-	MostRecent *bool   `mapstructure:"most_recent" cty:"most_recent" hcl:"most_recent"`
+	ProjectID       *string           `mapstructure:"project_id" cty:"project_id" hcl:"project_id"`
+	Filters         *string           `mapstructure:"filters" cty:"filters" hcl:"filters"`
+	MostRecent      *bool             `mapstructure:"most_recent" cty:"most_recent" hcl:"most_recent"`
+	UniverseDomain  *string           `mapstructure:"universe_domain" cty:"universe_domain" hcl:"universe_domain"`
+	CustomEndpoints map[string]string `mapstructure:"custom_endpoints" cty:"custom_endpoints" hcl:"custom_endpoints"`
 }
 
 // FlatMapstructure returns a new FlatConfig.
@@ -27,9 +29,11 @@ func (*Config) FlatMapstructure() interface{ HCL2Spec() map[string]hcldec.Spec }
 // The decoded values from this spec will then be applied to a FlatConfig.
 func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 	s := map[string]hcldec.Spec{
-		"project_id":  &hcldec.AttrSpec{Name: "project_id", Type: cty.String, Required: false},
-		"filters":     &hcldec.AttrSpec{Name: "filters", Type: cty.String, Required: false},
-		"most_recent": &hcldec.AttrSpec{Name: "most_recent", Type: cty.Bool, Required: false},
+		"project_id":       &hcldec.AttrSpec{Name: "project_id", Type: cty.String, Required: false},
+		"filters":          &hcldec.AttrSpec{Name: "filters", Type: cty.String, Required: false},
+		"most_recent":      &hcldec.AttrSpec{Name: "most_recent", Type: cty.Bool, Required: false},
+		"universe_domain":  &hcldec.AttrSpec{Name: "universe_domain", Type: cty.String, Required: false},
+		"custom_endpoints": &hcldec.AttrSpec{Name: "custom_endpoints", Type: cty.Map(cty.String), Required: false},
 	}
 	return s
 }

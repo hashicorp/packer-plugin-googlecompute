@@ -73,6 +73,19 @@ type Config struct {
 	//If true, the exporter instance will not have an external IP.
 	OmitExternalIP bool `mapstructure:"omit_external_ip" required:"false"`
 
+	// Specify the GCP universe to deploy in. The default is "googleapis.com".
+	UniverseDomain string `mapstructure:"universe_domain"`
+	// Custom service endpoints, typically used to configure the Google provider to
+	// communicate with GCP-like APIs such as the Cloud Functions emulator.
+	//
+	// Example:
+	//   custom_endpoints = {
+	//     compute = "https://{your-endpoint}/"
+	//     storage = "https://{your-endpoint}/"
+	//   }
+	//
+	CustomEndpoints map[string]string `mapstructure:"custom_endpoints"`
+
 	ctx interpolate.Context
 }
 
@@ -203,9 +216,11 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packersdk.Ui, artifa
 		exporterConfig.ServiceAccountEmail = p.config.ServiceAccountEmail
 	}
 	cfg := &common.GCEDriverConfig{
-		Ui:        ui,
-		ProjectId: builderProjectId,
-		Scopes:    p.config.Scopes,
+		Ui:              ui,
+		ProjectId:       builderProjectId,
+		Scopes:          p.config.Scopes,
+		UniverseDomain:  p.config.UniverseDomain,
+		CustomEndpoints: p.config.CustomEndpoints,
 	}
 	p.config.Authentication.ApplyDriverConfig(cfg)
 

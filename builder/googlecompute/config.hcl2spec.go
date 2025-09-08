@@ -139,6 +139,8 @@ type FlatConfig struct {
 	DeprecateAt                  *string                           `mapstructure:"deprecate_at" required:"false" cty:"deprecate_at" hcl:"deprecate_at"`
 	ObsoleteAt                   *string                           `mapstructure:"obsolete_at" required:"false" cty:"obsolete_at" hcl:"obsolete_at"`
 	DeleteAt                     *string                           `mapstructure:"delete_at" required:"false" cty:"delete_at" hcl:"delete_at"`
+	UniverseDomain               *string                           `mapstructure:"universe_domain" cty:"universe_domain" hcl:"universe_domain"`
+	CustomEndpoints              map[string]string                 `mapstructure:"custom_endpoints" cty:"custom_endpoints" hcl:"custom_endpoints"`
 }
 
 // FlatMapstructure returns a new FlatConfig.
@@ -281,6 +283,8 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"deprecate_at":                    &hcldec.AttrSpec{Name: "deprecate_at", Type: cty.String, Required: false},
 		"obsolete_at":                     &hcldec.AttrSpec{Name: "obsolete_at", Type: cty.String, Required: false},
 		"delete_at":                       &hcldec.AttrSpec{Name: "delete_at", Type: cty.String, Required: false},
+		"universe_domain":                 &hcldec.AttrSpec{Name: "universe_domain", Type: cty.String, Required: false},
+		"custom_endpoints":                &hcldec.AttrSpec{Name: "custom_endpoints", Type: cty.Map(cty.String), Required: false},
 	}
 	return s
 }

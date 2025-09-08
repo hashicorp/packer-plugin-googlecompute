@@ -41,6 +41,8 @@ type FlatConfig struct {
 	ImageKeyExchangeKey        []string          `mapstructure:"image_key_exchange_key" cty:"image_key_exchange_key" hcl:"image_key_exchange_key"`
 	ImageSignaturesDB          []string          `mapstructure:"image_signatures_db" cty:"image_signatures_db" hcl:"image_signatures_db"`
 	ImageForbiddenSignaturesDB []string          `mapstructure:"image_forbidden_signatures_db" cty:"image_forbidden_signatures_db" hcl:"image_forbidden_signatures_db"`
+	UniverseDomain             *string           `mapstructure:"universe_domain" cty:"universe_domain" hcl:"universe_domain"`
+	CustomEndpoints            map[string]string `mapstructure:"custom_endpoints" cty:"custom_endpoints" hcl:"custom_endpoints"`
 }
 
 // FlatMapstructure returns a new FlatConfig.
@@ -86,6 +88,8 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"image_key_exchange_key":        &hcldec.AttrSpec{Name: "image_key_exchange_key", Type: cty.List(cty.String), Required: false},
 		"image_signatures_db":           &hcldec.AttrSpec{Name: "image_signatures_db", Type: cty.List(cty.String), Required: false},
 		"image_forbidden_signatures_db": &hcldec.AttrSpec{Name: "image_forbidden_signatures_db", Type: cty.List(cty.String), Required: false},
+		"universe_domain":               &hcldec.AttrSpec{Name: "universe_domain", Type: cty.String, Required: false},
+		"custom_endpoints":              &hcldec.AttrSpec{Name: "custom_endpoints", Type: cty.Map(cty.String), Required: false},
 	}
 	return s
 }

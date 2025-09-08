@@ -340,4 +340,16 @@
   In UTC, in the following RFC3339 format: YYYY-MM-DDTHH:MM:SSZ.
   You can’t specify a date in the past.
 
+- `universe_domain` (string) - Specify the GCP universe to deploy in. The default is "googleapis.com".
+
+- `custom_endpoints` (map[string]string) - Custom service endpoints, typically used to configure the Google provider to
+  communicate with GCP-like APIs such as the Cloud Functions emulator.
+   Supported keys are `compute`, `storage`, `oslogin` and `oauth2`.
+  
+  Example:
+    custom_endpoints = {
+      compute = "https://{your-endpoint}/"
+      storage = "https://{your-endpoint}/"
+    }
+
 <!-- End of code generated from the comments of the Config struct in builder/googlecompute/config.go; -->

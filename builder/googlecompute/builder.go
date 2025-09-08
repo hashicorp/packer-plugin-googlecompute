@@ -48,9 +48,11 @@ func (b *Builder) Prepare(raws ...interface{}) ([]string, []string, error) {
 // representing a GCE machine image.
 func (b *Builder) Run(ctx context.Context, ui packersdk.Ui, hook packersdk.Hook) (packersdk.Artifact, error) {
 	cfg := &common.GCEDriverConfig{
-		Ui:        ui,
-		ProjectId: b.config.ProjectId,
-		Scopes:    b.config.Scopes,
+		Ui:              ui,
+		ProjectId:       b.config.ProjectId,
+		Scopes:          b.config.Scopes,
+		UniverseDomain:  b.config.UniverseDomain,
+		CustomEndpoints: b.config.CustomEndpoints,
 	}
 	b.config.Authentication.ApplyDriverConfig(cfg)
 

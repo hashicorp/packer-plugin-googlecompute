@@ -82,6 +82,19 @@ type Config struct {
 	//A database of certificates that have been revoked and will cause the system to stop booting if a boot file is signed with one of them. You may specify single or multiple comma-separated values for this value.
 	ImageForbiddenSignaturesDB []string `mapstructure:"image_forbidden_signatures_db"`
 
+	// Specify the GCP universe to deploy in. The default is "googleapis.com".
+	UniverseDomain string `mapstructure:"universe_domain"`
+	// Custom service endpoints, typically used to configure the Google provider to
+	// communicate with GCP-like APIs such as the Cloud Functions emulator.
+	//
+	// Example:
+	//   custom_endpoints = {
+	//     compute = "https://{your-endpoint}/"
+	//     storage = "https://{your-endpoint}/"
+	//   }
+	//
+	CustomEndpoints map[string]string `mapstructure:"custom_endpoints"`
+
 	ctx interpolate.Context
 }
 
