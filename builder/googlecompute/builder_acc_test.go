@@ -481,14 +481,14 @@ func TestAccBuilder_CustomEndpointsAndUniverse(t *testing.T) {
 		customEndpoints string // HCL block as a string for easy templating
 		expectSuccess   bool
 	}{
-		// {
-		// 	name:           "googlecompute-with-custom-endpoint-beta",
-		// 	universeDomain: "",
-		// 	// We use the real, public beta endpoint for the compute API.
-		// 	// A successful build proves the builder correctly used this endpoint.
-		// 	customEndpoints: `custom_endpoints = { compute = "https://beta.compute.googleapis.com/compute/v1/" }`,
-		// 	expectSuccess:   true,
-		// },
+		{
+			name:           "googlecompute-with-custom-endpoint-beta",
+			universeDomain: "",
+			// We use the real, public beta endpoint for the compute API.
+			// A successful build proves the builder correctly used this endpoint.
+			customEndpoints: `custom_endpoints = { compute = "https://beta.compute.googleapis.com/compute/v1/" }`,
+			expectSuccess:   true,
+		},
 		{
 			name: "googlecompute-with-invalid-universe",
 			// We use a fake domain that does not exist.
