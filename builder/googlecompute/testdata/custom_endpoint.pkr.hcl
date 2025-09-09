@@ -20,13 +20,16 @@ variable "universe_domain" {
   default = ""
 }
 
-locals { timestamp = regex_replace(timestamp(), "[- TZ:]", "") }
+variable "image_name" {
+  type    = string
+  default = ""
+}
 
 source "googlecompute" "acctest" {
 	project_id          = var.project_id
 	zone                = var.zone
 	source_image_family = "centos-stream-9"
-	image_name          = "packer-custom-endpoint-test-${local.timestamp}"
+	image_name          = var.image_name
 	machine_type        = "n2-standard-2"
 	ssh_username        = "packer"
 

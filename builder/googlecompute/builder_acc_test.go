@@ -486,7 +486,7 @@ func TestAccBuilder_CustomEndpointsAndUniverse(t *testing.T) {
 			universeDomain: "",
 			// We use the real, public beta endpoint for the compute API.
 			// A successful build proves the builder correctly used this endpoint.
-			customEndpoints: `custom_endpoints = { compute = "https://beta.compute.googleapis.com/compute/v1/" }`,
+			customEndpoints: "https://compute.googleapis.com/compute/beta/",
 			expectSuccess:   true,
 		},
 		{
@@ -512,10 +512,20 @@ func TestAccBuilder_CustomEndpointsAndUniverse(t *testing.T) {
 				t.Fatalf("failed to read testdata file: %s", err)
 			}
 
+			extraArgs := []string{
+				"-var", fmt.Sprintf("image_name=%s", imageName),
+				"-var", fmt.Sprintf("compute_custom_endpoints=%s", tt.customEndpoints),
+				"-var", fmt.Sprintf("universe_domain=%s", tt.universeDomain),
+			}
+
 			testCase := &acctest.PluginTestCase{
-				Name:     testRun.name,
-				Template: string(tmpl),
+				Name:           testRun.name,
+				Template:       string(tmpl),
+				BuildExtraArgs: extraArgs,
 				Teardown: func() error {
+					if !testRun.expectSuccess {
+						return nil
+					}
 					// Always attempt to delete the image, even on failure, in case it was partially created.
 					driver, err := common.NewDriverGCE(common.GCEDriverConfig{})
 					if err != nil {
@@ -525,8 +535,8 @@ func TestAccBuilder_CustomEndpointsAndUniverse(t *testing.T) {
 					}
 
 					chErr := driver.DeleteImage(os.Getenv("GOOGLE_PROJECT_ID"), imageName)
-					// We only care about logging the error, not failing the test on teardown issues.
-					for err := range chErr {
+					err = <-chErr
+					if err != nil {
 						t.Logf("Error during image cleanup for %s: %s", imageName, err)
 					}
 					return nil
