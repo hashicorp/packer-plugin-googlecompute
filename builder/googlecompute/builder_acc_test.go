@@ -494,7 +494,7 @@ func TestAccBuilder_CustomEndpointsAndUniverse(t *testing.T) {
 			// We use a fake domain that does not exist.
 			// The build MUST fail. A failure proves the builder tried to use
 			// this domain instead of ignoring it and using the default.
-			universeDomain:  `universe_domain = "packer.example.com"`,
+			universeDomain:  "packer.example.com",
 			customEndpoints: "",
 			expectSuccess:   false,
 		},
@@ -518,6 +518,12 @@ func TestAccBuilder_CustomEndpointsAndUniverse(t *testing.T) {
 				"-var", fmt.Sprintf("universe_domain=%s", tt.universeDomain),
 			}
 
+			driverConfig := common.GCEDriverConfig{
+				ProjectId:       os.Getenv("GOOGLE_PROJECT_ID"),
+				UniverseDomain:  tt.universeDomain,
+				CustomEndpoints: map[string]string{"compute": tt.customEndpoints},
+			}
+
 			testCase := &acctest.PluginTestCase{
 				Name:           testRun.name,
 				Template:       string(tmpl),
@@ -527,7 +533,7 @@ func TestAccBuilder_CustomEndpointsAndUniverse(t *testing.T) {
 						return nil
 					}
 					// Always attempt to delete the image, even on failure, in case it was partially created.
-					driver, err := common.NewDriverGCE(common.GCEDriverConfig{})
+					driver, err := common.NewDriverGCE(driverConfig)
 					if err != nil {
 						// Don't fail teardown if the driver can't be created (e.g., bad credentials).
 						t.Logf("Failed to create GCE driver for teardown: %s", err)
@@ -556,7 +562,7 @@ func TestAccBuilder_CustomEndpointsAndUniverse(t *testing.T) {
 
 					// Case 3: Build succeeded as expected. Verify the artifact.
 					if testRun.expectSuccess {
-						driver, err := common.NewDriverGCE(common.GCEDriverConfig{})
+						driver, err := common.NewDriverGCE(driverConfig)
 						if err != nil {
 							return fmt.Errorf("failed to create GCE driver for verification: %s", err)
 						}
