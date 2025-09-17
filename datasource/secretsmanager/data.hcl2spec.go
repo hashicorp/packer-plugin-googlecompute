@@ -10,10 +10,12 @@ import (
 // FlatConfig is an auto-generated flat version of Config.
 // Where the contents of a field with a `mapstructure:,squash` tag are bubbled up.
 type FlatConfig struct {
-	ProjectId *string `mapstructure:"project_id" required:"true" cty:"project_id" hcl:"project_id"`
-	Name      *string `mapstructure:"name" required:"true" cty:"name" hcl:"name"`
-	Key       *string `mapstructure:"key" cty:"key" hcl:"key"`
-	Version   *string `mapstructure:"version" cty:"version" hcl:"version"`
+	ProjectId       *string           `mapstructure:"project_id" required:"true" cty:"project_id" hcl:"project_id"`
+	Name            *string           `mapstructure:"name" required:"true" cty:"name" hcl:"name"`
+	Key             *string           `mapstructure:"key" cty:"key" hcl:"key"`
+	Version         *string           `mapstructure:"version" cty:"version" hcl:"version"`
+	UniverseDomain  *string           `mapstructure:"universe_domain" cty:"universe_domain" hcl:"universe_domain"`
+	CustomEndpoints map[string]string `mapstructure:"custom_endpoints" cty:"custom_endpoints" hcl:"custom_endpoints"`
 }
 
 // FlatMapstructure returns a new FlatConfig.
@@ -28,10 +30,12 @@ func (*Config) FlatMapstructure() interface{ HCL2Spec() map[string]hcldec.Spec }
 // The decoded values from this spec will then be applied to a FlatConfig.
 func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 	s := map[string]hcldec.Spec{
-		"project_id": &hcldec.AttrSpec{Name: "project_id", Type: cty.String, Required: false},
-		"name":       &hcldec.AttrSpec{Name: "name", Type: cty.String, Required: false},
-		"key":        &hcldec.AttrSpec{Name: "key", Type: cty.String, Required: false},
-		"version":    &hcldec.AttrSpec{Name: "version", Type: cty.String, Required: false},
+		"project_id":       &hcldec.AttrSpec{Name: "project_id", Type: cty.String, Required: false},
+		"name":             &hcldec.AttrSpec{Name: "name", Type: cty.String, Required: false},
+		"key":              &hcldec.AttrSpec{Name: "key", Type: cty.String, Required: false},
+		"version":          &hcldec.AttrSpec{Name: "version", Type: cty.String, Required: false},
+		"universe_domain":  &hcldec.AttrSpec{Name: "universe_domain", Type: cty.String, Required: false},
+		"custom_endpoints": &hcldec.AttrSpec{Name: "custom_endpoints", Type: cty.Map(cty.String), Required: false},
 	}
 	return s
 }

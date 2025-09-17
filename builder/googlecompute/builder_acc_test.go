@@ -471,3 +471,118 @@ func TestAccBuilder_NetworkIP(t *testing.T) {
 	}
 	acctest.TestPlugin(t, testCase)
 }
+
+func TestAccBuilder_CustomEndpointsAndUniverse(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name            string
+		universeDomain  string
+		customEndpoints string // HCL block as a string for easy templating
+		expectSuccess   bool
+	}{
+		{
+			name:           "googlecompute-with-custom-endpoint-beta",
+			universeDomain: "",
+			// We use the real, public beta endpoint for the compute API.
+			// A successful build proves the builder correctly used this endpoint.
+			customEndpoints: "https://compute.googleapis.com/compute/beta/",
+			expectSuccess:   true,
+		},
+		{
+			name: "googlecompute-with-invalid-universe",
+			// We use a fake domain that does not exist.
+			// The build MUST fail. A failure proves the builder tried to use
+			// this domain instead of ignoring it and using the default.
+			universeDomain:  "packer.example.com",
+			customEndpoints: "",
+			expectSuccess:   false,
+		},
+	}
+
+	for _, tt := range tests {
+		testRun := tt
+		t.Run(testRun.name, func(t *testing.T) {
+			t.Parallel()
+
+			imageName := fmt.Sprintf("%s-%d", testRun.name, time.Now().UTC().Unix())
+
+			tmpl, err := testDataFs.ReadFile("testdata/custom_endpoint.pkr.hcl")
+			if err != nil {
+				t.Fatalf("failed to read testdata file: %s", err)
+			}
+
+			extraArgs := []string{
+				"-var", fmt.Sprintf("image_name=%s", imageName),
+				"-var", fmt.Sprintf("compute_custom_endpoints=%s", tt.customEndpoints),
+				"-var", fmt.Sprintf("universe_domain=%s", tt.universeDomain),
+			}
+
+			driverConfig := common.GCEDriverConfig{
+				ProjectId:       os.Getenv("GOOGLE_PROJECT_ID"),
+				UniverseDomain:  tt.universeDomain,
+				CustomEndpoints: map[string]string{"compute": tt.customEndpoints},
+			}
+
+			testCase := &acctest.PluginTestCase{
+				Name:           testRun.name,
+				Template:       string(tmpl),
+				BuildExtraArgs: extraArgs,
+				Teardown: func() error {
+					if !testRun.expectSuccess {
+						return nil
+					}
+					// Always attempt to delete the image, even on failure, in case it was partially created.
+					driver, err := common.NewDriverGCE(driverConfig)
+					if err != nil {
+						// Don't fail teardown if the driver can't be created (e.g., bad credentials).
+						t.Logf("Failed to create GCE driver for teardown: %s", err)
+						return nil
+					}
+
+					chErr := driver.DeleteImage(os.Getenv("GOOGLE_PROJECT_ID"), imageName)
+					err = <-chErr
+					if err != nil {
+						t.Logf("Error during image cleanup for %s: %s", imageName, err)
+					}
+					return nil
+				},
+				Check: func(buildCommand *exec.Cmd, logfile string) error {
+					exitCode := buildCommand.ProcessState.ExitCode()
+
+					// Case 1: Build was expected to succeed, but it failed.
+					if testRun.expectSuccess && exitCode != 0 {
+						return fmt.Errorf("build was expected to succeed but failed with exit code %d. Logfile: %s", exitCode, logfile)
+					}
+
+					// Case 2: Build was expected to fail, but it succeeded.
+					if !testRun.expectSuccess && exitCode == 0 {
+						return fmt.Errorf("build was expected to fail but it succeeded. This indicates the invalid configuration was ignored.")
+					}
+
+					// Case 3: Build succeeded as expected. Verify the artifact.
+					if testRun.expectSuccess {
+						driver, err := common.NewDriverGCE(driverConfig)
+						if err != nil {
+							return fmt.Errorf("failed to create GCE driver for verification: %s", err)
+						}
+
+						_, err = driver.GetImageFromProject(os.Getenv("GOOGLE_PROJECT_ID"), imageName, false)
+						if err != nil {
+							return fmt.Errorf("failed to get the created image '%s' for verification: %s", imageName, err)
+						}
+						t.Logf("Successfully verified that image '%s' was created.", imageName)
+					}
+
+					// Case 4: Build failed as expected. The test passes.
+					if !testRun.expectSuccess {
+						t.Logf("Build failed as expected with a non-zero exit code.")
+					}
+
+					return nil
+				},
+			}
+			acctest.TestPlugin(t, testCase)
+		})
+	}
+}

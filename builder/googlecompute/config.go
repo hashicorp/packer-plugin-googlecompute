@@ -398,6 +398,20 @@ type Config struct {
 	// You can’t specify a date in the past.
 	DeleteAt string `mapstructure:"delete_at" required:"false"`
 
+	// Specify the GCP universe to deploy in. The default is "googleapis.com".
+	UniverseDomain string `mapstructure:"universe_domain"`
+	// Custom service endpoints, typically used to configure the Google provider to
+	// communicate with GCP-like APIs such as the Cloud Functions emulator.
+	//  Supported keys are `compute`, `storage`, `oslogin` and `oauth2`.
+	//
+	// Example:
+	//   custom_endpoints = {
+	//     compute = "https://{your-endpoint}/"
+	//     storage = "https://{your-endpoint}/"
+	//   }
+	//
+	CustomEndpoints map[string]string `mapstructure:"custom_endpoints"`
+
 	ctx                  interpolate.Context
 	imageSourceDisk      string
 	imageAlreadyExists   bool

@@ -58,6 +58,8 @@ type GCEDriverConfig struct {
 	AccessToken                   string
 	VaultOauthEngineName          string
 	Credentials                   *google.Credentials
+	UniverseDomain                string
+	CustomEndpoints               map[string]string
 }
 
 var DriverScopes = []string{
@@ -164,6 +166,18 @@ func NewClientOptionGoogle(vaultOauth string, impersonatesa string, accessToken 
 	return opts, nil
 }
 
+func buildServiceSpecificOptions(commonOpts []option.ClientOption, customEndpoints map[string]string, serviceKey string) []option.ClientOption {
+	finalOpts := make([]option.ClientOption, len(commonOpts))
+	copy(finalOpts, commonOpts)
+
+	// Check for a specific endpoint override for this service and add it if found.
+	if endpoint, ok := customEndpoints[serviceKey]; ok && endpoint != "" {
+		finalOpts = append(finalOpts, option.WithEndpoint(endpoint))
+	}
+
+	return finalOpts
+}
+
 func NewDriverGCE(config GCEDriverConfig) (Driver, error) {
 
 	opts, err := NewClientOptionGoogle(config.VaultOauthEngineName, config.ImpersonateServiceAccountName, config.AccessToken, config.Credentials, config.Scopes)
@@ -171,26 +185,34 @@ func NewDriverGCE(config GCEDriverConfig) (Driver, error) {
 		return nil, err
 	}
 
+	if config.UniverseDomain != "" {
+		opts = append(opts, option.WithUniverseDomain(config.UniverseDomain))
+	}
+
 	log.Printf("[INFO] Instantiating GCE client...")
-	service, err := compute.NewService(context.TODO(), opts...)
+	serviceOpts := buildServiceSpecificOptions(opts, config.CustomEndpoints, "compute")
+	service, err := compute.NewService(context.TODO(), serviceOpts...)
 	if err != nil {
 		return nil, err
 	}
 
 	log.Printf("[INFO] Instantiating OS Login client...")
-	osLoginService, err := oslogin.NewService(context.TODO(), opts...)
+	serviceOpts = buildServiceSpecificOptions(opts, config.CustomEndpoints, "oslogin")
+	osLoginService, err := oslogin.NewService(context.TODO(), serviceOpts...)
 	if err != nil {
 		return nil, err
 	}
 
 	log.Printf("[INFO] Instantiating Oauth2 client...")
-	oauth2Service, err := oauth2_svc.NewService(context.TODO(), opts...)
+	serviceOpts = buildServiceSpecificOptions(opts, config.CustomEndpoints, "oauth2")
+	oauth2Service, err := oauth2_svc.NewService(context.TODO(), serviceOpts...)
 	if err != nil {
 		return nil, err
 	}
 
 	log.Printf("[INFO] Instantiating storage client...")
-	storageService, err := storage.NewService(context.TODO(), opts...)
+	serviceOpts = buildServiceSpecificOptions(opts, config.CustomEndpoints, "storage")
+	storageService, err := storage.NewService(context.TODO(), serviceOpts...)
 	if err != nil {
 		return nil, err
 	}
