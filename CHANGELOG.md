@@ -3,6 +3,17 @@
 Please refer to [releases](https://github.com/hashicorp/packer-plugin-googlecompute/releases) for the latest CHANGELOG information.
 
 ---
+## 1.2.3 (September 18, 2025)
+
+## What's Changed
+
+### Exciting New Features
+* Add support for universe_domain and custom_endpoints in [GH-301](https://github.com/hashicorp/packer-plugin-googlecompute/pull/301)
+
+### Other Changes
+* Updated `xz` Module for Security Vulnerability in [GH-302](https://github.com/hashicorp/packer-plugin-googlecompute/pull/302)
+
+
 ## 1.0.8 (December 6, 2021)
 
 ### Exciting New Features 🎉
