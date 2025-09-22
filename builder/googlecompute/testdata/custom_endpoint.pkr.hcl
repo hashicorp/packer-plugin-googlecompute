@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 // This template is used for acceptance testing the custom_endpoints and
 // universe_domain features. The placeholders will be replaced by the Go test runner.
 variable "project_id" {
