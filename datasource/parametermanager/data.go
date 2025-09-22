@@ -115,7 +115,7 @@ func (d *Datasource) Execute() (cty.Value, error) {
 	}
 
 	if err != nil {
-		return cty.NullVal(cty.EmptyObject), fmt.Errorf("failed to create parameter manager client: %v", err)
+		return cty.NullVal(cty.EmptyObject), fmt.Errorf("failed to create parameter manager client: %w", err)
 	}
 	defer client.Close()
 
@@ -130,10 +130,10 @@ func (d *Datasource) Execute() (cty.Value, error) {
 	// Call the API to get parameter.
 	paramFormatResp, err := client.GetParameter(ctx, parameterFormatReq)
 	if err != nil {
-		return cty.NullVal(cty.EmptyObject), fmt.Errorf("could not identify parameter format %w", err)
+		return cty.NullVal(cty.EmptyObject), fmt.Errorf("failed to identify parameter format %w", err)
 	}
 
-	paramFormat := paramFormatResp.Format.String()
+	paramFormat := paramFormatResp.Format
 
 	parameterPayloadURL := fmt.Sprintf("projects/%s/locations/%s/parameters/%s/versions/%s", d.config.ProjectId, d.config.Location, d.config.Name, d.config.Version)
 
@@ -149,32 +149,30 @@ func (d *Datasource) Execute() (cty.Value, error) {
 		if st.Code() == codes.NotFound {
 			return cty.NullVal(cty.EmptyObject), fmt.Errorf("value %q not found", parameterPayloadResp)
 		}
-		return cty.NullVal(cty.EmptyObject), fmt.Errorf("error accessing secret: %w", err)
+		return cty.NullVal(cty.EmptyObject), fmt.Errorf("error rendering parameter: %w", err)
 	}
 
-	// return cty.NullVal(cty.EmptyObject), fmt.Errorf("Printing value for reference: %q", rendered.RenderedPayload)
 	payload := parameterPayloadResp.RenderedPayload
 
 	// Extract value from payload if key is provided
 	var value string
 	var payloadMap map[string]interface{}
 	if d.config.Key != "" {
-		if paramFormat == "JSON" {
+		switch paramFormat {
+		case parametermanagerpb.ParameterFormat_JSON:
 			jsonErr := json.Unmarshal(payload, &payloadMap)
 			if jsonErr != nil {
 				return cty.NullVal(cty.EmptyObject), fmt.Errorf("error unmarshaling JSON payload: %w", jsonErr)
 			}
-		}
 
-		if paramFormat == "YAML" {
+		case parametermanagerpb.ParameterFormat_YAML:
 			yamlErr := yaml.Unmarshal(payload, &payloadMap)
 			if yamlErr != nil {
 				return cty.NullVal(cty.EmptyObject), fmt.Errorf("error unmarshaling YAML payload: %w", yamlErr)
 			}
-		}
 
-		if paramFormat == "UNFORMATTED" {
-			return cty.NullVal(cty.EmptyObject), fmt.Errorf("key extraction is not supported for unformatted payload")
+		default:
+			return cty.NullVal(cty.EmptyObject), fmt.Errorf("key extraction is supported only for JSON and YAML payload")
 		}
 
 		val, ok := payloadMap[d.config.Key]

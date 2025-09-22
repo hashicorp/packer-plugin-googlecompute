@@ -116,14 +116,13 @@ foo: bar`,
 					BuildExtraArgs: extraArgs,
 					Check: func(cmd *exec.Cmd, logFile string) error {
 						logs, err := os.ReadFile(logFile)
-						fmt.Printf("Logs are .. : %s\n", logs)
 						if err != nil {
 							return fmt.Errorf("failed to read log file: %w", err)
 						}
 						logsString := string(logs)
 
 						if tc.wantErr {
-							if matched := regexp.MustCompile(`key extraction is not supported for unformatted payload`).MatchString(logsString); !matched {
+							if matched := regexp.MustCompile(`key extraction is supported only for JSON and YAML payload`).MatchString(logsString); !matched {
 								t.Errorf("Expected failure not found in logs")
 							}
 							return nil
