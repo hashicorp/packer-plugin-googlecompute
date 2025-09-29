@@ -1,0 +1,57 @@
+---
+description: |
+  The Parameter Manager data source provides the capability to retrieve the parameters stored in google cloud along with revealed secrets
+
+page_title: Parameter Manager - Data Source
+nav_title: Parameter Manager
+---
+
+# Google Compute Parameter Manager Data Source
+
+The Parameter Manager data source provides the capability to retrieve the parameters stored in google cloud along with revealed secrets
+
+-> **Note:** Data sources is a feature exclusively available to HCL2 templates.
+
+Basic examples of usage:
+
+```hcl
+data "googlecompute-parametermanager" "basic-example" {
+  project_id = "debian-cloud"
+  name       = "packer_test_parameter"
+  key        = "packer_test_key"
+  version    = "1"
+  location   = "us-east1"    
+}
+
+# usage example of the data source output
+locals {
+  value = data.googlecompute-parametermanager.basic-example.value
+  payload = data.googlecompute-parametermanager.basic-example.payload
+}
+```
+
+Reading key-value pairs from JSON back into a native Packer map can be accomplished
+with the [jsondecode() function](/packer/docs/templates/hcl_templates/functions/encoding/jsondecode).
+
+Reading key-value pairs from YAML back into a native Packer map can be accomplished
+with the [yamldecode() function](/packer/docs/templates/hcl_templates/functions/encoding/yamldecode).
+
+## Configuration Reference
+
+### Required
+
+@include 'datasource/parametermanager/Config-required.mdx'
+
+### Optional
+
+@include 'datasource/parametermanager/Config-not-required.mdx'
+
+## Output Data
+
+@include 'datasource/parametermanager/DatasourceOutput.mdx'
+
+## Authentication
+
+To authenticate with GCE, this data-source supports everything the plugin does.
+To get more information on this, refer to the plugin's description page, under
+the [authentication](/packer/integrations/hashicorp/googlecompute#authentication) section.
