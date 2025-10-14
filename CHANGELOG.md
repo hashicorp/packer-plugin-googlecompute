@@ -3,6 +3,14 @@
 Please refer to [releases](https://github.com/hashicorp/packer-plugin-googlecompute/releases) for the latest CHANGELOG information.
 
 ---
+## 1.2.4 (October 9, 2025)
+
+## What's Changed
+
+### Exciting New Features
+* Adding support for Parametermanager Datasource [GH-299](https://github.com/hashicorp/packer-plugin-googlecompute/pull/299)
+
+
 ## 1.2.3 (September 18, 2025)
 
 ## What's Changed
