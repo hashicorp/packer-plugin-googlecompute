@@ -32,6 +32,7 @@ type InstanceConfig struct {
 	InstanceTerminationAction    string
 	Preemptible                  bool
 	NodeAffinities               []NodeAffinity
+	ReservationAffinity          *ReservationAffinity
 	Region                       string
 	ServiceAccountEmail          string
 	Scopes                       []string

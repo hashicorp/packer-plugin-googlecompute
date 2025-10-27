@@ -207,6 +207,7 @@ func (s *StepCreateInstance) Run(ctx context.Context, state multistep.StateBag) 
 		Preemptible:                  c.Preemptible,
 		NodeAffinities:               c.NodeAffinities,
 		Region:                       c.Region,
+		ReservationAffinity:          c.ReservationAffinity,
 		ServiceAccountEmail:          c.ServiceAccountEmail,
 		Scopes:                       c.Scopes,
 		Subnetwork:                   c.Subnetwork,
