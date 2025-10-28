@@ -586,3 +586,71 @@ func TestAccBuilder_CustomEndpointsAndUniverse(t *testing.T) {
 		})
 	}
 }
+
+func TestAccBuilder_WithReservation(t *testing.T) {
+	t.Parallel()
+
+	// Use a timestamp to generate a unique name.
+	uniqueID := fmt.Sprintf("packer-test-%d", time.Now().UnixNano())
+	reservationName := uniqueID
+	imageName := uniqueID
+
+	tmpl, err := testDataFs.ReadFile("testdata/reservation.pkr.hcl")
+	if err != nil {
+		t.Fatalf("failed to read testdata file: %s", err)
+	}
+
+	testCase := &acctest.PluginTestCase{
+		Name:     "googlecompute-packer-with-reservation",
+		Template: string(tmpl),
+		BuildExtraArgs: []string{
+			"-var", fmt.Sprintf("project_id=%s", os.Getenv("GOOGLE_PROJECT_ID")),
+			"-var", fmt.Sprintf("image_name=%s", imageName),
+			"-var", fmt.Sprintf("reservation_name=%s", reservationName),
+		},
+		Setup: func() error {
+			cmd := exec.Command("gcloud", "compute", "firewall-rules", "create", "packer-test",
+				"--project="+os.Getenv("GOOGLE_PROJECT_ID"),
+				"--allow=tcp:22",
+				"--network=default",
+				"--target-tags=packer-test")
+			if output, err := cmd.CombinedOutput(); err != nil {
+				return fmt.Errorf("failed to create firewall rule: %s\nOutput: %s", err, string(output))
+			}
+			cmd = exec.Command("gcloud", "compute", "reservations", "create", reservationName,
+				"--project="+os.Getenv("GOOGLE_PROJECT_ID"),
+				"--zone=us-central1-a",
+				"--machine-type=n1-standard-1",
+				"--vm-count=1",
+				"--require-specific-reservation")
+			if output, err := cmd.CombinedOutput(); err != nil {
+				return fmt.Errorf("failed to create reservation: %s\nOutput: %s", err, string(output))
+			}
+			return nil
+		},
+		Teardown: func() error {
+			cmd := exec.Command("gcloud", "compute", "firewall-rules", "delete", "packer-test",
+				"--project="+os.Getenv("GOOGLE_PROJECT_ID"), "--quiet")
+			cmd.Run()
+			cmd = exec.Command("gcloud", "compute", "reservations", "delete", reservationName,
+				"--project="+os.Getenv("GOOGLE_PROJECT_ID"),
+				"--zone=us-central1-a", "--quiet")
+			cmd.Run()
+
+			cmd = exec.Command("gcloud", "compute", "images", "delete", imageName,
+				"--project="+os.Getenv("GOOGLE_PROJECT_ID"), "--quiet")
+			cmd.Run()
+
+			return nil
+		},
+		Check: func(buildCommand *exec.Cmd, logfile string) error {
+			if buildCommand.ProcessState != nil {
+				if buildCommand.ProcessState.ExitCode() != 0 {
+					return fmt.Errorf("Bad exit code. Logfile: %s", logfile)
+				}
+			}
+			return nil
+		},
+	}
+	acctest.TestPlugin(t, testCase)
+}
