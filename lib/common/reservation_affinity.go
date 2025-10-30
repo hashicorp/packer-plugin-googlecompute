@@ -13,7 +13,7 @@ import compute "google.golang.org/api/compute/v1"
 type ReservationAffinity struct {
 	// ConsumeReservationType: Specifies the type of reservation from which this
 	// instance can consume resources.
-	// See https://cloud.google.com/compute/docs/instances/consuming-reserved-instances for examples.
+	// See https://cloud.google.com/compute/docs/instances/reservations-overview for examples.
 	ConsumeReservationType string `mapstructure:"consume_reservation_type"`
 
 	// Key: Corresponds to the label key of a reservation resource. To target a
