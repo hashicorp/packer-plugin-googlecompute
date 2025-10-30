@@ -241,6 +241,8 @@ type Config struct {
 	//
 	// Refer to the [Node Affinity](#node-affinities) for more information on affinities.
 	NodeAffinities []common.NodeAffinity `mapstructure:"node_affinity" required:"false"`
+	// ReservationAffinity: Specifies the reservations that this instance can consume from.
+	ReservationAffinity *common.ReservationAffinity `mapstructure:"reservation_affinity" required:"false"`
 	// The time to wait for instance state changes. Defaults to "5m".
 	StateTimeout time.Duration `mapstructure:"state_timeout" required:"false"`
 	// The region in which to launch the instance. Defaults to the region

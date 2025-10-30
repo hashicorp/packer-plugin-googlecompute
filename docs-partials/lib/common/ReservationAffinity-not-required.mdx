@@ -1,0 +1,13 @@
+<!-- Code generated from the comments of the ReservationAffinity struct in lib/common/reservation_affinity.go; DO NOT EDIT MANUALLY -->
+
+- `consume_reservation_type` (string) - ConsumeReservationType: Specifies the type of reservation from which this
+  instance can consume resources.
+  See https://cloud.google.com/compute/docs/instances/reservations-overview for examples.
+
+- `key` (string) - Key: Corresponds to the label key of a reservation resource. To target a
+  SPECIFIC_RESERVATION by name, specify `compute.googleapis.com/reservation-name`
+  as the key.
+
+- `values` ([]string) - Values: Corresponds to the label values of a reservation resource.
+
+<!-- End of code generated from the comments of the ReservationAffinity struct in lib/common/reservation_affinity.go; -->
