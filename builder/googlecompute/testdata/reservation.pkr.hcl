@@ -18,14 +18,13 @@ source "googlecompute" "reservation-test" {
   tags                     = ["packer-test"]
   network                  = "default"
   ssh_username             = "packer"
-  image_name          = var.image_name
-  machine_type        = "n1-standard-1"
-
+  machine_type             = "n1-standard-1"
   reservation_affinity {
     consume_reservation_type = "SPECIFIC_RESERVATION"
     key                      = "compute.googleapis.com/reservation-name"
     values                   = [var.reservation_name]
   }
+  specific_reservation_required = true
 }
 
 build {

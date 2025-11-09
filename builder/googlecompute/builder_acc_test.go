@@ -4,6 +4,7 @@
 package googlecompute
 
 import (
+	"context"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -18,6 +19,7 @@ import (
 
 	"github.com/hashicorp/packer-plugin-googlecompute/lib/common"
 	"github.com/hashicorp/packer-plugin-sdk/acctest"
+	"google.golang.org/api/compute/v1"
 )
 
 //go:embed testdata
@@ -609,37 +611,76 @@ func TestAccBuilder_WithReservation(t *testing.T) {
 			"-var", fmt.Sprintf("reservation_name=%s", reservationName),
 		},
 		Setup: func() error {
-			cmd := exec.Command("gcloud", "compute", "firewall-rules", "create", "packer-test",
-				"--project="+os.Getenv("GOOGLE_PROJECT_ID"),
-				"--allow=tcp:22",
-				"--network=default",
-				"--target-tags=packer-test")
-			if output, err := cmd.CombinedOutput(); err != nil {
-				return fmt.Errorf("failed to create firewall rule: %s\nOutput: %s", err, string(output))
+			projectID := os.Getenv("GOOGLE_PROJECT_ID")
+			if projectID == "" {
+				return fmt.Errorf("GOOGLE_PROJECT_ID environment variable not set")
 			}
-			cmd = exec.Command("gcloud", "compute", "reservations", "create", reservationName,
-				"--project="+os.Getenv("GOOGLE_PROJECT_ID"),
-				"--zone=us-central1-a",
-				"--machine-type=n1-standard-1",
-				"--vm-count=1",
-				"--require-specific-reservation")
-			if output, err := cmd.CombinedOutput(); err != nil {
-				return fmt.Errorf("failed to create reservation: %s\nOutput: %s", err, string(output))
+			// The firewall rule is required for Packer to be able to SSH into the instance.
+			ctx := context.Background()
+			computeService, err := compute.NewService(ctx)
+			if err != nil {
+				return fmt.Errorf("failed to create compute service: %s", err)
+			}
+
+			firewall := &compute.Firewall{
+				Name: "packer-test",
+				Allowed: []*compute.FirewallAllowed{
+					{
+						IPProtocol: "tcp",
+						Ports:      []string{"22"},
+					},
+				},
+				Network:    "global/networks/default",
+				TargetTags: []string{"packer-test"},
+			}
+			_, err = computeService.Firewalls.Insert(projectID, firewall).Context(ctx).Do()
+			if err != nil {
+				return fmt.Errorf("failed to create firewall rule: %s", err)
+			}
+			reservation := &compute.Reservation{
+				Name: reservationName,
+				SpecificReservation: &compute.AllocationSpecificSKUReservation{
+					Count: 1,
+					InstanceProperties: &compute.AllocationSpecificSKUAllocationReservedInstanceProperties{
+						MachineType: "n1-standard-1",
+					},
+				},
+				SpecificReservationRequired: true,
+				Zone:                        "us-central1-a",
+			}
+			_, err = computeService.Reservations.Insert(projectID, "us-central1-a", reservation).Context(ctx).Do()
+			if err != nil {
+				return fmt.Errorf("failed to create reservation: %s", err)
 			}
 			return nil
-		},
-		Teardown: func() error {
-			cmd := exec.Command("gcloud", "compute", "firewall-rules", "delete", "packer-test",
-				"--project="+os.Getenv("GOOGLE_PROJECT_ID"), "--quiet")
-			cmd.Run()
-			cmd = exec.Command("gcloud", "compute", "reservations", "delete", reservationName,
-				"--project="+os.Getenv("GOOGLE_PROJECT_ID"),
-				"--zone=us-central1-a", "--quiet")
-			cmd.Run()
+		}, Teardown: func() error {
+			projectID := os.Getenv("GOOGLE_PROJECT_ID")
+			if projectID == "" {
+				return fmt.Errorf("GOOGLE_PROJECT_ID environment variable not set")
+			}
+			defer os.Unsetenv("GOOGLE_PROJECT_ID")
+			ctx := context.Background()
+			computeService, err := compute.NewService(ctx)
+			if err != nil {
+				return fmt.Errorf("failed to create compute service: %s", err)
+			}
+			_, err = computeService.Firewalls.Delete(projectID, "packer-test").Context(ctx).Do()
+			if err != nil {
+				// Don't fail teardown if the firewall rule is already gone.
+				fmt.Printf("failed to delete firewall rule: %s", err)
+			}
 
-			cmd = exec.Command("gcloud", "compute", "images", "delete", imageName,
-				"--project="+os.Getenv("GOOGLE_PROJECT_ID"), "--quiet")
-			cmd.Run()
+			_, err = computeService.Reservations.Delete(projectID, "us-central1-a", reservationName).Context(ctx).Do()
+			if err != nil {
+				// Don't fail teardown if the reservation is already gone.
+				fmt.Printf("failed to delete reservation: %s", err)
+			}
+
+			_, err = computeService.Images.Delete(projectID, imageName).Context(ctx).Do()
+			if err != nil {
+				// Don't fail teardown if the image is already gone.
+				fmt.Printf("failed to delete image: %s", err)
+			}
 
 			return nil
 		},

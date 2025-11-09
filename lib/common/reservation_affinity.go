@@ -37,4 +37,3 @@ func (r *ReservationAffinity) ComputeType() *compute.ReservationAffinity {
 		Values:                 r.Values,
 	}
 }
-

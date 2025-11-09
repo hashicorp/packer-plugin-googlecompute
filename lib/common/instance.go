@@ -33,6 +33,7 @@ type InstanceConfig struct {
 	Preemptible                  bool
 	NodeAffinities               []NodeAffinity
 	ReservationAffinity          *ReservationAffinity
+	SpecificReservationRequired  bool
 	Region                       string
 	ServiceAccountEmail          string
 	Scopes                       []string

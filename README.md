@@ -69,3 +69,23 @@ documentation located in the [`docs/`](docs) directory.
   fix a bug, please do so by opening a Pull Request in this GitHub repository.
   In case of feature contribution, we kindly ask you to open an issue to
   discuss it beforehand.
+
+### Running Acceptance Tests
+
+To run the acceptance tests locally, you need to set the `GOOGLE_PROJECT_ID` environment variable. This variable specifies the Google Cloud project where the tests will provision resources.
+
+You can set it directly when invoking the `make testacc` command:
+
+```bash
+GOOGLE_PROJECT_ID="your-gcp-project-id" make testacc
+```
+
+Alternatively, you can export it in your shell session before running `make testacc`:
+
+```bash
+export GOOGLE_PROJECT_ID="your-gcp-project-id"
+make testacc
+```
+
+Note that `make` may not always inherit environment variables exported in the current shell. If you encounter issues, explicitly setting the variable in the `make` command is recommended.
+
