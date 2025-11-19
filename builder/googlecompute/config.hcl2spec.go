@@ -167,6 +167,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"account_file":                    &hcldec.AttrSpec{Name: "account_file", Type: cty.String, Required: false},
 		"credentials_file":                &hcldec.AttrSpec{Name: "credentials_file", Type: cty.String, Required: false},
 		"credentials_json":                &hcldec.AttrSpec{Name: "credentials_json", Type: cty.String, Required: false},
+		"image_signatures_db":			   &hcldec.AttrSpec{Name: "image_signatures_db", Type: cty.String, Required: false},
 		"impersonate_service_account":     &hcldec.AttrSpec{Name: "impersonate_service_account", Type: cty.String, Required: false},
 		"vault_gcp_oauth_engine":          &hcldec.AttrSpec{Name: "vault_gcp_oauth_engine", Type: cty.String, Required: false},
 		"communicator":                    &hcldec.AttrSpec{Name: "communicator", Type: cty.String, Required: false},

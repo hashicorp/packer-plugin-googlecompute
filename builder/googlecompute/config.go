@@ -160,6 +160,9 @@ type Config struct {
 	ImageGuestOsFeatures []string `mapstructure:"image_guest_os_features" required:"false"`
 	// The project ID to push the build image into. Defaults to project_id.
 	ImageProjectId string `mapstructure:"image_project_id" required:"false"`
+	// A database of certificates that are trusted and can be used to sign boot files.
+	//You may specify single or multiple comma-separated values for this value.
+	ImageSignaturesDB []string `mapstructure:"image_signatures_db"`
 	// Storage location, either regional or multi-regional, where snapshot
 	// content is to be stored and only accepts 1 value. Always defaults to a nearby regional or multi-regional
 	// location.
