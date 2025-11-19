@@ -5,13 +5,9 @@ package googlecompute
 
 import (
 	"context"
-	"crypto/x509"
-	"encoding/base64"
-	"encoding/pem"
 	"errors"
 	"fmt"
 	"log"
-	"os"
 	"time"
 
 	"github.com/hashicorp/packer-plugin-googlecompute/lib/common"
@@ -23,30 +19,6 @@ import (
 // StepCreateImage represents a Packer build step that creates GCE machine
 // images.
 type StepCreateImage int
-
-func FillFileContentBuffer(certOrKeyFile string) (*compute.FileContentBuffer, error) {
-	data, err := os.ReadFile(certOrKeyFile)
-	if err != nil {
-		err := fmt.Errorf("Unable to read Certificate or Key file %s", certOrKeyFile)
-		return nil, err
-	}
-	shield := &compute.FileContentBuffer{
-		Content:  base64.StdEncoding.EncodeToString(data),
-		FileType: "X509",
-	}
-	block, _ := pem.Decode(data)
-
-	if block == nil || block.Type != "CERTIFICATE" {
-		_, err = x509.ParseCertificate(data)
-	} else {
-		_, err = x509.ParseCertificate(block.Bytes)
-	}
-	if err != nil {
-		shield.FileType = "BIN"
-	}
-	return shield, nil
-
-}
 
 // Run executes the Packer build step that creates a GCE machine image.
 //
@@ -88,7 +60,7 @@ func (s *StepCreateImage) Run(ctx context.Context, state multistep.StateBag) mul
 
 	shieldedVMStateConfig := &compute.InitialStateConfig{}
 	for _, v := range config.ImageSignaturesDB {
-		shieldedData, err := FillFileContentBuffer(v)
+		shieldedData, err := common.FillFileContentBuffer(v)
 		if err != nil {
 			ui.Error(err.Error())
 			return multistep.ActionHalt
