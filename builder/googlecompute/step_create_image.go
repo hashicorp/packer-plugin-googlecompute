@@ -59,10 +59,10 @@ func (s *StepCreateImage) Run(ctx context.Context, state multistep.StateBag) mul
 	}
 
 	imageGuestOsFeatures := []string{}
-	if config.ImageSignaturesDB != nil {
+	if config.ImageSignaturesDB != nil || config.ImageStorageLocations != nil || config.ImageKeyExchangeKey != nil || config.ImageForbiddenSignaturesDB != nil {
 		imageGuestOsFeatures = []string{"UEFI_COMPATIBLE"}
 	}
-	shieldedVMStateConfig, shieldErr := common.CreateShieldedVMStateConfig(imageGuestOsFeatures, "", nil, config.ImageSignaturesDB, nil)
+	shieldedVMStateConfig, shieldErr := common.CreateShieldedVMStateConfig(imageGuestOsFeatures, config.ImagePlatformKey, config.ImageKeyExchangeKey, config.ImageSignaturesDB, config.ImageForbiddenSignaturesDB)
 
 	if shieldErr != nil {
 		ui.Error(shieldErr.Error())
