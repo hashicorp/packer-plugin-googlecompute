@@ -221,7 +221,7 @@ func (p *PostProcessor) PostProcess(ctx context.Context, ui packersdk.Ui, artifa
 		return nil, false, false, err
 	}
 
-	shieldedVMStateConfig, err := CreateShieldedVMStateConfig(p.config.ImageGuestOsFeatures, p.config.ImagePlatformKey, p.config.ImageKeyExchangeKey, p.config.ImageSignaturesDB, p.config.ImageForbiddenSignaturesDB)
+	shieldedVMStateConfig, err := common.CreateShieldedVMStateConfig(p.config.ImageGuestOsFeatures, p.config.ImagePlatformKey, p.config.ImageKeyExchangeKey, p.config.ImageSignaturesDB, p.config.ImageForbiddenSignaturesDB)
 	if err != nil {
 		return nil, false, false, err
 	}
@@ -289,42 +289,4 @@ func (p PostProcessor) findTarballFromArtifact(artifact packersdk.Artifact) (io.
 	}
 
 	return os.Open(source)
-}
-
-func CreateShieldedVMStateConfig(imageGuestOsFeatures []string, imagePlatformKey string, imageKeyExchangeKey []string, imageSignaturesDB []string, imageForbiddenSignaturesDB []string) (*compute.InitialStateConfig, error) {
-	shieldedVMStateConfig := &compute.InitialStateConfig{}
-	for _, v := range imageGuestOsFeatures {
-		if v == "UEFI_COMPATIBLE" {
-			if imagePlatformKey != "" {
-				shieldedData, err := common.FillFileContentBuffer(imagePlatformKey)
-				if err != nil {
-					return nil, err
-				}
-				shieldedVMStateConfig.Pk = shieldedData
-			}
-			for _, v := range imageKeyExchangeKey {
-				shieldedData, err := common.FillFileContentBuffer(v)
-				if err != nil {
-					return nil, err
-				}
-				shieldedVMStateConfig.Keks = append(shieldedVMStateConfig.Keks, shieldedData)
-			}
-			for _, v := range imageSignaturesDB {
-				shieldedData, err := common.FillFileContentBuffer(v)
-				if err != nil {
-					return nil, err
-				}
-				shieldedVMStateConfig.Dbs = append(shieldedVMStateConfig.Dbs, shieldedData)
-			}
-			for _, v := range imageForbiddenSignaturesDB {
-				shieldedData, err := common.FillFileContentBuffer(v)
-				if err != nil {
-					return nil, err
-				}
-				shieldedVMStateConfig.Dbxs = append(shieldedVMStateConfig.Dbxs, shieldedData)
-			}
-
-		}
-	}
-	return shieldedVMStateConfig, nil
 }

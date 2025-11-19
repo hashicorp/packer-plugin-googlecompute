@@ -58,14 +58,11 @@ func (s *StepCreateImage) Run(ctx context.Context, state multistep.StateBag) mul
 		})
 	}
 
-	shieldedVMStateConfig := &compute.InitialStateConfig{}
-	for _, v := range config.ImageSignaturesDB {
-		shieldedData, err := common.FillFileContentBuffer(v)
-		if err != nil {
-			ui.Error(err.Error())
-			return multistep.ActionHalt
-		}
-		shieldedVMStateConfig.Dbs = append(shieldedVMStateConfig.Dbs, shieldedData)
+	shieldedVMStateConfig, shieldErr := common.CreateShieldedVMStateConfig(nil, "", nil, config.ImageSignaturesDB, nil)
+
+	if shieldErr != nil {
+		ui.Error(shieldErr.Error())
+		return multistep.ActionHalt
 	}
 
 	imagePayload := &compute.Image{
