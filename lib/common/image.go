@@ -17,8 +17,8 @@ type Image struct {
 	Name                         string
 	ProjectId                    string
 	SelfLink                     string
-	SizeGb                       int64
 	ShieldedInstanceInitialState *compute.InitialStateConfig
+	SizeGb                       int64
 }
 
 func (i *Image) IsWindows() bool {

@@ -151,8 +151,8 @@ func (d *DriverMock) CreateImage(project string, imageSpec *compute.Image) (<-ch
 			Name:                         imageSpec.Name,
 			ProjectId:                    d.CreateImageProjectId,
 			SelfLink:                     selfLink,
-			SizeGb:                       diskSizeGb,
 			ShieldedInstanceInitialState: imageSpec.ShieldedInstanceInitialState,
+			SizeGb:                       diskSizeGb,
 		}
 		close(ch)
 		resultCh = ch
