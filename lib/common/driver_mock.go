@@ -124,6 +124,10 @@ type DriverMock struct {
 	UploadToBucketData       io.Reader
 	UploadToBucketResult     string
 	UploadToBucketError      error
+
+	ImportOSLoginSSHKeyUser           string
+	ImportOSLoginSSHKeyKey            string
+	ImportOSLoginSSHKeyExpirationTime *int64
 }
 
 func (d *DriverMock) CreateImage(project string, imageSpec *compute.Image) (<-chan *Image, <-chan error) {
@@ -380,6 +384,9 @@ func (d *DriverMock) CreateOrResetWindowsPassword(instance, zone string, c *Wind
 }
 
 func (d *DriverMock) ImportOSLoginSSHKey(user, key string, expirationTimeUsec *int64) (*oslogin.LoginProfile, error) {
+	d.ImportOSLoginSSHKeyUser = user
+	d.ImportOSLoginSSHKeyKey = key
+	d.ImportOSLoginSSHKeyExpirationTime = expirationTimeUsec
 	account := oslogin.PosixAccount{Primary: true, Username: "testing_packer_io"}
 	profile := oslogin.LoginProfile{
 		PosixAccounts: []*oslogin.PosixAccount{&account},
