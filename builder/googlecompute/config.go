@@ -369,6 +369,11 @@ type Config struct {
 	//
 	// Note: Invalid or unsupported values will result in an error during provisioning.
 	OSLoginSSHUsername string `mapstructure:"oslogin_ssh_username" required:"false"`
+	// The duration after which an SSH key imported into OS Login will expire.
+	// This parameter is used when an SSH key is imported into the OS Login profile.
+	// The expiration time is calculated from the current time plus this duration.
+	// Example value: `1h`, `30m`, `24h`.
+	OSLoginSSHKeyExpireAfter time.Duration `mapstructure:"oslogin_ssh_key_expire_after" required:"false"`
 	// The time to wait between the creation of the instance used to create the image,
 	// and the addition of SSH configuration, including SSH keys, to that instance.
 	// The delay is intended to protect packer from anything in the instance boot

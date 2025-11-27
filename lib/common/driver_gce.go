@@ -898,12 +898,17 @@ func (d *driverGCE) getPasswordResponses(zone, instance string) ([]windowsPasswo
 	return passwordResponses, nil
 }
 
-func (d *driverGCE) ImportOSLoginSSHKey(user, sshPublicKey string) (*oslogin.LoginProfile, error) {
+func (d *driverGCE) ImportOSLoginSSHKey(user, sshPublicKey string, expirationTimeUsec *int64) (*oslogin.LoginProfile, error) {
 	parent := fmt.Sprintf("users/%s", user)
 
-	resp, err := d.osLoginService.Users.ImportSshPublicKey(parent, &oslogin.SshPublicKey{
+	sshKey := &oslogin.SshPublicKey{
 		Key: sshPublicKey,
-	}).Do()
+	}
+	if expirationTimeUsec != nil {
+		sshKey.ExpirationTimeUsec = *expirationTimeUsec
+	}
+
+	resp, err := d.osLoginService.Users.ImportSshPublicKey(parent, sshKey).Do()
 	if err != nil {
 		return nil, err
 	}

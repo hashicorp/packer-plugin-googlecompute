@@ -379,7 +379,7 @@ func (d *DriverMock) CreateOrResetWindowsPassword(instance, zone string, c *Wind
 	return resultCh, d.CreateOrResetWindowsPasswordErr
 }
 
-func (d *DriverMock) ImportOSLoginSSHKey(user, key string) (*oslogin.LoginProfile, error) {
+func (d *DriverMock) ImportOSLoginSSHKey(user, key string, expirationTimeUsec *int64) (*oslogin.LoginProfile, error) {
 	account := oslogin.PosixAccount{Primary: true, Username: "testing_packer_io"}
 	profile := oslogin.LoginProfile{
 		PosixAccounts: []*oslogin.PosixAccount{&account},
