@@ -126,7 +126,7 @@ func (s *StepCreateImage) getDeprecationStatus(config *Config) (*compute.Depreca
 				errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("deprecate_at must be a future time"))
 			} else {
 				deprecation.Deprecated = config.DeprecateAt
-				deprecation.State      = "ACTIVE"
+				deprecation.State = "ACTIVE"
 			}
 		}
 
@@ -138,7 +138,7 @@ func (s *StepCreateImage) getDeprecationStatus(config *Config) (*compute.Depreca
 				errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("obsolete_at must be a future time"))
 			} else {
 				deprecation.Obsolete = config.ObsoleteAt
-				deprecation.State    = "ACTIVE"
+				deprecation.State = "ACTIVE"
 			}
 
 		}
@@ -151,7 +151,7 @@ func (s *StepCreateImage) getDeprecationStatus(config *Config) (*compute.Depreca
 				errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("delete_at must be a future time"))
 			} else {
 				deprecation.Deleted = config.DeleteAt
-				deprecation.State   = "ACTIVE"
+				deprecation.State = "ACTIVE"
 			}
 		}
 
