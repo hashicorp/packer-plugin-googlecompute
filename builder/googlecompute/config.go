@@ -161,7 +161,7 @@ type Config struct {
 	// The project ID to push the build image into. Defaults to project_id.
 	ImageProjectId string `mapstructure:"image_project_id" required:"false"`
 	// A database of certificates that are trusted and can be used to sign boot files.
-	//You may specify single or multiple comma-separated values for this value.
+	// You may specify single or multiple comma-separated values for this value.
 	ImageSignaturesDB []string `mapstructure:"image_signatures_db" required:"false"`
 	// A key used to establish the trust relationship between the platform owner and the firmware. You may only specify one platform key, and it must be a valid X.509 certificate.
 	ImagePlatformKey string `mapstructure:"image_platform_key" required:"false"`
