@@ -167,7 +167,7 @@ type Config struct {
 	ImagePlatformKey string `mapstructure:"image_platform_key" required:"false"`
 	//A key used to establish a trust relationship between the firmware and the OS. You may specify multiple comma-separated keys for this value.
 	ImageKeyExchangeKey []string `mapstructure:"image_key_exchange_key" required:"false"`
-	//A database of certificates that have been revoked and will cause the system to stop booting if a boot file is signed with one of them. You may specify single or multiple comma-separated values for this value.
+	// A database of certificates that have been revoked and will cause the system to stop booting if a boot file is signed with one of them. You may specify single or multiple comma-separated values for this value.
 	ImageForbiddenSignaturesDB []string `mapstructure:"image_forbidden_signatures_db" required:"false"`
 
 	// Storage location, either regional or multi-regional, where snapshot
