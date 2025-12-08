@@ -1,4 +1,4 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2013, 2025
 # SPDX-License-Identifier: MPL-2.0
 
 // This template is used for acceptance testing the custom_endpoints and
