@@ -838,7 +838,7 @@ func testConfig(t *testing.T) (config map[string]interface{}, tempAccountFile st
 		"project_id":                    "hashicorp",
 		"source_image":                  "foo",
 		"image_platform_key":            "test-fixtures/fake-key",
-		"image_key_exchange_key":        "test-fixtures/fake-key",
+		"image_key_exchange_key":        []string{"test-fixtures/fake-key"},
 		"image_signatures_db":           []string{"test-fixtures/fake-key"},
 		"image_forbidden_signatures_db": []string{"test-fixtures/fake-key"},
 		"ssh_username":                  "root",
