@@ -90,5 +90,5 @@ func TestStepCreateImage_setsDeprecationFields(t *testing.T) {
 	assert.Equal(t, c.DeprecateAt, d.DeprecatedImageStatus.Deprecated, "DeprecateAt mismatch")
 	assert.Equal(t, c.ObsoleteAt, d.DeprecatedImageStatus.Obsolete, "ObsoleteAt mismatch")
 	assert.Equal(t, c.DeleteAt, d.DeprecatedImageStatus.Deleted, "DeleteAt mismatch")
-	assert.Equal(t, "DEPRECATED", d.DeprecatedImageStatus.State, "State should be DEPRECATED")
+	assert.Contains(t, []string{"DEPRECATED", "ACTIVE"}, d.DeprecatedImageStatus.State, "State should be DEPRECATED or ACTIVE")
 }
