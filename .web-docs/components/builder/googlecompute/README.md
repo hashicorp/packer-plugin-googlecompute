@@ -253,6 +253,10 @@ builder.
   
   Refer to the [Node Affinity](#node-affinities) for more information on affinities.
 
+- `reservation_affinity` (\*common.ReservationAffinity) - ReservationAffinity: Specifies the reservations that this instance can consume from.
+
+- `specific_reservation_required` (bool) - If you are using a reservation, you must set this to true.
+
 - `state_timeout` (duration string | ex: "1h5m2s") - The time to wait for instance state changes. Defaults to "5m".
 
 - `region` (string) - The region in which to launch the instance. Defaults to the region
