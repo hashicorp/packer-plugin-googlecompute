@@ -134,6 +134,7 @@ type FlatConfig struct {
 	UseOSLogin                   *bool                             `mapstructure:"use_os_login" required:"false" cty:"use_os_login" hcl:"use_os_login"`
 	NetworkIP                    *string                           `mapstructure:"network_ip" required:"false" cty:"network_ip" hcl:"network_ip"`
 	OSLoginSSHUsername           *string                           `mapstructure:"oslogin_ssh_username" required:"false" cty:"oslogin_ssh_username" hcl:"oslogin_ssh_username"`
+	OSLoginSSHKeyExpireAfter     *string                           `mapstructure:"oslogin_ssh_key_expire_after" required:"false" cty:"oslogin_ssh_key_expire_after" hcl:"oslogin_ssh_key_expire_after"`
 	WaitToAddSSHKeys             *string                           `mapstructure:"wait_to_add_ssh_keys" cty:"wait_to_add_ssh_keys" hcl:"wait_to_add_ssh_keys"`
 	Zone                         *string                           `mapstructure:"zone" required:"true" cty:"zone" hcl:"zone"`
 	DeprecateAt                  *string                           `mapstructure:"deprecate_at" required:"false" cty:"deprecate_at" hcl:"deprecate_at"`
@@ -278,6 +279,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"use_os_login":                    &hcldec.AttrSpec{Name: "use_os_login", Type: cty.Bool, Required: false},
 		"network_ip":                      &hcldec.AttrSpec{Name: "network_ip", Type: cty.String, Required: false},
 		"oslogin_ssh_username":            &hcldec.AttrSpec{Name: "oslogin_ssh_username", Type: cty.String, Required: false},
+		"oslogin_ssh_key_expire_after":    &hcldec.AttrSpec{Name: "oslogin_ssh_key_expire_after", Type: cty.String, Required: false},
 		"wait_to_add_ssh_keys":            &hcldec.AttrSpec{Name: "wait_to_add_ssh_keys", Type: cty.String, Required: false},
 		"zone":                            &hcldec.AttrSpec{Name: "zone", Type: cty.String, Required: false},
 		"deprecate_at":                    &hcldec.AttrSpec{Name: "deprecate_at", Type: cty.String, Required: false},

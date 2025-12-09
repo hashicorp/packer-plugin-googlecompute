@@ -102,7 +102,16 @@ func (s *StepImportOSLoginSSHKey) Run(ctx context.Context, state multistep.State
 		return multistep.ActionHalt
 	}
 
-	loginProfile, err := driver.ImportOSLoginSSHKey(s.accountEmail, string(config.Comm.SSHPublicKey))
+	// Calculate expiration time if oslogin_ssh_key_expire_after is set
+	// This is used when an SSH key is imported into the OS Login profile
+	var expirationTimeUsec *int64
+	if config.OSLoginSSHKeyExpireAfter > 0 {
+		expirationTime := time.Now().Add(config.OSLoginSSHKeyExpireAfter)
+		expirationTimeUsecVal := expirationTime.UnixMicro()
+		expirationTimeUsec = &expirationTimeUsecVal
+	}
+
+	loginProfile, err := driver.ImportOSLoginSSHKey(s.accountEmail, string(config.Comm.SSHPublicKey), expirationTimeUsec)
 	if err != nil {
 		err := fmt.Errorf("Error importing SSH public key for OSLogin: %s", err)
 		state.Put("error", err)
