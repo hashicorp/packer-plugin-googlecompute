@@ -160,6 +160,16 @@ type Config struct {
 	ImageGuestOsFeatures []string `mapstructure:"image_guest_os_features" required:"false"`
 	// The project ID to push the build image into. Defaults to project_id.
 	ImageProjectId string `mapstructure:"image_project_id" required:"false"`
+	// A database of certificates that are trusted and can be used to sign boot files.
+	// You may specify single or multiple comma-separated values for this value.
+	ImageSignaturesDB []string `mapstructure:"image_signatures_db" required:"false"`
+	// A key used to establish the trust relationship between the platform owner and the firmware. You may only specify one platform key, and it must be a valid X.509 certificate.
+	ImagePlatformKey string `mapstructure:"image_platform_key" required:"false"`
+	//A key used to establish a trust relationship between the firmware and the OS. You may specify multiple comma-separated keys for this value.
+	ImageKeyExchangeKey []string `mapstructure:"image_key_exchange_key" required:"false"`
+	// A database of certificates that have been revoked and will cause the system to stop booting if a boot file is signed with one of them. You may specify single or multiple comma-separated values for this value.
+	ImageForbiddenSignaturesDB []string `mapstructure:"image_forbidden_signatures_db" required:"false"`
+
 	// Storage location, either regional or multi-regional, where snapshot
 	// content is to be stored and only accepts 1 value. Always defaults to a nearby regional or multi-regional
 	// location.

@@ -45,6 +45,7 @@ func TestStepCreateImage(t *testing.T) {
 	assert.Equal(t, c.ProjectId, image.ProjectId, "Created image project ID does not match config.")
 	assert.Equal(t, d.CreateImageReturnSelfLink, image.SelfLink, "Created image selflink does not match config")
 	assert.Equal(t, d.CreateImageReturnDiskSize, image.SizeGb, "Created image disk size does not match config")
+	assert.Equal(t, d.CreateImageSpec.ShieldedInstanceInitialState, image.ShieldedInstanceInitialState)
 
 	// Verify proper args passed to driver.CreateImage.
 	assert.Equal(t, c.ProjectId, d.CreateImageProjectId, "Incorrect project ID passed to driver.")
