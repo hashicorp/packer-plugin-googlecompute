@@ -741,6 +741,11 @@ func (d *driverGCE) RunInstance(c *InstanceConfig) (<-chan error, error) {
 		},
 	}
 
+	if c.ReservationAffinity != nil {
+		log.Printf("[DEBUG] setting reservation affinity to %s", c.ReservationAffinity)
+		instance.ReservationAffinity = c.ReservationAffinity.ComputeType()
+	}
+
 	if c.MaxRunDurationInSeconds > 0 {
 		log.Printf("[DEBUG] setting max run duration to %d seconds", c.MaxRunDurationInSeconds)
 		instance.Scheduling.MaxRunDuration = &compute.Duration{
