@@ -9,7 +9,9 @@ import (
 	"encoding/hex"
 	"os"
 	"testing"
+	"time"
 
+	"github.com/hashicorp/packer-plugin-googlecompute/lib/common"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	configsdk "github.com/hashicorp/packer-plugin-sdk/template/config"
 	"google.golang.org/api/oauth2/v2"
@@ -307,5 +309,81 @@ func TestGetOSLoginUsername(t *testing.T) {
 				t.Errorf("Expected username to be truncated to 32 characters, got %q", username)
 			}
 		})
+	}
+}
+
+func TestStepImportOSLoginSSHKey_withExpirationTime(t *testing.T) {
+	state := testState(t)
+	fakeAccountEmail := "raffi-compute@developer.gserviceaccount.com"
+	driver := state.Get("driver").(*common.DriverMock)
+	step := &StepImportOSLoginSSHKey{
+		TokeninfoFunc: func() (*oauth2.Tokeninfo, error) {
+			return &oauth2.Tokeninfo{Email: fakeAccountEmail}, nil
+		},
+	}
+	defer step.Cleanup(state)
+
+	config := state.Get("config").(*Config)
+	config.UseOSLogin = configsdk.TriTrue
+	config.Comm.SSHPublicKey = []byte{'k', 'e', 'y'}
+	config.OSLoginSSHKeyExpireAfter = 1 * time.Hour
+
+	beforeTime := time.Now()
+	if action := step.Run(context.Background(), state); action != multistep.ActionContinue {
+		t.Fatalf("bad action: %#v", action)
+	}
+	afterTime := time.Now()
+
+	if driver.ImportOSLoginSSHKeyExpirationTime == nil {
+		t.Fatal("expected expiration time to be set, but got nil")
+	}
+
+	expectedExpirationMin := beforeTime.Add(config.OSLoginSSHKeyExpireAfter).UnixMicro()
+	expectedExpirationMax := afterTime.Add(config.OSLoginSSHKeyExpireAfter).UnixMicro()
+	actualExpiration := *driver.ImportOSLoginSSHKeyExpirationTime
+
+	if actualExpiration < expectedExpirationMin || actualExpiration > expectedExpirationMax {
+		t.Errorf("expected expiration time to be between %d and %d, but got %d", expectedExpirationMin, expectedExpirationMax, actualExpiration)
+	}
+
+	if driver.ImportOSLoginSSHKeyUser != fakeAccountEmail {
+		t.Errorf("expected user to be %q, but got %q", fakeAccountEmail, driver.ImportOSLoginSSHKeyUser)
+	}
+
+	if driver.ImportOSLoginSSHKeyKey != "key" {
+		t.Errorf("expected key to be %q, but got %q", "key", driver.ImportOSLoginSSHKeyKey)
+	}
+}
+
+func TestStepImportOSLoginSSHKey_withoutExpirationTime(t *testing.T) {
+	state := testState(t)
+	fakeAccountEmail := "raffi-compute@developer.gserviceaccount.com"
+	driver := state.Get("driver").(*common.DriverMock)
+	step := &StepImportOSLoginSSHKey{
+		TokeninfoFunc: func() (*oauth2.Tokeninfo, error) {
+			return &oauth2.Tokeninfo{Email: fakeAccountEmail}, nil
+		},
+	}
+	defer step.Cleanup(state)
+
+	config := state.Get("config").(*Config)
+	config.UseOSLogin = configsdk.TriTrue
+	config.Comm.SSHPublicKey = []byte{'k', 'e', 'y'}
+	config.OSLoginSSHKeyExpireAfter = 0 // Not set
+
+	if action := step.Run(context.Background(), state); action != multistep.ActionContinue {
+		t.Fatalf("bad action: %#v", action)
+	}
+
+	if driver.ImportOSLoginSSHKeyExpirationTime != nil {
+		t.Errorf("expected expiration time to be nil when not set, but got %v", *driver.ImportOSLoginSSHKeyExpirationTime)
+	}
+
+	if driver.ImportOSLoginSSHKeyUser != fakeAccountEmail {
+		t.Errorf("expected user to be %q, but got %q", fakeAccountEmail, driver.ImportOSLoginSSHKeyUser)
+	}
+
+	if driver.ImportOSLoginSSHKeyKey != "key" {
+		t.Errorf("expected key to be %q, but got %q", "key", driver.ImportOSLoginSSHKeyKey)
 	}
 }
