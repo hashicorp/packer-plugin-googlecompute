@@ -57,18 +57,27 @@ func (s *StepCreateImage) Run(ctx context.Context, state multistep.StateBag) mul
 			Type: v,
 		})
 	}
+
+	shieldedVMStateConfig, shieldErr := common.CreateShieldedVMStateConfig(config.ImageGuestOsFeatures, config.ImagePlatformKey, config.ImageKeyExchangeKey, config.ImageSignaturesDB, config.ImageForbiddenSignaturesDB)
+
+	if shieldErr != nil {
+		ui.Error(shieldErr.Error())
+		return multistep.ActionHalt
+	}
+
 	imagePayload := &compute.Image{
-		Architecture:       config.ImageArchitecture,
-		Description:        config.ImageDescription,
-		Name:               config.ImageName,
-		Family:             config.ImageFamily,
-		Labels:             config.ImageLabels,
-		Licenses:           config.ImageLicenses,
-		GuestOsFeatures:    imageFeatures,
-		ImageEncryptionKey: config.ImageEncryptionKey.ComputeType(),
-		SourceDisk:         sourceDiskURI,
-		SourceType:         "RAW",
-		StorageLocations:   config.ImageStorageLocations,
+		Architecture:                 config.ImageArchitecture,
+		Description:                  config.ImageDescription,
+		Name:                         config.ImageName,
+		Family:                       config.ImageFamily,
+		ShieldedInstanceInitialState: shieldedVMStateConfig,
+		Labels:                       config.ImageLabels,
+		Licenses:                     config.ImageLicenses,
+		GuestOsFeatures:              imageFeatures,
+		ImageEncryptionKey:           config.ImageEncryptionKey.ComputeType(),
+		SourceDisk:                   sourceDiskURI,
+		SourceType:                   "RAW",
+		StorageLocations:             config.ImageStorageLocations,
 	}
 	imageCh, errCh := driver.CreateImage(config.ImageProjectId, imagePayload)
 	var err error

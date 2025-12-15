@@ -103,6 +103,10 @@ type FlatConfig struct {
 	ImageLicenses                []string                          `mapstructure:"image_licenses" required:"false" cty:"image_licenses" hcl:"image_licenses"`
 	ImageGuestOsFeatures         []string                          `mapstructure:"image_guest_os_features" required:"false" cty:"image_guest_os_features" hcl:"image_guest_os_features"`
 	ImageProjectId               *string                           `mapstructure:"image_project_id" required:"false" cty:"image_project_id" hcl:"image_project_id"`
+	ImageSignaturesDB            []string                          `mapstructure:"image_signatures_db" required:"false" cty:"image_signatures_db" hcl:"image_signatures_db"`
+	ImagePlatformKey             *string                           `mapstructure:"image_platform_key" required:"false" cty:"image_platform_key" hcl:"image_platform_key"`
+	ImageKeyExchangeKey          []string                          `mapstructure:"image_key_exchange_key" required:"false" cty:"image_key_exchange_key" hcl:"image_key_exchange_key"`
+	ImageForbiddenSignaturesDB   []string                          `mapstructure:"image_forbidden_signatures_db" required:"false" cty:"image_forbidden_signatures_db" hcl:"image_forbidden_signatures_db"`
 	ImageStorageLocations        []string                          `mapstructure:"image_storage_locations" required:"false" cty:"image_storage_locations" hcl:"image_storage_locations"`
 	InstanceName                 *string                           `mapstructure:"instance_name" required:"false" cty:"instance_name" hcl:"instance_name"`
 	Labels                       map[string]string                 `mapstructure:"labels" required:"false" cty:"labels" hcl:"labels"`
@@ -248,6 +252,10 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"image_licenses":                  &hcldec.AttrSpec{Name: "image_licenses", Type: cty.List(cty.String), Required: false},
 		"image_guest_os_features":         &hcldec.AttrSpec{Name: "image_guest_os_features", Type: cty.List(cty.String), Required: false},
 		"image_project_id":                &hcldec.AttrSpec{Name: "image_project_id", Type: cty.String, Required: false},
+		"image_signatures_db":             &hcldec.AttrSpec{Name: "image_signatures_db", Type: cty.List(cty.String), Required: false},
+		"image_platform_key":              &hcldec.AttrSpec{Name: "image_platform_key", Type: cty.String, Required: false},
+		"image_key_exchange_key":          &hcldec.AttrSpec{Name: "image_key_exchange_key", Type: cty.List(cty.String), Required: false},
+		"image_forbidden_signatures_db":   &hcldec.AttrSpec{Name: "image_forbidden_signatures_db", Type: cty.List(cty.String), Required: false},
 		"image_storage_locations":         &hcldec.AttrSpec{Name: "image_storage_locations", Type: cty.List(cty.String), Required: false},
 		"instance_name":                   &hcldec.AttrSpec{Name: "instance_name", Type: cty.String, Required: false},
 		"labels":                          &hcldec.AttrSpec{Name: "labels", Type: cty.Map(cty.String), Required: false},
