@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math/big"
 	"strings"
 	"time"
 
@@ -908,12 +909,38 @@ func (d *driverGCE) ImportOSLoginSSHKey(user, sshPublicKey string, expirationTim
 		sshKey.ExpirationTimeUsec = *expirationTimeUsec
 	}
 
-	resp, err := d.osLoginService.Users.ImportSshPublicKey(parent, sshKey).Do()
-	if err != nil {
-		return nil, err
+	for retry := 0; true; {
+		resp, err := d.osLoginService.Users.ImportSshPublicKey(parent, sshKey).Do()
+		if err == nil {
+			return resp.LoginProfile, nil
+		}
+		// Retry on concurrent mutation errors, where the error message looks like:
+		// googleapi: Error 409: Multiple concurrent mutations were attempted. Please retry the request.
+		isRetryable := strings.Contains(err.Error(), "Please retry the request")
+		if !isRetryable {
+			return nil, err
+		}
+		retry++
+		if retry < 10 {
+			log.Printf("ImportSshPublicKey try %d/10 failed (%v)", retry, err)
+			sleepSecs := retrySleepSeconds()
+			// Sleep between 5-15 seconds (randomly chosen) before retry
+			sleepDuration := time.Duration(sleepSecs) * time.Second
+			log.Printf("Waiting %v before retry...", sleepDuration)
+			time.Sleep(sleepDuration)
+		} else {
+			return nil, err
+		}
 	}
+	// not reached:
+	return nil, nil
+}
 
-	return resp.LoginProfile, nil
+func retrySleepSeconds() int {
+	// get a big.Int in range [0,10] :
+	offset, _ := rand.Int(rand.Reader, big.NewInt(11))
+	// convert to int via int64, and add bias:
+	return int(offset.Int64()) + 5
 }
 
 func (d *driverGCE) DeleteOSLoginSSHKey(user, fingerprint string) error {
