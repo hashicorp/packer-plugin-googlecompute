@@ -19,6 +19,7 @@ import (
 	"time"
 
 	compute "google.golang.org/api/compute/v1"
+	"google.golang.org/api/googleapi"
 	impersonate "google.golang.org/api/impersonate"
 	oauth2_svc "google.golang.org/api/oauth2/v2"
 	"google.golang.org/api/option"
@@ -909,31 +910,24 @@ func (d *driverGCE) ImportOSLoginSSHKey(user, sshPublicKey string, expirationTim
 		sshKey.ExpirationTimeUsec = *expirationTimeUsec
 	}
 
-	for retry := 0; true; {
+	const maxRetries = 10
+	var err error
+	for i := 0; i < maxRetries; i++ {
 		resp, err := d.osLoginService.Users.ImportSshPublicKey(parent, sshKey).Do()
 		if err == nil {
 			return resp.LoginProfile, nil
 		}
-		// Retry on concurrent mutation errors, where the error message looks like:
-		// googleapi: Error 409: Multiple concurrent mutations were attempted. Please retry the request.
-		isRetryable := strings.Contains(err.Error(), "Please retry the request")
-		if !isRetryable {
-			return nil, err
-		}
-		retry++
-		if retry < 10 {
-			log.Printf("ImportSshPublicKey try %d/10 failed (%v)", retry, err)
+		// Retry on concurrent mutation errors
+		if gErr, ok := err.(*googleapi.Error); ok && gErr.Code == 409 && (i+1 < maxRetries) {
+			log.Printf("ImportSshPublicKey conflict (try %d/%d): %v", i+1, maxRetries, err)
 			sleepSecs := retrySleepSeconds()
 			// Sleep between 5-15 seconds (randomly chosen) before retry
-			sleepDuration := time.Duration(sleepSecs) * time.Second
-			log.Printf("Waiting %v before retry...", sleepDuration)
-			time.Sleep(sleepDuration)
+			time.Sleep(time.Duration(sleepSecs) * time.Second)
 		} else {
-			return nil, err
+			break
 		}
 	}
-	// not reached:
-	return nil, nil
+	return nil, err
 }
 
 func retrySleepSeconds() int {
