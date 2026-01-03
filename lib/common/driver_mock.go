@@ -148,14 +148,15 @@ func (d *DriverMock) CreateImage(project string, imageSpec *compute.Image) (<-ch
 		}
 
 		ch <- &Image{
-			Architecture:    imageSpec.Architecture,
-			GuestOsFeatures: imageSpec.GuestOsFeatures,
-			Labels:          imageSpec.Labels,
-			Licenses:        imageSpec.Licenses,
-			Name:            imageSpec.Name,
-			ProjectId:       d.CreateImageProjectId,
-			SelfLink:        selfLink,
-			SizeGb:          diskSizeGb,
+			Architecture:                 imageSpec.Architecture,
+			GuestOsFeatures:              imageSpec.GuestOsFeatures,
+			Labels:                       imageSpec.Labels,
+			Licenses:                     imageSpec.Licenses,
+			Name:                         imageSpec.Name,
+			ProjectId:                    d.CreateImageProjectId,
+			SelfLink:                     selfLink,
+			ShieldedInstanceInitialState: imageSpec.ShieldedInstanceInitialState,
+			SizeGb:                       diskSizeGb,
 		}
 		close(ch)
 		resultCh = ch
