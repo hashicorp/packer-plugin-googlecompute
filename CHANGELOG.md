@@ -3,6 +3,25 @@
 Please refer to [releases](https://github.com/hashicorp/packer-plugin-googlecompute/releases) for the latest CHANGELOG information.
 
 ---
+## 1.2.5 (January 27, 2026)
+
+## What's Changed
+
+### Exciting New Features
+* Add support for image signatures with `image_platform_key`, `image_key_exchange_key`, and `image_forbidden_signatures_db` parameters [GH-318](https://github.com/hashicorp/packer-plugin-googlecompute/pull/318)
+* Add `oslogin_ssh_key_expire_after` parameter for OS Login SSH key expiration [GH-319](https://github.com/hashicorp/packer-plugin-googlecompute/pull/319)
+
+### Improvements
+* Add retry loop around ImportSshPublicKey for better reliability [GH-324](https://github.com/hashicorp/packer-plugin-googlecompute/pull/324)
+
+### Bug Fixes
+* Fix deprecation state handling when config is valid [GH-321](https://github.com/hashicorp/packer-plugin-googlecompute/pull/321)
+
+### Other Changes
+* Bump `x/crypto` to v0.46.0 for security updates [GH-323](https://github.com/hashicorp/packer-plugin-googlecompute/pull/323)
+* Update Copyright and License Headers for compliance [GH-322](https://github.com/hashicorp/packer-plugin-googlecompute/pull/322)
+
+
 ## 1.2.4 (October 9, 2025)
 
 ## What's Changed
