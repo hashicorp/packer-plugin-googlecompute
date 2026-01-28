@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2013, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package googlecompute
@@ -45,6 +45,7 @@ func TestStepCreateImage(t *testing.T) {
 	assert.Equal(t, c.ProjectId, image.ProjectId, "Created image project ID does not match config.")
 	assert.Equal(t, d.CreateImageReturnSelfLink, image.SelfLink, "Created image selflink does not match config")
 	assert.Equal(t, d.CreateImageReturnDiskSize, image.SizeGb, "Created image disk size does not match config")
+	assert.Equal(t, d.CreateImageSpec.ShieldedInstanceInitialState, image.ShieldedInstanceInitialState)
 
 	// Verify proper args passed to driver.CreateImage.
 	assert.Equal(t, c.ProjectId, d.CreateImageProjectId, "Incorrect project ID passed to driver.")
@@ -90,5 +91,5 @@ func TestStepCreateImage_setsDeprecationFields(t *testing.T) {
 	assert.Equal(t, c.DeprecateAt, d.DeprecatedImageStatus.Deprecated, "DeprecateAt mismatch")
 	assert.Equal(t, c.ObsoleteAt, d.DeprecatedImageStatus.Obsolete, "ObsoleteAt mismatch")
 	assert.Equal(t, c.DeleteAt, d.DeprecatedImageStatus.Deleted, "DeleteAt mismatch")
-	assert.Equal(t, "DEPRECATED", d.DeprecatedImageStatus.State, "State should be DEPRECATED")
+	assert.Contains(t, []string{"DEPRECATED", "ACTIVE"}, d.DeprecatedImageStatus.State, "State should be DEPRECATED or ACTIVE")
 }

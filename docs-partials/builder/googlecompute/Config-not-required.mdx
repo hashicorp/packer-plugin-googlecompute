@@ -118,6 +118,15 @@
 
 - `image_project_id` (string) - The project ID to push the build image into. Defaults to project_id.
 
+- `image_signatures_db` ([]string) - A database of certificates that are trusted and can be used to sign boot files.
+  You may specify single or multiple comma-separated values for this value.
+
+- `image_platform_key` (string) - A key used to establish the trust relationship between the platform owner and the firmware. You may only specify one platform key, and it must be a valid X.509 certificate.
+
+- `image_key_exchange_key` ([]string) - A key used to establish a trust relationship between the firmware and the OS. You may specify multiple comma-separated keys for this value.
+
+- `image_forbidden_signatures_db` ([]string) - A database of certificates that have been revoked and will cause the system to stop booting if a boot file is signed with one of them. You may specify single or multiple comma-separated values for this value.
+
 - `image_storage_locations` ([]string) - Storage location, either regional or multi-regional, where snapshot
   content is to be stored and only accepts 1 value. Always defaults to a nearby regional or multi-regional
   location.
@@ -317,6 +326,11 @@
   "ext_" to the canonical username in the browser, but omits it when using ADC in Packer.
   
   Note: Invalid or unsupported values will result in an error during provisioning.
+
+- `oslogin_ssh_key_expire_after` (duration string | ex: "1h5m2s") - The duration after which an SSH key imported into OS Login will expire.
+  This parameter is used when an SSH key is imported into the OS Login profile.
+  The expiration time is calculated from the current time plus this duration.
+  Example value: `1h`, `30m`, `24h`.
 
 - `wait_to_add_ssh_keys` (duration string | ex: "1h5m2s") - The time to wait between the creation of the instance used to create the image,
   and the addition of SSH configuration, including SSH keys, to that instance.

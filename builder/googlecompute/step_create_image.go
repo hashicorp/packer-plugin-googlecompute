@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2013, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package googlecompute
@@ -57,18 +57,27 @@ func (s *StepCreateImage) Run(ctx context.Context, state multistep.StateBag) mul
 			Type: v,
 		})
 	}
+
+	shieldedVMStateConfig, shieldErr := common.CreateShieldedVMStateConfig(config.ImageGuestOsFeatures, config.ImagePlatformKey, config.ImageKeyExchangeKey, config.ImageSignaturesDB, config.ImageForbiddenSignaturesDB)
+
+	if shieldErr != nil {
+		ui.Error(shieldErr.Error())
+		return multistep.ActionHalt
+	}
+
 	imagePayload := &compute.Image{
-		Architecture:       config.ImageArchitecture,
-		Description:        config.ImageDescription,
-		Name:               config.ImageName,
-		Family:             config.ImageFamily,
-		Labels:             config.ImageLabels,
-		Licenses:           config.ImageLicenses,
-		GuestOsFeatures:    imageFeatures,
-		ImageEncryptionKey: config.ImageEncryptionKey.ComputeType(),
-		SourceDisk:         sourceDiskURI,
-		SourceType:         "RAW",
-		StorageLocations:   config.ImageStorageLocations,
+		Architecture:                 config.ImageArchitecture,
+		Description:                  config.ImageDescription,
+		Name:                         config.ImageName,
+		Family:                       config.ImageFamily,
+		ShieldedInstanceInitialState: shieldedVMStateConfig,
+		Labels:                       config.ImageLabels,
+		Licenses:                     config.ImageLicenses,
+		GuestOsFeatures:              imageFeatures,
+		ImageEncryptionKey:           config.ImageEncryptionKey.ComputeType(),
+		SourceDisk:                   sourceDiskURI,
+		SourceType:                   "RAW",
+		StorageLocations:             config.ImageStorageLocations,
 	}
 	imageCh, errCh := driver.CreateImage(config.ImageProjectId, imagePayload)
 	var err error
@@ -126,6 +135,7 @@ func (s *StepCreateImage) getDeprecationStatus(config *Config) (*compute.Depreca
 				errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("deprecate_at must be a future time"))
 			} else {
 				deprecation.Deprecated = config.DeprecateAt
+				deprecation.State = "ACTIVE"
 			}
 		}
 
@@ -137,6 +147,7 @@ func (s *StepCreateImage) getDeprecationStatus(config *Config) (*compute.Depreca
 				errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("obsolete_at must be a future time"))
 			} else {
 				deprecation.Obsolete = config.ObsoleteAt
+				deprecation.State = "ACTIVE"
 			}
 
 		}
@@ -149,6 +160,7 @@ func (s *StepCreateImage) getDeprecationStatus(config *Config) (*compute.Depreca
 				errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("delete_at must be a future time"))
 			} else {
 				deprecation.Deleted = config.DeleteAt
+				deprecation.State = "ACTIVE"
 			}
 		}
 

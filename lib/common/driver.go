@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2013, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package common
@@ -86,7 +86,9 @@ type Driver interface {
 	CreateOrResetWindowsPassword(zone, name string, config *WindowsPasswordConfig) (<-chan error, error)
 
 	// ImportOSLoginSSHKey imports SSH public key for OSLogin.
-	ImportOSLoginSSHKey(user, sshPublicKey string) (*oslogin.LoginProfile, error)
+	// expirationTimeUsec is an optional expiration time in microseconds since Unix epoch.
+	// If nil, no expiration time will be set.
+	ImportOSLoginSSHKey(user, sshPublicKey string, expirationTimeUsec *int64) (*oslogin.LoginProfile, error)
 
 	// DeleteOSLoginSSHKey deletes the SSH public key for OSLogin with the given key.
 	DeleteOSLoginSSHKey(user, fingerprint string) error

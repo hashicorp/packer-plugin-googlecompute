@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2013, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package googlecompute
@@ -834,11 +834,15 @@ func testConfig(t *testing.T) (config map[string]interface{}, tempAccountFile st
 	tempAccountFile = testAccountFile(t)
 
 	config = map[string]interface{}{
-		"credentials_file": tempAccountFile,
-		"project_id":       "hashicorp",
-		"source_image":     "foo",
-		"ssh_username":     "root",
-		"image_family":     "bar",
+		"credentials_file":              tempAccountFile,
+		"project_id":                    "hashicorp",
+		"source_image":                  "foo",
+		"image_platform_key":            "test-fixtures/fake-key",
+		"image_key_exchange_key":        []string{"test-fixtures/fake-key"},
+		"image_signatures_db":           []string{"test-fixtures/fake-key"},
+		"image_forbidden_signatures_db": []string{"test-fixtures/fake-key"},
+		"ssh_username":                  "root",
+		"image_family":                  "bar",
 		"image_labels": map[string]string{
 			"label-1": "value-1",
 			"label-2": "value-2",

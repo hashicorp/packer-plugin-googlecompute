@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2013, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package common
@@ -124,6 +124,10 @@ type DriverMock struct {
 	UploadToBucketData       io.Reader
 	UploadToBucketResult     string
 	UploadToBucketError      error
+
+	ImportOSLoginSSHKeyUser           string
+	ImportOSLoginSSHKeyKey            string
+	ImportOSLoginSSHKeyExpirationTime *int64
 }
 
 func (d *DriverMock) CreateImage(project string, imageSpec *compute.Image) (<-chan *Image, <-chan error) {
@@ -144,14 +148,15 @@ func (d *DriverMock) CreateImage(project string, imageSpec *compute.Image) (<-ch
 		}
 
 		ch <- &Image{
-			Architecture:    imageSpec.Architecture,
-			GuestOsFeatures: imageSpec.GuestOsFeatures,
-			Labels:          imageSpec.Labels,
-			Licenses:        imageSpec.Licenses,
-			Name:            imageSpec.Name,
-			ProjectId:       d.CreateImageProjectId,
-			SelfLink:        selfLink,
-			SizeGb:          diskSizeGb,
+			Architecture:                 imageSpec.Architecture,
+			GuestOsFeatures:              imageSpec.GuestOsFeatures,
+			Labels:                       imageSpec.Labels,
+			Licenses:                     imageSpec.Licenses,
+			Name:                         imageSpec.Name,
+			ProjectId:                    d.CreateImageProjectId,
+			SelfLink:                     selfLink,
+			ShieldedInstanceInitialState: imageSpec.ShieldedInstanceInitialState,
+			SizeGb:                       diskSizeGb,
 		}
 		close(ch)
 		resultCh = ch
@@ -379,7 +384,10 @@ func (d *DriverMock) CreateOrResetWindowsPassword(instance, zone string, c *Wind
 	return resultCh, d.CreateOrResetWindowsPasswordErr
 }
 
-func (d *DriverMock) ImportOSLoginSSHKey(user, key string) (*oslogin.LoginProfile, error) {
+func (d *DriverMock) ImportOSLoginSSHKey(user, key string, expirationTimeUsec *int64) (*oslogin.LoginProfile, error) {
+	d.ImportOSLoginSSHKeyUser = user
+	d.ImportOSLoginSSHKeyKey = key
+	d.ImportOSLoginSSHKeyExpirationTime = expirationTimeUsec
 	account := oslogin.PosixAccount{Primary: true, Username: "testing_packer_io"}
 	profile := oslogin.LoginProfile{
 		PosixAccounts: []*oslogin.PosixAccount{&account},

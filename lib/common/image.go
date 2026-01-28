@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2013, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package common
@@ -10,14 +10,15 @@ import (
 )
 
 type Image struct {
-	Architecture    string
-	GuestOsFeatures []*compute.GuestOsFeature
-	Labels          map[string]string
-	Licenses        []string
-	Name            string
-	ProjectId       string
-	SelfLink        string
-	SizeGb          int64
+	Architecture                 string
+	GuestOsFeatures              []*compute.GuestOsFeature
+	Labels                       map[string]string
+	Licenses                     []string
+	Name                         string
+	ProjectId                    string
+	SelfLink                     string
+	ShieldedInstanceInitialState *compute.InitialStateConfig
+	SizeGb                       int64
 }
 
 func (i *Image) IsWindows() bool {
