@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2013, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package common
@@ -14,10 +14,12 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math/big"
 	"strings"
 	"time"
 
 	compute "google.golang.org/api/compute/v1"
+	"google.golang.org/api/googleapi"
 	impersonate "google.golang.org/api/impersonate"
 	oauth2_svc "google.golang.org/api/oauth2/v2"
 	"google.golang.org/api/option"
@@ -898,17 +900,41 @@ func (d *driverGCE) getPasswordResponses(zone, instance string) ([]windowsPasswo
 	return passwordResponses, nil
 }
 
-func (d *driverGCE) ImportOSLoginSSHKey(user, sshPublicKey string) (*oslogin.LoginProfile, error) {
+func (d *driverGCE) ImportOSLoginSSHKey(user, sshPublicKey string, expirationTimeUsec *int64) (*oslogin.LoginProfile, error) {
 	parent := fmt.Sprintf("users/%s", user)
 
-	resp, err := d.osLoginService.Users.ImportSshPublicKey(parent, &oslogin.SshPublicKey{
+	sshKey := &oslogin.SshPublicKey{
 		Key: sshPublicKey,
-	}).Do()
-	if err != nil {
-		return nil, err
+	}
+	if expirationTimeUsec != nil {
+		sshKey.ExpirationTimeUsec = *expirationTimeUsec
 	}
 
-	return resp.LoginProfile, nil
+	const maxRetries = 10
+	var err error
+	for i := 0; i < maxRetries; i++ {
+		resp, err := d.osLoginService.Users.ImportSshPublicKey(parent, sshKey).Do()
+		if err == nil {
+			return resp.LoginProfile, nil
+		}
+		// Retry on concurrent mutation errors
+		if gErr, ok := err.(*googleapi.Error); ok && gErr.Code == 409 && (i+1 < maxRetries) {
+			log.Printf("ImportSshPublicKey conflict (try %d/%d): %v", i+1, maxRetries, err)
+			sleepSecs := retrySleepSeconds()
+			// Sleep between 5-15 seconds (randomly chosen) before retry
+			time.Sleep(time.Duration(sleepSecs) * time.Second)
+		} else {
+			break
+		}
+	}
+	return nil, err
+}
+
+func retrySleepSeconds() int {
+	// get a big.Int in range [0,10] :
+	offset, _ := rand.Int(rand.Reader, big.NewInt(11))
+	// convert to int via int64, and add bias:
+	return int(offset.Int64()) + 5
 }
 
 func (d *driverGCE) DeleteOSLoginSSHKey(user, fingerprint string) error {
