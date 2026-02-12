@@ -742,6 +742,11 @@ func (d *driverGCE) RunInstance(c *InstanceConfig) (<-chan error, error) {
 			Items: c.Tags,
 		},
 	}
+	if len(c.ResourceManagerTags) > 0 {
+		instance.Params = &compute.InstanceParams{
+			ResourceManagerTags: c.ResourceManagerTags,
+		}
+	}
 
 	if c.MaxRunDurationInSeconds > 0 {
 		log.Printf("[DEBUG] setting max run duration to %d seconds", c.MaxRunDurationInSeconds)

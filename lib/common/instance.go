@@ -37,6 +37,8 @@ type InstanceConfig struct {
 	Scopes                       []string
 	Subnetwork                   string
 	Tags                         []string
-	Zone                         string
-	NetworkIP                    string
+	ResourceManagerTags          map[string]string
+
+	Zone      string
+	NetworkIP string
 }

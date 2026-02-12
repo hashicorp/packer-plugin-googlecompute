@@ -312,6 +312,8 @@ builder.
 
 - `tags` ([]string) - Assign network tags to apply firewall rules to VM instance.
 
+- `resource_manager_tags` (map[string]string) - Assign Secure Tags to apply firewall rules to VM instance.
+
 - `use_internal_ip` (bool) - If true, use the instance's internal IP instead of its external IP
   during building.
 

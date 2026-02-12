@@ -310,6 +310,8 @@ type Config struct {
 	Subnetwork string `mapstructure:"subnetwork" required:"false"`
 	// Assign network tags to apply firewall rules to VM instance.
 	Tags []string `mapstructure:"tags" required:"false"`
+	// Assign Secure Tags to apply firewall rules to VM instance.
+	ResourceManagerTags map[string]string `mapstructure:"resource_manager_tags" required:"false"`
 	// If true, use the instance's internal IP instead of its external IP
 	// during building.
 	UseInternalIP bool `mapstructure:"use_internal_ip" required:"false"`
