@@ -33,40 +33,35 @@ func FillFileContentBuffer(certOrKeyFile string) (*compute.FileContentBuffer, er
 	return shield, nil
 }
 
-func CreateShieldedVMStateConfig(imageGuestOsFeatures []string, imagePlatformKey string, imageKeyExchangeKey []string, imageSignaturesDB []string, imageForbiddenSignaturesDB []string) (*compute.InitialStateConfig, error) {
+func CreateShieldedVMStateConfig(imagePlatformKey string, imageKeyExchangeKey []string, imageSignaturesDB []string, imageForbiddenSignaturesDB []string) (*compute.InitialStateConfig, error) {
 	shieldedVMStateConfig := &compute.InitialStateConfig{}
-	for _, v := range imageGuestOsFeatures {
-		if v == "UEFI_COMPATIBLE" {
-			if imagePlatformKey != "" {
-				shieldedData, err := FillFileContentBuffer(imagePlatformKey)
-				if err != nil {
-					return nil, err
-				}
-				shieldedVMStateConfig.Pk = shieldedData
-			}
-			for _, v := range imageKeyExchangeKey {
-				shieldedData, err := FillFileContentBuffer(v)
-				if err != nil {
-					return nil, err
-				}
-				shieldedVMStateConfig.Keks = append(shieldedVMStateConfig.Keks, shieldedData)
-			}
-			for _, v := range imageSignaturesDB {
-				shieldedData, err := FillFileContentBuffer(v)
-				if err != nil {
-					return nil, err
-				}
-				shieldedVMStateConfig.Dbs = append(shieldedVMStateConfig.Dbs, shieldedData)
-			}
-			for _, v := range imageForbiddenSignaturesDB {
-				shieldedData, err := FillFileContentBuffer(v)
-				if err != nil {
-					return nil, err
-				}
-				shieldedVMStateConfig.Dbxs = append(shieldedVMStateConfig.Dbxs, shieldedData)
-			}
-
+	if imagePlatformKey != "" {
+		shieldedData, err := FillFileContentBuffer(imagePlatformKey)
+		if err != nil {
+			return nil, err
 		}
+		shieldedVMStateConfig.Pk = shieldedData
+	}
+	for _, v := range imageKeyExchangeKey {
+		shieldedData, err := FillFileContentBuffer(v)
+		if err != nil {
+			return nil, err
+		}
+		shieldedVMStateConfig.Keks = append(shieldedVMStateConfig.Keks, shieldedData)
+	}
+	for _, v := range imageSignaturesDB {
+		shieldedData, err := FillFileContentBuffer(v)
+		if err != nil {
+			return nil, err
+		}
+		shieldedVMStateConfig.Dbs = append(shieldedVMStateConfig.Dbs, shieldedData)
+	}
+	for _, v := range imageForbiddenSignaturesDB {
+		shieldedData, err := FillFileContentBuffer(v)
+		if err != nil {
+			return nil, err
+		}
+		shieldedVMStateConfig.Dbxs = append(shieldedVMStateConfig.Dbxs, shieldedData)
 	}
 	return shieldedVMStateConfig, nil
 }
