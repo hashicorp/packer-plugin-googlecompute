@@ -120,7 +120,7 @@ func (s *StepImportOSLoginSSHKey) Run(ctx context.Context, state multistep.State
 	}
 
 	// Replacing `SSHUsername` as the username have to be from OSLogin
-	if len(loginProfile.PosixAccounts) == 0 {
+	if loginProfile == nil || len(loginProfile.PosixAccounts) == 0 {
 		err := fmt.Errorf("Error importing SSH public key for OSLogin: no PosixAccounts available")
 		state.Put("error", err)
 		ui.Error(err.Error())
