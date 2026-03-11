@@ -122,6 +122,8 @@ type FlatConfig struct {
 	InstanceTerminationAction    *string                           `mapstructure:"instance_termination_action" required:"false" cty:"instance_termination_action" hcl:"instance_termination_action"`
 	Preemptible                  *bool                             `mapstructure:"preemptible" required:"false" cty:"preemptible" hcl:"preemptible"`
 	NodeAffinities               []common.FlatNodeAffinity         `mapstructure:"node_affinity" required:"false" cty:"node_affinity" hcl:"node_affinity"`
+	ReservationAffinity          *common.FlatReservationAffinity   `mapstructure:"reservation_affinity" required:"false" cty:"reservation_affinity" hcl:"reservation_affinity"`
+	SpecificReservationRequired  *bool                             `mapstructure:"specific_reservation_required" required:"false" cty:"specific_reservation_required" hcl:"specific_reservation_required"`
 	StateTimeout                 *string                           `mapstructure:"state_timeout" required:"false" cty:"state_timeout" hcl:"state_timeout"`
 	Region                       *string                           `mapstructure:"region" required:"false" cty:"region" hcl:"region"`
 	Scopes                       []string                          `mapstructure:"scopes" required:"false" cty:"scopes" hcl:"scopes"`
@@ -271,6 +273,8 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"instance_termination_action":     &hcldec.AttrSpec{Name: "instance_termination_action", Type: cty.String, Required: false},
 		"preemptible":                     &hcldec.AttrSpec{Name: "preemptible", Type: cty.Bool, Required: false},
 		"node_affinity":                   &hcldec.BlockListSpec{TypeName: "node_affinity", Nested: hcldec.ObjectSpec((*common.FlatNodeAffinity)(nil).HCL2Spec())},
+		"reservation_affinity":            &hcldec.BlockSpec{TypeName: "reservation_affinity", Nested: hcldec.ObjectSpec((*common.FlatReservationAffinity)(nil).HCL2Spec())},
+		"specific_reservation_required":   &hcldec.AttrSpec{Name: "specific_reservation_required", Type: cty.Bool, Required: false},
 		"state_timeout":                   &hcldec.AttrSpec{Name: "state_timeout", Type: cty.String, Required: false},
 		"region":                          &hcldec.AttrSpec{Name: "region", Type: cty.String, Required: false},
 		"scopes":                          &hcldec.AttrSpec{Name: "scopes", Type: cty.List(cty.String), Required: false},
