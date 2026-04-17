@@ -93,3 +93,47 @@ func TestStepCreateImage_setsDeprecationFields(t *testing.T) {
 	assert.Equal(t, c.DeleteAt, d.DeprecatedImageStatus.Deleted, "DeleteAt mismatch")
 	assert.Contains(t, []string{"DEPRECATED", "ACTIVE"}, d.DeprecatedImageStatus.State, "State should be DEPRECATED or ACTIVE")
 }
+
+func TestStepCreateImageNonUEFI_image(t *testing.T) {
+	state := testState(t)
+	step := new(StepCreateImage)
+	defer step.Cleanup(state)
+
+	c := state.Get("config").(*Config)
+	c.ImageGuestOsFeatures = []string{}
+
+	// run the step
+	action := step.Run(context.Background(), state)
+	assert.Equal(t, action, multistep.ActionContinue, "Step did not pass.")
+
+	uncastImage, ok := state.GetOk("image")
+	assert.True(t, ok, "State does not have resulting image.")
+	image, ok := uncastImage.(*common.Image)
+	assert.True(t, ok, "Image in state is not an Image.")
+
+	assert.Len(t, image.ShieldedInstanceInitialState.Keks, 1)
+	assert.Len(t, image.ShieldedInstanceInitialState.Dbs, 1)
+	assert.Len(t, image.ShieldedInstanceInitialState.Dbxs, 1)
+}
+
+func TestStepCreateImageUEFI_image(t *testing.T) {
+	state := testState(t)
+	step := new(StepCreateImage)
+	defer step.Cleanup(state)
+
+	c := state.Get("config").(*Config)
+	c.ImageGuestOsFeatures = []string{"UEFI_COMPATIBLE"}
+
+	// run the step
+	action := step.Run(context.Background(), state)
+	assert.Equal(t, action, multistep.ActionContinue, "Step did not pass.")
+
+	uncastImage, ok := state.GetOk("image")
+	assert.True(t, ok, "State does not have resulting image.")
+	image, ok := uncastImage.(*common.Image)
+	assert.True(t, ok, "Image in state is not an Image.")
+
+	assert.Len(t, image.ShieldedInstanceInitialState.Keks, 1)
+	assert.Len(t, image.ShieldedInstanceInitialState.Dbs, 1)
+	assert.Len(t, image.ShieldedInstanceInitialState.Dbxs, 1)
+}
