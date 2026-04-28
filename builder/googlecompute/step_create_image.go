@@ -58,7 +58,7 @@ func (s *StepCreateImage) Run(ctx context.Context, state multistep.StateBag) mul
 		})
 	}
 
-	shieldedVMStateConfig, shieldErr := common.CreateShieldedVMStateConfig(config.ImageGuestOsFeatures, config.ImagePlatformKey, config.ImageKeyExchangeKey, config.ImageSignaturesDB, config.ImageForbiddenSignaturesDB)
+	shieldedVMStateConfig, shieldErr := common.CreateShieldedVMStateConfig(config.ImagePlatformKey, config.ImageKeyExchangeKey, config.ImageSignaturesDB, config.ImageForbiddenSignaturesDB)
 
 	if shieldErr != nil {
 		ui.Error(shieldErr.Error())
