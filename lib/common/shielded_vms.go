@@ -34,6 +34,16 @@ func FillFileContentBuffer(certOrKeyFile string) (*compute.FileContentBuffer, er
 }
 
 func CreateShieldedVMStateConfig(imagePlatformKey string, imageKeyExchangeKey []string, imageSignaturesDB []string, imageForbiddenSignaturesDB []string) (*compute.InitialStateConfig, error) {
+	// When no Secure Boot signature inputs are configured, return nil so the
+	// caller leaves ShieldedInstanceInitialState unset on the image payload.
+	// Sending an explicit (even empty) InitialStateConfig replaces the
+	// PK/KEKs/db/dbx that would otherwise be inherited from the source disk,
+	// which causes Secure Boot to fail on VMs launched from the resulting
+	// image (UEFI: "Status: Security Violation").
+	if imagePlatformKey == "" && len(imageKeyExchangeKey) == 0 && len(imageSignaturesDB) == 0 && len(imageForbiddenSignaturesDB) == 0 {
+		return nil, nil
+	}
+
 	shieldedVMStateConfig := &compute.InitialStateConfig{}
 	if imagePlatformKey != "" {
 		shieldedData, err := FillFileContentBuffer(imagePlatformKey)
