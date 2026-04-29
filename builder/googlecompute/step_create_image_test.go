@@ -117,11 +117,7 @@ func TestStepCreateImage_noSignatureInputsLeavesInitialStateNil(t *testing.T) {
 	action := step.Run(context.Background(), state)
 	assert.Equal(t, multistep.ActionContinue, action, "Step did not pass.")
 
-	assert.Nil(
-		t,
-		d.CreateImageSpec.ShieldedInstanceInitialState,
-		"shieldedInstanceInitialState must be nil so the source disk's initial state is inherited",
-	)
+	assert.Nil(t, d.CreateImageSpec.ShieldedInstanceInitialState, "shieldedInstanceInitialState must be nil so the source disk's initial state is inherited")
 }
 
 func TestStepCreateImageNonUEFI_image(t *testing.T) {

@@ -33,7 +33,7 @@ func TestCreateShieldedVMStateConfig_PopulatesFieldsWhenInputsProvided(t *testin
 		t.Fatalf("failed to write fake key: %v", err)
 	}
 
-	tests := []struct {
+	testcases := []struct {
 		name string
 		pk   string
 		keks []string
@@ -46,9 +46,9 @@ func TestCreateShieldedVMStateConfig_PopulatesFieldsWhenInputsProvided(t *testin
 		{name: "dbx only", dbxs: []string{keyPath}},
 	}
 
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			cfg, err := CreateShieldedVMStateConfig(tc.pk, tc.keks, tc.dbs, tc.dbxs)
+	for _, tt := range testcases {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg, err := CreateShieldedVMStateConfig(tt.pk, tt.keks, tt.dbs, tt.dbxs)
 			assert.NoError(t, err)
 			assert.NotNil(t, cfg, "expected non-nil config when at least one signature input is provided")
 		})
