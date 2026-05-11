@@ -1,3 +1,5 @@
+# Copyright IBM Corp. 2013, 2026
+
 variable "project_id" {
   type = string
 }
