@@ -4,6 +4,7 @@
 package googlecompute
 
 import (
+	"context"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -18,6 +19,7 @@ import (
 
 	"github.com/hashicorp/packer-plugin-googlecompute/lib/common"
 	"github.com/hashicorp/packer-plugin-sdk/acctest"
+	"google.golang.org/api/compute/v1"
 )
 
 //go:embed testdata
@@ -585,4 +587,111 @@ func TestAccBuilder_CustomEndpointsAndUniverse(t *testing.T) {
 			acctest.TestPlugin(t, testCase)
 		})
 	}
+}
+
+func TestAccBuilder_WithReservation(t *testing.T) {
+	t.Parallel()
+
+	// Use a timestamp to generate a unique name.
+	uniqueID := fmt.Sprintf("packer-test-%d", time.Now().UnixNano())
+	reservationName := uniqueID
+	imageName := uniqueID
+
+	tmpl, err := testDataFs.ReadFile("testdata/reservation.pkr.hcl")
+	if err != nil {
+		t.Fatalf("failed to read testdata file: %s", err)
+	}
+
+	testCase := &acctest.PluginTestCase{
+		Name:     "googlecompute-packer-with-reservation",
+		Template: string(tmpl),
+		BuildExtraArgs: []string{
+			"-var", fmt.Sprintf("project_id=%s", os.Getenv("GOOGLE_PROJECT_ID")),
+			"-var", fmt.Sprintf("image_name=%s", imageName),
+			"-var", fmt.Sprintf("reservation_name=%s", reservationName),
+		},
+		Setup: func() error {
+			projectID := os.Getenv("GOOGLE_PROJECT_ID")
+			if projectID == "" {
+				return fmt.Errorf("GOOGLE_PROJECT_ID environment variable not set")
+			}
+			// The firewall rule is required for Packer to be able to SSH into the instance.
+			ctx := context.Background()
+			computeService, err := compute.NewService(ctx)
+			if err != nil {
+				return fmt.Errorf("failed to create compute service: %s", err)
+			}
+
+			firewall := &compute.Firewall{
+				Name: "packer-test",
+				Allowed: []*compute.FirewallAllowed{
+					{
+						IPProtocol: "tcp",
+						Ports:      []string{"22"},
+					},
+				},
+				Network:    "global/networks/default",
+				TargetTags: []string{"packer-test"},
+			}
+			_, err = computeService.Firewalls.Insert(projectID, firewall).Context(ctx).Do()
+			if err != nil {
+				return fmt.Errorf("failed to create firewall rule: %s", err)
+			}
+			reservation := &compute.Reservation{
+				Name: reservationName,
+				SpecificReservation: &compute.AllocationSpecificSKUReservation{
+					Count: 1,
+					InstanceProperties: &compute.AllocationSpecificSKUAllocationReservedInstanceProperties{
+						MachineType: "n1-standard-1",
+					},
+				},
+				SpecificReservationRequired: true,
+				Zone:                        "us-central1-a",
+			}
+			_, err = computeService.Reservations.Insert(projectID, "us-central1-a", reservation).Context(ctx).Do()
+			if err != nil {
+				return fmt.Errorf("failed to create reservation: %s", err)
+			}
+			return nil
+		}, Teardown: func() error {
+			projectID := os.Getenv("GOOGLE_PROJECT_ID")
+			if projectID == "" {
+				return fmt.Errorf("GOOGLE_PROJECT_ID environment variable not set")
+			}
+			defer os.Unsetenv("GOOGLE_PROJECT_ID")
+			ctx := context.Background()
+			computeService, err := compute.NewService(ctx)
+			if err != nil {
+				return fmt.Errorf("failed to create compute service: %s", err)
+			}
+			_, err = computeService.Firewalls.Delete(projectID, "packer-test").Context(ctx).Do()
+			if err != nil {
+				// Don't fail teardown if the firewall rule is already gone.
+				fmt.Printf("failed to delete firewall rule: %s", err)
+			}
+
+			_, err = computeService.Reservations.Delete(projectID, "us-central1-a", reservationName).Context(ctx).Do()
+			if err != nil {
+				// Don't fail teardown if the reservation is already gone.
+				fmt.Printf("failed to delete reservation: %s", err)
+			}
+
+			_, err = computeService.Images.Delete(projectID, imageName).Context(ctx).Do()
+			if err != nil {
+				// Don't fail teardown if the image is already gone.
+				fmt.Printf("failed to delete image: %s", err)
+			}
+
+			return nil
+		},
+		Check: func(buildCommand *exec.Cmd, logfile string) error {
+			if buildCommand.ProcessState != nil {
+				if buildCommand.ProcessState.ExitCode() != 0 {
+					return fmt.Errorf("Bad exit code. Logfile: %s", logfile)
+				}
+			}
+			return nil
+		},
+	}
+	acctest.TestPlugin(t, testCase)
 }
