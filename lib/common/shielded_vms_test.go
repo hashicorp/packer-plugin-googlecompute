@@ -50,7 +50,12 @@ func TestCreateShieldedVMStateConfig_PopulatesFieldsWhenInputsProvided(t *testin
 		t.Run(tt.name, func(t *testing.T) {
 			cfg, err := CreateShieldedVMStateConfig(tt.pk, tt.keks, tt.dbs, tt.dbxs)
 			assert.NoError(t, err)
-			assert.NotNil(t, cfg, "expected non-nil config when at least one signature input is provided")
+			assert.NotNil(t, cfg)
+
+			assert.Equal(t, tt.pk != "", cfg.Pk != nil, "Pk presence should match input")
+			assert.Len(t, cfg.Keks, len(tt.keks))
+			assert.Len(t, cfg.Dbs, len(tt.dbs))
+			assert.Len(t, cfg.Dbxs, len(tt.dbxs))
 		})
 	}
 }
