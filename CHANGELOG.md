@@ -3,6 +3,27 @@
 Please refer to [releases](https://github.com/hashicorp/packer-plugin-googlecompute/releases) for the latest CHANGELOG information.
 
 ---
+## 1.2.6 (May 25, 2026)
+
+## What's Changed
+
+### Exciting New Features
+* Add support for Secure Tags [GH-331](https://github.com/hashicorp/packer-plugin-googlecompute/pull/331)
+
+### Bug Fixes
+* Fix UEFI_COMPATIBLE not needed when passing in image guest OS features [GH-333](https://github.com/hashicorp/packer-plugin-googlecompute/pull/333)
+* Fix nil pointer dereference when LoginProfile is nil in OS Login [GH-334](https://github.com/hashicorp/packer-plugin-googlecompute/pull/334)
+* Fix avoid sending empty ShieldedInstanceInitialState on image create [GH-341](https://github.com/hashicorp/packer-plugin-googlecompute/pull/341)
+
+
+### Other Changes
+* Update Go version and key dependencies [GH-335](https://github.com/hashicorp/packer-plugin-googlecompute/pull/335)
+* Update dependencies in go.mod and go.sum [GH-339](https://github.com/hashicorp/packer-plugin-googlecompute/pull/339)
+* Bump `github.com/hashicorp/packer-plugin-sdk` to v0.6.7 [GH-337](https://github.com/hashicorp/packer-plugin-googlecompute/pull/337)
+* Add/Update Copyright Headers [GH-342](https://github.com/hashicorp/packer-plugin-googlecompute/pull/342)
+* Migrate golangci-lint to v2 and refresh dependencies [GH-343](https://github.com/hashicorp/packer-plugin-googlecompute/pull/343)
+
+
 ## 1.2.5 (January 27, 2026)
 
 ## What's Changed
