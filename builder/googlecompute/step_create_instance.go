@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2013, 2025
+// Copyright IBM Corp. 2013, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package googlecompute
@@ -211,6 +211,7 @@ func (s *StepCreateInstance) Run(ctx context.Context, state multistep.StateBag) 
 		Scopes:                       c.Scopes,
 		Subnetwork:                   c.Subnetwork,
 		Tags:                         c.Tags,
+		ResourceManagerTags:          c.ResourceManagerTags,
 		Zone:                         c.Zone,
 		NetworkIP:                    c.NetworkIP,
 	})

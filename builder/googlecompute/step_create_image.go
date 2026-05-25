@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2013, 2025
+// Copyright IBM Corp. 2013, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package googlecompute
@@ -58,7 +58,7 @@ func (s *StepCreateImage) Run(ctx context.Context, state multistep.StateBag) mul
 		})
 	}
 
-	shieldedVMStateConfig, shieldErr := common.CreateShieldedVMStateConfig(config.ImageGuestOsFeatures, config.ImagePlatformKey, config.ImageKeyExchangeKey, config.ImageSignaturesDB, config.ImageForbiddenSignaturesDB)
+	shieldedVMStateConfig, shieldErr := common.CreateShieldedVMStateConfig(config.ImagePlatformKey, config.ImageKeyExchangeKey, config.ImageSignaturesDB, config.ImageForbiddenSignaturesDB)
 
 	if shieldErr != nil {
 		ui.Error(shieldErr.Error())
