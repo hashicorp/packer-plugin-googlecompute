@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2013, 2025
+// Copyright IBM Corp. 2013, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package googlecompute
@@ -92,4 +92,74 @@ func TestStepCreateImage_setsDeprecationFields(t *testing.T) {
 	assert.Equal(t, c.ObsoleteAt, d.DeprecatedImageStatus.Obsolete, "ObsoleteAt mismatch")
 	assert.Equal(t, c.DeleteAt, d.DeprecatedImageStatus.Deleted, "DeleteAt mismatch")
 	assert.Contains(t, []string{"DEPRECATED", "ACTIVE"}, d.DeprecatedImageStatus.State, "State should be DEPRECATED or ACTIVE")
+}
+
+// Regression test: when no Secure Boot signature inputs are configured, the
+// image insert request must not include a shieldedInstanceInitialState field.
+// Sending an explicit (even empty) InitialStateConfig replaces the
+// PK/KEKs/db/dbx that would otherwise be inherited from the source disk and
+// causes Secure Boot to fail on VMs launched from the resulting image
+// (UEFI: "Status: Security Violation").
+func TestStepCreateImage_noSignatureInputsLeavesInitialStateNil(t *testing.T) {
+	state := testState(t)
+	step := new(StepCreateImage)
+	defer step.Cleanup(state)
+
+	c := state.Get("config").(*Config)
+	d := state.Get("driver").(*common.DriverMock)
+
+	// Clear all signature inputs supplied by the default testConfig.
+	c.ImagePlatformKey = ""
+	c.ImageKeyExchangeKey = nil
+	c.ImageSignaturesDB = nil
+	c.ImageForbiddenSignaturesDB = nil
+
+	action := step.Run(context.Background(), state)
+	assert.Equal(t, multistep.ActionContinue, action, "Step did not pass.")
+
+	assert.Nil(t, d.CreateImageSpec.ShieldedInstanceInitialState, "shieldedInstanceInitialState must be nil so the source disk's initial state is inherited")
+}
+
+func TestStepCreateImageNonUEFI_image(t *testing.T) {
+	state := testState(t)
+	step := new(StepCreateImage)
+	defer step.Cleanup(state)
+
+	c := state.Get("config").(*Config)
+	c.ImageGuestOsFeatures = []string{}
+
+	// run the step
+	action := step.Run(context.Background(), state)
+	assert.Equal(t, action, multistep.ActionContinue, "Step did not pass.")
+
+	uncastImage, ok := state.GetOk("image")
+	assert.True(t, ok, "State does not have resulting image.")
+	image, ok := uncastImage.(*common.Image)
+	assert.True(t, ok, "Image in state is not an Image.")
+
+	assert.Len(t, image.ShieldedInstanceInitialState.Keks, 1)
+	assert.Len(t, image.ShieldedInstanceInitialState.Dbs, 1)
+	assert.Len(t, image.ShieldedInstanceInitialState.Dbxs, 1)
+}
+
+func TestStepCreateImageUEFI_image(t *testing.T) {
+	state := testState(t)
+	step := new(StepCreateImage)
+	defer step.Cleanup(state)
+
+	c := state.Get("config").(*Config)
+	c.ImageGuestOsFeatures = []string{"UEFI_COMPATIBLE"}
+
+	// run the step
+	action := step.Run(context.Background(), state)
+	assert.Equal(t, action, multistep.ActionContinue, "Step did not pass.")
+
+	uncastImage, ok := state.GetOk("image")
+	assert.True(t, ok, "State does not have resulting image.")
+	image, ok := uncastImage.(*common.Image)
+	assert.True(t, ok, "Image in state is not an Image.")
+
+	assert.Len(t, image.ShieldedInstanceInitialState.Keks, 1)
+	assert.Len(t, image.ShieldedInstanceInitialState.Dbs, 1)
+	assert.Len(t, image.ShieldedInstanceInitialState.Dbxs, 1)
 }

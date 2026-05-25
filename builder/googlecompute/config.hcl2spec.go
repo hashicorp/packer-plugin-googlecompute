@@ -134,6 +134,7 @@ type FlatConfig struct {
 	WrapStartupScriptFile        *bool                             `mapstructure:"wrap_startup_script" required:"false" cty:"wrap_startup_script" hcl:"wrap_startup_script"`
 	Subnetwork                   *string                           `mapstructure:"subnetwork" required:"false" cty:"subnetwork" hcl:"subnetwork"`
 	Tags                         []string                          `mapstructure:"tags" required:"false" cty:"tags" hcl:"tags"`
+	ResourceManagerTags          map[string]string                 `mapstructure:"resource_manager_tags" required:"false" cty:"resource_manager_tags" hcl:"resource_manager_tags"`
 	UseInternalIP                *bool                             `mapstructure:"use_internal_ip" required:"false" cty:"use_internal_ip" hcl:"use_internal_ip"`
 	UseOSLogin                   *bool                             `mapstructure:"use_os_login" required:"false" cty:"use_os_login" hcl:"use_os_login"`
 	NetworkIP                    *string                           `mapstructure:"network_ip" required:"false" cty:"network_ip" hcl:"network_ip"`
@@ -283,6 +284,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"wrap_startup_script":             &hcldec.AttrSpec{Name: "wrap_startup_script", Type: cty.Bool, Required: false},
 		"subnetwork":                      &hcldec.AttrSpec{Name: "subnetwork", Type: cty.String, Required: false},
 		"tags":                            &hcldec.AttrSpec{Name: "tags", Type: cty.List(cty.String), Required: false},
+		"resource_manager_tags":           &hcldec.AttrSpec{Name: "resource_manager_tags", Type: cty.Map(cty.String), Required: false},
 		"use_internal_ip":                 &hcldec.AttrSpec{Name: "use_internal_ip", Type: cty.Bool, Required: false},
 		"use_os_login":                    &hcldec.AttrSpec{Name: "use_os_login", Type: cty.Bool, Required: false},
 		"network_ip":                      &hcldec.AttrSpec{Name: "network_ip", Type: cty.String, Required: false},

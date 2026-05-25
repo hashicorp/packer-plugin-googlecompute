@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2013, 2025
+// Copyright IBM Corp. 2013, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package googlecompute
@@ -850,9 +850,7 @@ func testConfig(t *testing.T) (config map[string]interface{}, tempAccountFile st
 		"image_licenses": []string{
 			"test-license",
 		},
-		"image_guest_os_features": []string{
-			"UEFI_COMPATIBLE",
-		},
+		"image_guest_os_features": []string{},
 		"image_storage_locations": []string{
 			"us-east1",
 		},

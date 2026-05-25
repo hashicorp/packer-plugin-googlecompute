@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2013, 2025
+// Copyright IBM Corp. 2013, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package common
@@ -37,6 +37,8 @@ type InstanceConfig struct {
 	Scopes                       []string
 	Subnetwork                   string
 	Tags                         []string
-	Zone                         string
-	NetworkIP                    string
+	ResourceManagerTags          map[string]string
+
+	Zone      string
+	NetworkIP string
 }

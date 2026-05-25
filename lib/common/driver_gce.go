@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2013, 2025
+// Copyright IBM Corp. 2013, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package common
@@ -741,6 +741,11 @@ func (d *driverGCE) RunInstance(c *InstanceConfig) (<-chan error, error) {
 		Tags: &compute.Tags{
 			Items: c.Tags,
 		},
+	}
+	if len(c.ResourceManagerTags) > 0 {
+		instance.Params = &compute.InstanceParams{
+			ResourceManagerTags: c.ResourceManagerTags,
+		}
 	}
 
 	if c.MaxRunDurationInSeconds > 0 {
