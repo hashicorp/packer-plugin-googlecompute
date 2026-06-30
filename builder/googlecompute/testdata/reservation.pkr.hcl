@@ -12,6 +12,7 @@ variable "project_id" {
 
 source "googlecompute" "reservation-test" {
   project_id               = var.project_id
+  image_name               = var.image_name
   source_image_family      = "ubuntu-2204-lts"
   source_image_project_id  = ["ubuntu-os-cloud"]
   zone                     = "us-central1-a"
@@ -24,7 +25,6 @@ source "googlecompute" "reservation-test" {
     key                      = "compute.googleapis.com/reservation-name"
     values                   = [var.reservation_name]
   }
-  specific_reservation_required = true
 }
 
 build {

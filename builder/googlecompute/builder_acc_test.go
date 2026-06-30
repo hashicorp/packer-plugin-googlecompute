@@ -593,7 +593,7 @@ func TestAccBuilder_WithReservation(t *testing.T) {
 	t.Parallel()
 
 	// Use a timestamp to generate a unique name.
-	uniqueID := fmt.Sprintf("packer-test-%d", time.Now().UnixNano())
+	uniqueID := fmt.Sprintf("packer-acc-reservation-%d", time.Now().UnixNano())
 	reservationName := uniqueID
 	imageName := uniqueID
 
@@ -633,10 +633,30 @@ func TestAccBuilder_WithReservation(t *testing.T) {
 				Network:    "global/networks/default",
 				TargetTags: []string{"packer-test"},
 			}
-			_, err = computeService.Firewalls.Insert(projectID, firewall).Context(ctx).Do()
+			op, err := computeService.Firewalls.Insert(projectID, firewall).Context(ctx).Do()
 			if err != nil {
 				return fmt.Errorf("failed to create firewall rule: %s", err)
 			}
+			// Wait for firewall to be created
+			for {
+				select {
+				case <-ctx.Done():
+					return ctx.Err()
+				default:
+				}
+				gOp, err := computeService.GlobalOperations.Get(projectID, op.Name).Context(ctx).Do()
+				if err != nil {
+					return fmt.Errorf("failed to get firewall operation: %s", err)
+				}
+				if gOp.Status == "DONE" {
+					if gOp.Error != nil {
+						return fmt.Errorf("failed to create firewall: %s", gOp.Error.Errors[0].Message)
+					}
+					break
+				}
+				time.Sleep(2 * time.Second)
+			}
+
 			reservation := &compute.Reservation{
 				Name: reservationName,
 				SpecificReservation: &compute.AllocationSpecificSKUReservation{
@@ -648,9 +668,28 @@ func TestAccBuilder_WithReservation(t *testing.T) {
 				SpecificReservationRequired: true,
 				Zone:                        "us-central1-a",
 			}
-			_, err = computeService.Reservations.Insert(projectID, "us-central1-a", reservation).Context(ctx).Do()
+			op, err = computeService.Reservations.Insert(projectID, "us-central1-a", reservation).Context(ctx).Do()
 			if err != nil {
 				return fmt.Errorf("failed to create reservation: %s", err)
+			}
+			// Wait for reservation to be created
+			for {
+				select {
+				case <-ctx.Done():
+					return ctx.Err()
+				default:
+				}
+				zOp, err := computeService.ZoneOperations.Get(projectID, "us-central1-a", op.Name).Context(ctx).Do()
+				if err != nil {
+					return fmt.Errorf("failed to get reservation operation: %s", err)
+				}
+				if zOp.Status == "DONE" {
+					if zOp.Error != nil {
+						return fmt.Errorf("failed to create reservation: %s", zOp.Error.Errors[0].Message)
+					}
+					break
+				}
+				time.Sleep(2 * time.Second)
 			}
 			return nil
 		}, Teardown: func() error {
@@ -658,7 +697,6 @@ func TestAccBuilder_WithReservation(t *testing.T) {
 			if projectID == "" {
 				return fmt.Errorf("GOOGLE_PROJECT_ID environment variable not set")
 			}
-			defer os.Unsetenv("GOOGLE_PROJECT_ID")
 			ctx := context.Background()
 			computeService, err := compute.NewService(ctx)
 			if err != nil {
@@ -667,19 +705,19 @@ func TestAccBuilder_WithReservation(t *testing.T) {
 			_, err = computeService.Firewalls.Delete(projectID, "packer-test").Context(ctx).Do()
 			if err != nil {
 				// Don't fail teardown if the firewall rule is already gone.
-				fmt.Printf("failed to delete firewall rule: %s", err)
+				t.Logf("failed to delete firewall rule: %s", err)
 			}
 
 			_, err = computeService.Reservations.Delete(projectID, "us-central1-a", reservationName).Context(ctx).Do()
 			if err != nil {
 				// Don't fail teardown if the reservation is already gone.
-				fmt.Printf("failed to delete reservation: %s", err)
+				t.Logf("failed to delete reservation: %s", err)
 			}
 
 			_, err = computeService.Images.Delete(projectID, imageName).Context(ctx).Do()
 			if err != nil {
 				// Don't fail teardown if the image is already gone.
-				fmt.Printf("failed to delete image: %s", err)
+				t.Logf("failed to delete image: %s", err)
 			}
 
 			return nil
