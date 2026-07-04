@@ -10,13 +10,17 @@ variable "project_id" {
   type = string
 }
 
+variable "network_tag" {
+  type = string
+}
+
 source "googlecompute" "reservation-test" {
   project_id               = var.project_id
   image_name               = var.image_name
   source_image_family      = "ubuntu-2204-lts"
   source_image_project_id  = ["ubuntu-os-cloud"]
   zone                     = "us-central1-a"
-  tags                     = ["packer-test"]
+  tags                     = [var.network_tag]
   network                  = "default"
   ssh_username             = "packer"
   machine_type             = "n1-standard-1"

@@ -742,7 +742,7 @@ func (d *driverGCE) RunInstance(c *InstanceConfig) (<-chan error, error) {
 	}
 
 	if c.ReservationAffinity != nil {
-		log.Printf("[DEBUG] setting reservation affinity to %s", c.ReservationAffinity)
+		log.Printf("[DEBUG] setting reservation affinity to %+v", c.ReservationAffinity)
 		instance.ReservationAffinity = c.ReservationAffinity.ComputeType()
 	}
 

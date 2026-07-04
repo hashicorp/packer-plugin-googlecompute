@@ -596,6 +596,8 @@ func TestAccBuilder_WithReservation(t *testing.T) {
 	uniqueID := fmt.Sprintf("packer-acc-reservation-%d", time.Now().UnixNano())
 	reservationName := uniqueID
 	imageName := uniqueID
+	networkTag := uniqueID
+	firewallName := fmt.Sprintf("%s-fw", uniqueID)
 
 	tmpl, err := testDataFs.ReadFile("testdata/reservation.pkr.hcl")
 	if err != nil {
@@ -609,6 +611,7 @@ func TestAccBuilder_WithReservation(t *testing.T) {
 			"-var", fmt.Sprintf("project_id=%s", os.Getenv("GOOGLE_PROJECT_ID")),
 			"-var", fmt.Sprintf("image_name=%s", imageName),
 			"-var", fmt.Sprintf("reservation_name=%s", reservationName),
+			"-var", fmt.Sprintf("network_tag=%s", networkTag),
 		},
 		Setup: func() error {
 			projectID := os.Getenv("GOOGLE_PROJECT_ID")
@@ -616,14 +619,15 @@ func TestAccBuilder_WithReservation(t *testing.T) {
 				return fmt.Errorf("GOOGLE_PROJECT_ID environment variable not set")
 			}
 			// The firewall rule is required for Packer to be able to SSH into the instance.
-			ctx := context.Background()
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+			defer cancel()
 			computeService, err := compute.NewService(ctx)
 			if err != nil {
 				return fmt.Errorf("failed to create compute service: %s", err)
 			}
 
 			firewall := &compute.Firewall{
-				Name: "packer-test",
+				Name: firewallName,
 				Allowed: []*compute.FirewallAllowed{
 					{
 						IPProtocol: "tcp",
@@ -631,7 +635,7 @@ func TestAccBuilder_WithReservation(t *testing.T) {
 					},
 				},
 				Network:    "global/networks/default",
-				TargetTags: []string{"packer-test"},
+				TargetTags: []string{networkTag},
 			}
 			op, err := computeService.Firewalls.Insert(projectID, firewall).Context(ctx).Do()
 			if err != nil {
@@ -650,7 +654,10 @@ func TestAccBuilder_WithReservation(t *testing.T) {
 				}
 				if gOp.Status == "DONE" {
 					if gOp.Error != nil {
-						return fmt.Errorf("failed to create firewall: %s", gOp.Error.Errors[0].Message)
+						if len(gOp.Error.Errors) > 0 {
+							return fmt.Errorf("failed to create firewall: %s", gOp.Error.Errors[0].Message)
+						}
+						return fmt.Errorf("failed to create firewall: %+v", gOp.Error)
 					}
 					break
 				}
@@ -685,7 +692,10 @@ func TestAccBuilder_WithReservation(t *testing.T) {
 				}
 				if zOp.Status == "DONE" {
 					if zOp.Error != nil {
-						return fmt.Errorf("failed to create reservation: %s", zOp.Error.Errors[0].Message)
+						if len(zOp.Error.Errors) > 0 {
+							return fmt.Errorf("failed to create reservation: %s", zOp.Error.Errors[0].Message)
+						}
+						return fmt.Errorf("failed to create reservation: %+v", zOp.Error)
 					}
 					break
 				}
@@ -702,7 +712,7 @@ func TestAccBuilder_WithReservation(t *testing.T) {
 			if err != nil {
 				return fmt.Errorf("failed to create compute service: %s", err)
 			}
-			_, err = computeService.Firewalls.Delete(projectID, "packer-test").Context(ctx).Do()
+			_, err = computeService.Firewalls.Delete(projectID, firewallName).Context(ctx).Do()
 			if err != nil {
 				// Don't fail teardown if the firewall rule is already gone.
 				t.Logf("failed to delete firewall rule: %s", err)
