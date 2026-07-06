@@ -828,6 +828,48 @@ func TestLabelsValidity(t *testing.T) {
 	}
 }
 
+func TestConfig_ReservationAffinity(t *testing.T) {
+	// Get a standard, valid base configuration
+	raw, tempfile := testConfig(t)
+	defer os.Remove(tempfile)
+
+	// Add the reservation_affinity block to the configuration
+	raw["reservation_affinity"] = map[string]interface{}{
+		"consume_reservation_type": "SPECIFIC_RESERVATION",
+		"key":                      "compute.googleapis.com/reservation-name",
+		"values":                   []string{"test-reservation"},
+	}
+
+	// Prepare the configuration, which parses the raw map into the Config struct
+	var c Config
+	warns, errs := c.Prepare(raw)
+
+	// Use the existing helper to assert that there were no errors
+	testConfigOk(t, warns, errs)
+
+	// --- Verification ---
+	// Now, check that the ReservationAffinity struct was populated correctly.
+
+	if c.ReservationAffinity == nil {
+		t.Fatal("ReservationAffinity should not be nil after preparing config")
+	}
+
+	if c.ReservationAffinity.ConsumeReservationType != "SPECIFIC_RESERVATION" {
+		t.Errorf("expected ConsumeReservationType to be 'SPECIFIC_RESERVATION', but got '%s'",
+			c.ReservationAffinity.ConsumeReservationType)
+	}
+
+	if c.ReservationAffinity.Key != "compute.googleapis.com/reservation-name" {
+		t.Errorf("expected Key to be 'compute.googleapis.com/reservation-name', but got '%s'",
+			c.ReservationAffinity.Key)
+	}
+
+	if len(c.ReservationAffinity.Values) != 1 || c.ReservationAffinity.Values[0] != "test-reservation" {
+		t.Errorf("expected Values to be ['test-reservation'], but got '%v'",
+			c.ReservationAffinity.Values)
+	}
+}
+
 // Helper stuff below
 
 func testConfig(t *testing.T) (config map[string]interface{}, tempAccountFile string) {
