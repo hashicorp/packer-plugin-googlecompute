@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2013, 2025
+// Copyright IBM Corp. 2013, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package common
@@ -103,7 +103,7 @@ func (ots OauthTokenSource) Token() (*oauth2.Token, error) {
 
 }
 
-func NewClientOptionGoogle(vaultOauth string, impersonatesa string, accessToken string, credentials *google.Credentials, scopes []string) ([]option.ClientOption, error) {
+func NewClientOptionGoogle(vaultOauth string, impersonatesa string, accessToken string, credentials *google.Credentials, scopes []string, universeDomain string) ([]option.ClientOption, error) {
 	var err error
 
 	var opts []option.ClientOption
@@ -112,7 +112,15 @@ func NewClientOptionGoogle(vaultOauth string, impersonatesa string, accessToken 
 		// Auth with Vault Oauth
 		log.Printf("Using Vault to generate Oauth token.")
 		ts := OauthTokenSource{vaultOauth}
-		opts = append(opts, option.WithTokenSource(ts))
+		if universeDomain != "" {
+			creds := &google.Credentials{
+				TokenSource:            ts,
+				UniverseDomainProvider: func() (string, error) { return universeDomain, nil },
+			}
+			opts = append(opts, option.WithCredentials(creds))
+		} else {
+			opts = append(opts, option.WithTokenSource(ts))
+		}
 
 	} else if impersonatesa != "" {
 		log.Printf("[INFO] Using Google Cloud impersonation mechanism")
@@ -123,13 +131,28 @@ func NewClientOptionGoogle(vaultOauth string, impersonatesa string, accessToken 
 		if err != nil {
 			return nil, err
 		}
-		opts = append(opts, option.WithTokenSource(ts))
+		if universeDomain != "" {
+			creds := &google.Credentials{
+				TokenSource:            ts,
+				UniverseDomainProvider: func() (string, error) { return universeDomain, nil },
+			}
+			opts = append(opts, option.WithCredentials(creds))
+		} else {
+			opts = append(opts, option.WithTokenSource(ts))
+		}
 	} else if accessToken != "" {
 		// Auth with static access token
 		log.Printf("[INFO] Using static Google Access Token")
 		token := &oauth2.Token{AccessToken: accessToken}
-		ts := oauth2.StaticTokenSource(token)
-		opts = append(opts, option.WithTokenSource(ts))
+
+		creds := &google.Credentials{
+			TokenSource: oauth2.StaticTokenSource(token),
+		}
+		if universeDomain != "" {
+			creds.UniverseDomainProvider = func() (string, error) { return universeDomain, nil }
+		}
+
+		opts = append(opts, option.WithCredentials(creds))
 	} else if credentials != nil {
 		// Auth with Credentials if provided
 		log.Printf("[INFO] Requesting Google token via credentials...")
@@ -139,13 +162,13 @@ func NewClientOptionGoogle(vaultOauth string, impersonatesa string, accessToken 
 	} else {
 		log.Printf("[INFO] Requesting Google token via GCE API Default Client Token Source...")
 		scopes := append(DriverScopes, "https://www.googleapis.com/auth/cloud-platform")
-		ts, err := google.DefaultTokenSource(context.TODO(), scopes...)
+		creds, err := google.FindDefaultCredentials(context.TODO(), scopes...)
 		if err != nil {
 			return nil, err
 		}
-		opts = append(opts, option.WithTokenSource(ts))
-		// The DefaultClient uses the DefaultTokenSource of the google lib.
-		// The DefaultTokenSource uses the "Application Default Credentials"
+		opts = append(opts, option.WithCredentials(creds))
+		// The DefaultClient uses the FindDefaultCredentials of the google lib.
+		// The FindDefaultCredentials uses the "Application Default Credentials"
 		// It looks for credentials in the following places, preferring the first location found:
 		// 1. A JSON file whose path is specified by the
 		//    GOOGLE_APPLICATION_CREDENTIALS environment variable.
@@ -182,7 +205,7 @@ func buildServiceSpecificOptions(commonOpts []option.ClientOption, customEndpoin
 
 func NewDriverGCE(config GCEDriverConfig) (Driver, error) {
 
-	opts, err := NewClientOptionGoogle(config.VaultOauthEngineName, config.ImpersonateServiceAccountName, config.AccessToken, config.Credentials, config.Scopes)
+	opts, err := NewClientOptionGoogle(config.VaultOauthEngineName, config.ImpersonateServiceAccountName, config.AccessToken, config.Credentials, config.Scopes, config.UniverseDomain)
 	if err != nil {
 		return nil, err
 	}
@@ -741,6 +764,16 @@ func (d *driverGCE) RunInstance(c *InstanceConfig) (<-chan error, error) {
 		Tags: &compute.Tags{
 			Items: c.Tags,
 		},
+	}
+	if len(c.ResourceManagerTags) > 0 {
+		instance.Params = &compute.InstanceParams{
+			ResourceManagerTags: c.ResourceManagerTags,
+		}
+	}
+
+	if c.ReservationAffinity != nil {
+		log.Printf("[DEBUG] setting reservation affinity to %+v", c.ReservationAffinity)
+		instance.ReservationAffinity = c.ReservationAffinity.ComputeType()
 	}
 
 	if c.MaxRunDurationInSeconds > 0 {

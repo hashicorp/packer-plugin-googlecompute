@@ -122,6 +122,7 @@ type FlatConfig struct {
 	InstanceTerminationAction    *string                           `mapstructure:"instance_termination_action" required:"false" cty:"instance_termination_action" hcl:"instance_termination_action"`
 	Preemptible                  *bool                             `mapstructure:"preemptible" required:"false" cty:"preemptible" hcl:"preemptible"`
 	NodeAffinities               []common.FlatNodeAffinity         `mapstructure:"node_affinity" required:"false" cty:"node_affinity" hcl:"node_affinity"`
+	ReservationAffinity          *common.FlatReservationAffinity   `mapstructure:"reservation_affinity" required:"false" cty:"reservation_affinity" hcl:"reservation_affinity"`
 	StateTimeout                 *string                           `mapstructure:"state_timeout" required:"false" cty:"state_timeout" hcl:"state_timeout"`
 	Region                       *string                           `mapstructure:"region" required:"false" cty:"region" hcl:"region"`
 	Scopes                       []string                          `mapstructure:"scopes" required:"false" cty:"scopes" hcl:"scopes"`
@@ -134,6 +135,7 @@ type FlatConfig struct {
 	WrapStartupScriptFile        *bool                             `mapstructure:"wrap_startup_script" required:"false" cty:"wrap_startup_script" hcl:"wrap_startup_script"`
 	Subnetwork                   *string                           `mapstructure:"subnetwork" required:"false" cty:"subnetwork" hcl:"subnetwork"`
 	Tags                         []string                          `mapstructure:"tags" required:"false" cty:"tags" hcl:"tags"`
+	ResourceManagerTags          map[string]string                 `mapstructure:"resource_manager_tags" required:"false" cty:"resource_manager_tags" hcl:"resource_manager_tags"`
 	UseInternalIP                *bool                             `mapstructure:"use_internal_ip" required:"false" cty:"use_internal_ip" hcl:"use_internal_ip"`
 	UseOSLogin                   *bool                             `mapstructure:"use_os_login" required:"false" cty:"use_os_login" hcl:"use_os_login"`
 	NetworkIP                    *string                           `mapstructure:"network_ip" required:"false" cty:"network_ip" hcl:"network_ip"`
@@ -271,6 +273,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"instance_termination_action":     &hcldec.AttrSpec{Name: "instance_termination_action", Type: cty.String, Required: false},
 		"preemptible":                     &hcldec.AttrSpec{Name: "preemptible", Type: cty.Bool, Required: false},
 		"node_affinity":                   &hcldec.BlockListSpec{TypeName: "node_affinity", Nested: hcldec.ObjectSpec((*common.FlatNodeAffinity)(nil).HCL2Spec())},
+		"reservation_affinity":            &hcldec.BlockSpec{TypeName: "reservation_affinity", Nested: hcldec.ObjectSpec((*common.FlatReservationAffinity)(nil).HCL2Spec())},
 		"state_timeout":                   &hcldec.AttrSpec{Name: "state_timeout", Type: cty.String, Required: false},
 		"region":                          &hcldec.AttrSpec{Name: "region", Type: cty.String, Required: false},
 		"scopes":                          &hcldec.AttrSpec{Name: "scopes", Type: cty.List(cty.String), Required: false},
@@ -283,6 +286,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"wrap_startup_script":             &hcldec.AttrSpec{Name: "wrap_startup_script", Type: cty.Bool, Required: false},
 		"subnetwork":                      &hcldec.AttrSpec{Name: "subnetwork", Type: cty.String, Required: false},
 		"tags":                            &hcldec.AttrSpec{Name: "tags", Type: cty.List(cty.String), Required: false},
+		"resource_manager_tags":           &hcldec.AttrSpec{Name: "resource_manager_tags", Type: cty.Map(cty.String), Required: false},
 		"use_internal_ip":                 &hcldec.AttrSpec{Name: "use_internal_ip", Type: cty.Bool, Required: false},
 		"use_os_login":                    &hcldec.AttrSpec{Name: "use_os_login", Type: cty.Bool, Required: false},
 		"network_ip":                      &hcldec.AttrSpec{Name: "network_ip", Type: cty.String, Required: false},

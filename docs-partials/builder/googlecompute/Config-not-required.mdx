@@ -208,6 +208,11 @@
   
   Refer to the [Node Affinity](#node-affinities) for more information on affinities.
 
+- `reservation_affinity` (\*common.ReservationAffinity) - ReservationAffinity: Specifies the reservations that this instance can consume from.
+  You can configure this to consume a specific reservation, any reservation, or no reservation.
+  For more information, see GCE Reservations documentation:
+  https://cloud.google.com/compute/docs/instances/reservations-overview
+
 - `state_timeout` (duration string | ex: "1h5m2s") - The time to wait for instance state changes. Defaults to "5m".
 
 - `region` (string) - The region in which to launch the instance. Defaults to the region
@@ -257,6 +262,8 @@
   `projects/((network_project_id))/regions/((region))/subnetworks/((subnetwork))`
 
 - `tags` ([]string) - Assign network tags to apply firewall rules to VM instance.
+
+- `resource_manager_tags` (map[string]string) - Assign Secure Tags to apply firewall rules to VM instance.
 
 - `use_internal_ip` (bool) - If true, use the instance's internal IP instead of its external IP
   during building.

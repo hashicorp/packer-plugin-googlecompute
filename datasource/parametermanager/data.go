@@ -1,3 +1,5 @@
+// Copyright IBM Corp. 2013, 2026
+
 //go:generate packer-sdc struct-markdown
 //go:generate packer-sdc mapstructure-to-hcl2 -type Config,DatasourceOutput
 

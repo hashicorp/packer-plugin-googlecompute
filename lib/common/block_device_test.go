@@ -563,7 +563,18 @@ func TestIsRegion(t *testing.T) {
 		t.Errorf("expected zone %q not to be a region, but isZoneARegion returned %t", zone, isRegion)
 	}
 
+	zone = "u-france-east1-a"
+	isRegion = IsZoneARegion(zone)
+	if isRegion {
+		t.Errorf("expected zone %q not to be a region, but isZoneARegion returned %t", zone, isRegion)
+	}
+
 	region := "us-central1"
+	isRegion = IsZoneARegion(region)
+	if !isRegion {
+		t.Errorf("expected region %q to be a region, but isZoneARegion returned %t", region, isRegion)
+	}
+	region = "u-france-east1"
 	isRegion = IsZoneARegion(region)
 	if !isRegion {
 		t.Errorf("expected region %q to be a region, but isZoneARegion returned %t", region, isRegion)

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2013, 2025
+// Copyright IBM Corp. 2013, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 //go:generate packer-sdc struct-markdown
@@ -251,6 +251,11 @@ type Config struct {
 	//
 	// Refer to the [Node Affinity](#node-affinities) for more information on affinities.
 	NodeAffinities []common.NodeAffinity `mapstructure:"node_affinity" required:"false"`
+	// ReservationAffinity: Specifies the reservations that this instance can consume from.
+	// You can configure this to consume a specific reservation, any reservation, or no reservation.
+	// For more information, see GCE Reservations documentation:
+	// https://cloud.google.com/compute/docs/instances/reservations-overview
+	ReservationAffinity *common.ReservationAffinity `mapstructure:"reservation_affinity" required:"false"`
 	// The time to wait for instance state changes. Defaults to "5m".
 	StateTimeout time.Duration `mapstructure:"state_timeout" required:"false"`
 	// The region in which to launch the instance. Defaults to the region
@@ -310,6 +315,8 @@ type Config struct {
 	Subnetwork string `mapstructure:"subnetwork" required:"false"`
 	// Assign network tags to apply firewall rules to VM instance.
 	Tags []string `mapstructure:"tags" required:"false"`
+	// Assign Secure Tags to apply firewall rules to VM instance.
+	ResourceManagerTags map[string]string `mapstructure:"resource_manager_tags" required:"false"`
 	// If true, use the instance's internal IP instead of its external IP
 	// during building.
 	UseInternalIP bool `mapstructure:"use_internal_ip" required:"false"`
