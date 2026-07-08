@@ -3,6 +3,18 @@
 Please refer to [releases](https://github.com/hashicorp/packer-plugin-googlecompute/releases) for the latest CHANGELOG information.
 
 ---
+## 1.2.7 (July 8, 2026)
+
+## What's Changed
+
+### Exciting New Features
+* Add support for reservation affinity [GH-316](https://github.com/hashicorp/packer-plugin-googlecompute/pull/316)
+
+### Bug Fixes
+* Fix support for universe regions starting with `u-` in zoneRegexp [GH-348](https://github.com/hashicorp/packer-plugin-googlecompute/pull/348)
+* Fix authentication failures when using Google Cloud universes [GH-349](https://github.com/hashicorp/packer-plugin-googlecompute/pull/349)
+
+
 ## 1.2.6 (May 25, 2026)
 
 ## What's Changed
