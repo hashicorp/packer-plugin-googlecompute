@@ -4,6 +4,7 @@
 package googlecompute
 
 import (
+	"context"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -18,6 +19,7 @@ import (
 
 	"github.com/hashicorp/packer-plugin-googlecompute/lib/common"
 	"github.com/hashicorp/packer-plugin-sdk/acctest"
+	"google.golang.org/api/compute/v1"
 )
 
 //go:embed testdata
@@ -585,4 +587,159 @@ func TestAccBuilder_CustomEndpointsAndUniverse(t *testing.T) {
 			acctest.TestPlugin(t, testCase)
 		})
 	}
+}
+
+func TestAccBuilder_WithReservation(t *testing.T) {
+	t.Parallel()
+
+	// Use a timestamp to generate a unique name.
+	uniqueID := fmt.Sprintf("packer-acc-reservation-%d", time.Now().UnixNano())
+	reservationName := uniqueID
+	imageName := uniqueID
+	networkTag := uniqueID
+	firewallName := fmt.Sprintf("%s-fw", uniqueID)
+
+	tmpl, err := testDataFs.ReadFile("testdata/reservation.pkr.hcl")
+	if err != nil {
+		t.Fatalf("failed to read testdata file: %s", err)
+	}
+
+	testCase := &acctest.PluginTestCase{
+		Name:     "googlecompute-packer-with-reservation",
+		Template: string(tmpl),
+		BuildExtraArgs: []string{
+			"-var", fmt.Sprintf("project_id=%s", os.Getenv("GOOGLE_PROJECT_ID")),
+			"-var", fmt.Sprintf("image_name=%s", imageName),
+			"-var", fmt.Sprintf("reservation_name=%s", reservationName),
+			"-var", fmt.Sprintf("network_tag=%s", networkTag),
+		},
+		Setup: func() error {
+			projectID := os.Getenv("GOOGLE_PROJECT_ID")
+			if projectID == "" {
+				return fmt.Errorf("GOOGLE_PROJECT_ID environment variable not set")
+			}
+			// The firewall rule is required for Packer to be able to SSH into the instance.
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+			defer cancel()
+			computeService, err := compute.NewService(ctx)
+			if err != nil {
+				return fmt.Errorf("failed to create compute service: %s", err)
+			}
+
+			firewall := &compute.Firewall{
+				Name: firewallName,
+				Allowed: []*compute.FirewallAllowed{
+					{
+						IPProtocol: "tcp",
+						Ports:      []string{"22"},
+					},
+				},
+				Network:    "global/networks/default",
+				TargetTags: []string{networkTag},
+			}
+			op, err := computeService.Firewalls.Insert(projectID, firewall).Context(ctx).Do()
+			if err != nil {
+				return fmt.Errorf("failed to create firewall rule: %s", err)
+			}
+			// Wait for firewall to be created
+			for {
+				select {
+				case <-ctx.Done():
+					return ctx.Err()
+				default:
+				}
+				gOp, err := computeService.GlobalOperations.Get(projectID, op.Name).Context(ctx).Do()
+				if err != nil {
+					return fmt.Errorf("failed to get firewall operation: %s", err)
+				}
+				if gOp.Status == "DONE" {
+					if gOp.Error != nil {
+						if len(gOp.Error.Errors) > 0 {
+							return fmt.Errorf("failed to create firewall: %s", gOp.Error.Errors[0].Message)
+						}
+						return fmt.Errorf("failed to create firewall: %+v", gOp.Error)
+					}
+					break
+				}
+				time.Sleep(2 * time.Second)
+			}
+
+			reservation := &compute.Reservation{
+				Name: reservationName,
+				SpecificReservation: &compute.AllocationSpecificSKUReservation{
+					Count: 1,
+					InstanceProperties: &compute.AllocationSpecificSKUAllocationReservedInstanceProperties{
+						MachineType: "n1-standard-1",
+					},
+				},
+				SpecificReservationRequired: true,
+				Zone:                        "us-central1-a",
+			}
+			op, err = computeService.Reservations.Insert(projectID, "us-central1-a", reservation).Context(ctx).Do()
+			if err != nil {
+				return fmt.Errorf("failed to create reservation: %s", err)
+			}
+			// Wait for reservation to be created
+			for {
+				select {
+				case <-ctx.Done():
+					return ctx.Err()
+				default:
+				}
+				zOp, err := computeService.ZoneOperations.Get(projectID, "us-central1-a", op.Name).Context(ctx).Do()
+				if err != nil {
+					return fmt.Errorf("failed to get reservation operation: %s", err)
+				}
+				if zOp.Status == "DONE" {
+					if zOp.Error != nil {
+						if len(zOp.Error.Errors) > 0 {
+							return fmt.Errorf("failed to create reservation: %s", zOp.Error.Errors[0].Message)
+						}
+						return fmt.Errorf("failed to create reservation: %+v", zOp.Error)
+					}
+					break
+				}
+				time.Sleep(2 * time.Second)
+			}
+			return nil
+		}, Teardown: func() error {
+			projectID := os.Getenv("GOOGLE_PROJECT_ID")
+			if projectID == "" {
+				return fmt.Errorf("GOOGLE_PROJECT_ID environment variable not set")
+			}
+			ctx := context.Background()
+			computeService, err := compute.NewService(ctx)
+			if err != nil {
+				return fmt.Errorf("failed to create compute service: %s", err)
+			}
+			_, err = computeService.Firewalls.Delete(projectID, firewallName).Context(ctx).Do()
+			if err != nil {
+				// Don't fail teardown if the firewall rule is already gone.
+				t.Logf("failed to delete firewall rule: %s", err)
+			}
+
+			_, err = computeService.Reservations.Delete(projectID, "us-central1-a", reservationName).Context(ctx).Do()
+			if err != nil {
+				// Don't fail teardown if the reservation is already gone.
+				t.Logf("failed to delete reservation: %s", err)
+			}
+
+			_, err = computeService.Images.Delete(projectID, imageName).Context(ctx).Do()
+			if err != nil {
+				// Don't fail teardown if the image is already gone.
+				t.Logf("failed to delete image: %s", err)
+			}
+
+			return nil
+		},
+		Check: func(buildCommand *exec.Cmd, logfile string) error {
+			if buildCommand.ProcessState != nil {
+				if buildCommand.ProcessState.ExitCode() != 0 {
+					return fmt.Errorf("Bad exit code. Logfile: %s", logfile)
+				}
+			}
+			return nil
+		},
+	}
+	acctest.TestPlugin(t, testCase)
 }
