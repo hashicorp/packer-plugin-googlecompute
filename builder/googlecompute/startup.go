@@ -26,9 +26,10 @@ GetMetadata () {
 }
 
 ZONE=$(basename $(GetMetadata zone))
+INSTANCE_NAME=$(basename $(GetMetadata name))
 
 SetMetadata () {
-  gcloud compute instances add-metadata ${HOSTNAME} --metadata ${1}=${2} --zone ${ZONE}
+  gcloud compute instances add-metadata ${INSTANCE_NAME} --metadata ${1}=${2} --zone ${ZONE}
 }
 
 STARTUPSCRIPT=$(GetMetadata attributes/%[1]s)
