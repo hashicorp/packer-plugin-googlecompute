@@ -26,7 +26,7 @@ GetMetadata () {
 }
 
 ZONE=$(basename $(GetMetadata zone))
-INSTANCE_NAME=$(basename $(GetMetadata name))
+INSTANCE_NAME=$(GetMetadata name)
 
 SetMetadata () {
   gcloud compute instances add-metadata ${INSTANCE_NAME} --metadata ${1}=${2} --zone ${ZONE}
