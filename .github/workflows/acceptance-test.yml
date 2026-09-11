@@ -6,7 +6,7 @@ name: "Acceptance Test"
 on:
   push:
     branches:
-    - "main"
+    - "test/go-getter-v2-decompress-perms"
 
 permissions:
   contents: read
