@@ -29,6 +29,7 @@ type DriverMock struct {
 	DeprecatedProjectName string
 	DeprecatedImageName   string
 	DeprecatedImageStatus *compute.DeprecationStatus
+	DeprecatedImageErr    error
 
 	DeleteProjectId  string
 	DeleteImageName  string
@@ -194,7 +195,7 @@ func (d *DriverMock) SetImageDeprecationStatus(project, name string, deprecation
 	d.DeprecatedProjectName = project
 	d.DeprecatedImageName = name
 	d.DeprecatedImageStatus = deprecationStatus
-	return nil
+	return d.DeprecatedImageErr
 }
 
 func (d *DriverMock) DeleteImage(project, name string) <-chan error {
