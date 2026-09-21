@@ -179,7 +179,7 @@ func (s *StepCreateInstance) Run(ctx context.Context, state multistep.StateBag) 
 
 	metadataNoSSHKeys, metadataSSHKeys, errs := c.createInstanceMetadata(sourceImage, string(c.Comm.SSHPublicKey))
 	if errs != nil {
-		state.Put("error", errs.Error())
+		state.Put("error", errs)
 		ui.Error(errs.Error())
 		return multistep.ActionHalt
 	}
