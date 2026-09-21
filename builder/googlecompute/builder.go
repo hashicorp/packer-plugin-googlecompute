@@ -128,7 +128,7 @@ func (b *Builder) Run(ctx context.Context, ui packersdk.Ui, hook packersdk.Hook)
 
 	// Report any errors.
 	if rawErr, ok := state.GetOk("error"); ok {
-		return nil, rawErr.(error)
+		return nil, errorFromState(rawErr)
 	}
 	if _, ok := state.GetOk("image"); !ok {
 		log.Println("Failed to find image in state. Bug?")
@@ -142,4 +142,18 @@ func (b *Builder) Run(ctx context.Context, ui packersdk.Ui, hook packersdk.Hook)
 		StateData: map[string]interface{}{"generated_data": state.Get("generated_data")},
 	}
 	return artifact, nil
+}
+
+// errorFromState converts a value stored under the "error" key of the state
+// bag into an error. Steps are expected to store an error value, but a step
+// storing anything else must not take the whole plugin process down with a
+// failed type assertion, so any other value is formatted instead.
+func errorFromState(rawErr interface{}) error {
+	if rawErr == nil {
+		return nil
+	}
+	if err, ok := rawErr.(error); ok {
+		return err
+	}
+	return fmt.Errorf("%v", rawErr)
 }
