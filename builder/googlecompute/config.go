@@ -26,6 +26,9 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/uuid"
 )
 
+// used when disk_size is unset and the source image does not report its size
+const defaultDiskSizeGb int64 = 20
+
 // used for ImageName and ImageFamily
 var validImageName = regexp.MustCompile(`^[a-z]([-a-z0-9]{0,61}[a-z0-9])?$`)
 
@@ -56,7 +59,8 @@ type Config struct {
 	DisableDefaultServiceAccount bool `mapstructure:"disable_default_service_account" required:"false"`
 	// The name of the disk, if unset the instance name will be used.
 	DiskName string `mapstructure:"disk_name" required:"false"`
-	// The size of the disk in GB. This defaults to 20, which is 20GB.
+	// The size of the disk in GB. Defaults to the size of the source image,
+	// or 20GB if the source image does not report a size.
 	DiskSizeGb int64 `mapstructure:"disk_size" required:"false"`
 	// Type of disk used to back your instance, like pd-ssd or pd-standard.
 	// Defaults to pd-standard.
@@ -480,10 +484,6 @@ func (c *Config) Prepare(raws ...interface{}) ([]string, error) {
 
 	if c.NetworkProjectId == "" {
 		c.NetworkProjectId = c.ProjectId
-	}
-
-	if c.DiskSizeGb == 0 {
-		c.DiskSizeGb = 20
 	}
 
 	if c.DiskType == "" {

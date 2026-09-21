@@ -4,6 +4,7 @@
 package googlecompute
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -13,6 +14,7 @@ import (
 
 	"github.com/hashicorp/packer-plugin-googlecompute/lib/common"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
+	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/hashicorp/packer-plugin-sdk/packerbuilderdata"
 	"github.com/hashicorp/packer-plugin-sdk/template/config"
 	"github.com/stretchr/testify/assert"
@@ -530,4 +532,73 @@ func TestImage_IsWindows(t *testing.T) {
 
 	i = StubImage("foo", "foo-project", []string{"license-foo", "windows-license"}, 100)
 	assert.True(t, i.IsWindows())
+}
+
+func TestResolveDiskSize(t *testing.T) {
+	cases := []struct {
+		Name        string
+		Configured  int64
+		ImageSizeGb int64
+		Expect      int64
+		ExpectSay   string
+	}{
+		{"unset uses image size", 0, 50, 50,
+			"Setting disk size to 50GB to match source image test-image"},
+		{"unset with unknown image size uses the default", 0, 0, 20,
+			"Source image test-image does not report a disk size, using default disk size of 20GB"},
+		{"explicit larger than image is kept", 100, 50, 100, ""},
+		{"explicit smaller than image is kept", 20, 50, 20, ""},
+		{"explicit equal to image is kept", 50, 50, 50, ""},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.Name, func(t *testing.T) {
+			out := new(bytes.Buffer)
+			ui := &packersdk.BasicUi{
+				Reader: new(bytes.Buffer),
+				Writer: out,
+			}
+			image := StubImage("test-image", "test-project", []string{}, tc.ImageSizeGb)
+
+			got := resolveDiskSize(tc.Configured, image, ui)
+
+			assert.Equal(t, tc.Expect, got, "Incorrect resolved disk size.")
+			if tc.ExpectSay != "" {
+				assert.Contains(t, out.String(), tc.ExpectSay)
+			} else {
+				assert.Empty(t, out.String(), "Step should not have reported anything.")
+			}
+		})
+	}
+}
+
+func TestStepCreateInstance_diskSize(t *testing.T) {
+	cases := []struct {
+		Name       string
+		Configured int64
+		Expect     int64
+	}{
+		{"unset disk_size matches the source image", 0, 50},
+		{"explicit disk_size is passed through", 100, 100},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.Name, func(t *testing.T) {
+			state := testState(t)
+			step := new(StepCreateInstance)
+			defer step.Cleanup(state)
+
+			state.Put("ssh_public_key", "key")
+
+			c := state.Get("config").(*Config)
+			c.DiskSizeGb = tc.Configured
+
+			d := state.Get("driver").(*common.DriverMock)
+			d.GetImageResult = StubImage("test-image", "test-project", []string{}, 50)
+
+			assert.Equal(t, multistep.ActionContinue, step.Run(context.Background(), state), "Step should have passed and continued.")
+			assert.Equal(t, tc.Expect, d.RunInstanceConfig.DiskSizeGb, "Incorrect disk size passed to driver.")
+			assert.Equal(t, tc.Configured, c.DiskSizeGb, "Config disk size should not be mutated.")
+		})
+	}
 }

@@ -116,6 +116,22 @@ func getImage(c *Config, d common.Driver) (*common.Image, error) {
 	}
 }
 
+func resolveDiskSize(configured int64, sourceImage *common.Image, ui packersdk.Ui) int64 {
+	// If user configured a disk size, return it as-is.
+	if configured != 0 {
+		return configured
+	}
+
+	// The source image size is unknown, so fall back to the historical default.
+	if sourceImage.SizeGb == 0 {
+		ui.Say(fmt.Sprintf("Source image %s does not report a disk size, using default disk size of %dGB", sourceImage.Name, defaultDiskSizeGb))
+		return defaultDiskSizeGb
+	}
+
+	ui.Say(fmt.Sprintf("Setting disk size to %dGB to match source image %s", sourceImage.SizeGb, sourceImage.Name))
+	return sourceImage.SizeGb
+}
+
 // Run executes the Packer build step that creates a GCE instance.
 func (s *StepCreateInstance) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	c := state.Get("config").(*Config)
@@ -146,6 +162,8 @@ func (s *StepCreateInstance) Run(ctx context.Context, state multistep.StateBag) 
 	}
 
 	ui.Say(fmt.Sprintf("Using image: %s", sourceImage.Name))
+
+	diskSizeGb := resolveDiskSize(c.DiskSizeGb, sourceImage, ui)
 
 	if sourceImage.IsWindows() && c.Comm.Type == "winrm" && c.Comm.WinRMPassword == "" {
 		state.Put("create_windows_password", true)
@@ -184,7 +202,7 @@ func (s *StepCreateInstance) Run(ctx context.Context, state multistep.StateBag) 
 		Description:                  "New instance created by Packer",
 		DisableDefaultServiceAccount: c.DisableDefaultServiceAccount,
 		DiskName:                     c.DiskName,
-		DiskSizeGb:                   c.DiskSizeGb,
+		DiskSizeGb:                   diskSizeGb,
 		DiskType:                     c.DiskType,
 		DiskEncryptionKey:            c.DiskEncryptionKey,
 		EnableNestedVirtualization:   c.EnableNestedVirtualization,
