@@ -1006,7 +1006,10 @@ func (d *driverGCE) ImportOSLoginSSHKey(user, sshPublicKey string, expirationTim
 	const maxRetries = 10
 	var err error
 	for i := 0; i < maxRetries; i++ {
-		resp, err := d.osLoginService.Users.ImportSshPublicKey(parent, sshKey).Do()
+		// Assign to the outer err rather than declaring a new one with :=, so the
+		// return below reports the last error instead of (nil, nil).
+		var resp *oslogin.ImportSshPublicKeyResponse
+		resp, err = d.osLoginService.Users.ImportSshPublicKey(parent, sshKey).Do()
 		if err == nil {
 			return resp.LoginProfile, nil
 		}
@@ -1015,13 +1018,16 @@ func (d *driverGCE) ImportOSLoginSSHKey(user, sshPublicKey string, expirationTim
 			log.Printf("ImportSshPublicKey conflict (try %d/%d): %v", i+1, maxRetries, err)
 			sleepSecs := retrySleepSeconds()
 			// Sleep between 5-15 seconds (randomly chosen) before retry
-			time.Sleep(time.Duration(sleepSecs) * time.Second)
+			osLoginRetrySleep(time.Duration(sleepSecs) * time.Second)
 		} else {
 			break
 		}
 	}
 	return nil, err
 }
+
+// osLoginRetrySleep is a variable so tests can skip the wait between retries.
+var osLoginRetrySleep = time.Sleep
 
 func retrySleepSeconds() int {
 	// get a big.Int in range [0,10] :
