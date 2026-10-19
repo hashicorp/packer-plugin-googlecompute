@@ -15,6 +15,7 @@ import (
 	"io"
 	"log"
 	"math/big"
+	"net/http"
 	"strings"
 	"time"
 
@@ -281,12 +282,71 @@ func (d *driverGCE) CreateImage(project string, imageSpec *compute.Image) (<-cha
 	return imageCh, errCh
 }
 
+// Tuning for the images.deprecate retry loop below.
+const (
+	deprecateTries          = 5
+	deprecateInitialBackoff = 2 * time.Second
+	deprecateMaxBackoff     = 30 * time.Second
+)
+
 func (d *driverGCE) SetImageDeprecationStatus(project, name string, deprecationStatus *compute.DeprecationStatus) error {
 	if deprecationStatus == nil {
 		return errors.New("deprecationStatus cannot be nil")
 	}
-	_, err := d.service.Images.Deprecate(project, name, deprecationStatus).Do()
-	return err
+
+	// Images.Deprecate is a single HTTP request that the API client does not
+	// retry, and it is the last call of a build. Retrying the transient
+	// failures keeps a blip from discarding an image that was already created
+	// successfully.
+	backoff := &retry.Backoff{
+		InitialBackoff: deprecateInitialBackoff,
+		MaxBackoff:     deprecateMaxBackoff,
+		Multiplier:     2,
+	}
+
+	config := retry.Config{
+		Tries:       deprecateTries,
+		RetryDelay:  backoff.Linear,
+		ShouldRetry: isRetryableAPIError,
+	}
+
+	try := 0
+	return config.Run(context.TODO(), func(_ context.Context) error {
+		try++
+
+		_, err := d.service.Images.Deprecate(project, name, deprecationStatus).Do()
+		if err != nil {
+			log.Printf("[WARN] Failed to set the deprecation status of image %q (attempt %d/%d): %s",
+				name, try, deprecateTries, err)
+		}
+		return err
+	})
+}
+
+var retryableStatuses = map[int]bool{
+	http.StatusConflict:            true,
+	http.StatusTooManyRequests:     true,
+	http.StatusInternalServerError: true,
+	http.StatusBadGateway:          true,
+	http.StatusServiceUnavailable:  true,
+	http.StatusGatewayTimeout:      true,
+}
+
+// isRetryableAPIError reports whether a failed GCE API call is worth retrying.
+func isRetryableAPIError(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+		return false
+	}
+
+	var apiErr *googleapi.Error
+	if errors.As(err, &apiErr) {
+		return retryableStatuses[apiErr.Code]
+	}
+	return true
 }
 
 func (d *driverGCE) DeleteImage(project, name string) <-chan error {
@@ -946,7 +1006,10 @@ func (d *driverGCE) ImportOSLoginSSHKey(user, sshPublicKey string, expirationTim
 	const maxRetries = 10
 	var err error
 	for i := 0; i < maxRetries; i++ {
-		resp, err := d.osLoginService.Users.ImportSshPublicKey(parent, sshKey).Do()
+		// Assign to the outer err rather than declaring a new one with :=, so the
+		// return below reports the last error instead of (nil, nil).
+		var resp *oslogin.ImportSshPublicKeyResponse
+		resp, err = d.osLoginService.Users.ImportSshPublicKey(parent, sshKey).Do()
 		if err == nil {
 			return resp.LoginProfile, nil
 		}
@@ -955,13 +1018,16 @@ func (d *driverGCE) ImportOSLoginSSHKey(user, sshPublicKey string, expirationTim
 			log.Printf("ImportSshPublicKey conflict (try %d/%d): %v", i+1, maxRetries, err)
 			sleepSecs := retrySleepSeconds()
 			// Sleep between 5-15 seconds (randomly chosen) before retry
-			time.Sleep(time.Duration(sleepSecs) * time.Second)
+			osLoginRetrySleep(time.Duration(sleepSecs) * time.Second)
 		} else {
 			break
 		}
 	}
 	return nil, err
 }
+
+// osLoginRetrySleep is a variable so tests can skip the wait between retries.
+var osLoginRetrySleep = time.Sleep
 
 func retrySleepSeconds() int {
 	// get a big.Int in range [0,10] :

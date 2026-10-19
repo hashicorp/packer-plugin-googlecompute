@@ -104,14 +104,13 @@ func (s *StepCreateImage) Run(ctx context.Context, state multistep.StateBag) mul
 		return multistep.ActionHalt
 	}
 
-	err = driver.SetImageDeprecationStatus(config.ImageProjectId, config.ImageName, deprecationStatus)
-	if err != nil {
-		err := fmt.Errorf("Error setting image deprecation status: %s", err)
-		state.Put("error", err.Error())
-		ui.Error(err.Error())
-		return multistep.ActionHalt
-	}
-	if config.DeprecateAt != "" || config.ObsoleteAt != "" || config.DeleteAt != "" {
+	if deprecationStatus != nil {
+		if err := driver.SetImageDeprecationStatus(config.ImageProjectId, config.ImageName, deprecationStatus); err != nil {
+			err = fmt.Errorf("Error setting image deprecation status: %s", err)
+			state.Put("error", err)
+			ui.Error(err.Error())
+			return multistep.ActionHalt
+		}
 		ui.Say("Image deprecation status set")
 	}
 
@@ -120,54 +119,58 @@ func (s *StepCreateImage) Run(ctx context.Context, state multistep.StateBag) mul
 
 func (s *StepCreateImage) getDeprecationStatus(config *Config) (*compute.DeprecationStatus, error) {
 	var errs error
-	deprecation := &compute.DeprecationStatus{}
 
-	if config.DeprecateAt != "" || config.ObsoleteAt != "" || config.DeleteAt != "" {
-		deprecation.State = "DEPRECATED"
-
-		now := time.Now().UTC()
-
-		if config.DeprecateAt != "" {
-			t, err := time.Parse(time.RFC3339, config.DeprecateAt)
-			if err != nil {
-				errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("invalid deprecate_at format (RFC3339 expected): %w", err))
-			} else if t.Before(now) {
-				errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("deprecate_at must be a future time"))
-			} else {
-				deprecation.Deprecated = config.DeprecateAt
-				deprecation.State = "ACTIVE"
-			}
-		}
-
-		if config.ObsoleteAt != "" {
-			t, err := time.Parse(time.RFC3339, config.ObsoleteAt)
-			if err != nil {
-				errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("invalid obsolete_at format (RFC3339 expected): %w", err))
-			} else if t.Before(now) {
-				errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("obsolete_at must be a future time"))
-			} else {
-				deprecation.Obsolete = config.ObsoleteAt
-				deprecation.State = "ACTIVE"
-			}
-
-		}
-
-		if config.DeleteAt != "" {
-			t, err := time.Parse(time.RFC3339, config.DeleteAt)
-			if err != nil {
-				errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("invalid delete_at format (RFC3339 expected): %w", err))
-			} else if t.Before(now) {
-				errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("delete_at must be a future time"))
-			} else {
-				deprecation.Deleted = config.DeleteAt
-				deprecation.State = "ACTIVE"
-			}
-		}
-
-	}
 	log.Printf("[DEBUG] deprecate_at: %s", config.DeprecateAt)
 	log.Printf("[DEBUG] obsolete_at: %s", config.ObsoleteAt)
 	log.Printf("[DEBUG] delete_at: %s", config.DeleteAt)
+
+	// With no lifecycle properties configured there is nothing to apply.
+	// Returning nil keeps the caller from issuing an images.deprecate request
+	// that would be a no-op on a freshly created image, but that can still
+	// fail transiently and take a fully successful build down with it.
+	if config.DeprecateAt == "" && config.ObsoleteAt == "" && config.DeleteAt == "" {
+		return nil, nil
+	}
+
+	deprecation := &compute.DeprecationStatus{State: "DEPRECATED"}
+	now := time.Now().UTC()
+
+	if config.DeprecateAt != "" {
+		t, err := time.Parse(time.RFC3339, config.DeprecateAt)
+		if err != nil {
+			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("invalid deprecate_at format (RFC3339 expected): %w", err))
+		} else if t.Before(now) {
+			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("deprecate_at must be a future time"))
+		} else {
+			deprecation.Deprecated = config.DeprecateAt
+			deprecation.State = "ACTIVE"
+		}
+	}
+
+	if config.ObsoleteAt != "" {
+		t, err := time.Parse(time.RFC3339, config.ObsoleteAt)
+		if err != nil {
+			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("invalid obsolete_at format (RFC3339 expected): %w", err))
+		} else if t.Before(now) {
+			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("obsolete_at must be a future time"))
+		} else {
+			deprecation.Obsolete = config.ObsoleteAt
+			deprecation.State = "ACTIVE"
+		}
+	}
+
+	if config.DeleteAt != "" {
+		t, err := time.Parse(time.RFC3339, config.DeleteAt)
+		if err != nil {
+			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("invalid delete_at format (RFC3339 expected): %w", err))
+		} else if t.Before(now) {
+			errs = packersdk.MultiErrorAppend(errs, fmt.Errorf("delete_at must be a future time"))
+		} else {
+			deprecation.Deleted = config.DeleteAt
+			deprecation.State = "ACTIVE"
+		}
+	}
+
 	return deprecation, errs
 }
 

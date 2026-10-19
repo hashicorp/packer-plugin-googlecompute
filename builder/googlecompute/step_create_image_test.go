@@ -71,6 +71,40 @@ func TestStepCreateImage_errorOnChannel(t *testing.T) {
 	assert.False(t, ok, "State should not have a resulting image.")
 }
 
+func TestStepCreateImage_deprecationFailureStoresError(t *testing.T) {
+	state := testState(t)
+	step := new(StepCreateImage)
+	defer step.Cleanup(state)
+
+	c := state.Get("config").(*Config)
+	d := state.Get("driver").(*common.DriverMock)
+
+	c.DeprecateAt = "2125-06-01T00:00:00Z"
+	d.DeprecatedImageErr = errors.New("googleapi: Error 409: resource is not ready")
+
+	action := step.Run(context.Background(), state)
+	assert.Equal(t, multistep.ActionHalt, action, "Step should have halted.")
+
+	rawErr, ok := state.GetOk("error")
+	assert.True(t, ok, "State should have an error.")
+	_, ok = rawErr.(error)
+	assert.True(t, ok, "State error must satisfy the error interface, got %T", rawErr)
+}
+
+func TestStepCreateImage_noDeprecationFieldsSkipsAPICall(t *testing.T) {
+	state := testState(t)
+	step := new(StepCreateImage)
+	defer step.Cleanup(state)
+
+	d := state.Get("driver").(*common.DriverMock)
+
+	action := step.Run(context.Background(), state)
+	assert.Equal(t, multistep.ActionContinue, action, "Step did not pass.")
+
+	assert.Empty(t, d.DeprecatedImageName, "images.deprecate must not be called when no lifecycle properties are set")
+	assert.Nil(t, d.DeprecatedImageStatus, "no deprecation status should have been sent")
+}
+
 func TestStepCreateImage_setsDeprecationFields(t *testing.T) {
 	state := testState(t)
 	step := new(StepCreateImage)

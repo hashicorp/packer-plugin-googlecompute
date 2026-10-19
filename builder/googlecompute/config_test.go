@@ -997,3 +997,29 @@ const testAccountContent = `{
   "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
   "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/12345-compute%40developer.gserviceaccount.com"
 }`
+
+func TestConfigPrepare_DiskSizeDefault(t *testing.T) {
+	raw, tempfile := testConfig(t)
+	defer os.Remove(tempfile)
+
+	// disk_size is absent from raw, so it must stay 0 to signal "match the
+	// source image" to StepCreateInstance.
+	var c Config
+	_, errs := c.Prepare(raw)
+	if errs != nil {
+		t.Fatalf("bad: %#v", errs)
+	}
+	if c.DiskSizeGb != 0 {
+		t.Fatalf("unset disk_size should stay 0, got %d", c.DiskSizeGb)
+	}
+
+	raw["disk_size"] = 30
+	var explicit Config
+	_, errs = explicit.Prepare(raw)
+	if errs != nil {
+		t.Fatalf("bad: %#v", errs)
+	}
+	if explicit.DiskSizeGb != 30 {
+		t.Fatalf("explicit disk_size should be preserved, got %d", explicit.DiskSizeGb)
+	}
+}

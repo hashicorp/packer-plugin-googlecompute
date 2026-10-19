@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2013, 2025
+// Copyright IBM Corp. 2013, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package googlecompute
@@ -26,9 +26,10 @@ GetMetadata () {
 }
 
 ZONE=$(basename $(GetMetadata zone))
+INSTANCE_NAME=$(GetMetadata name)
 
 SetMetadata () {
-  gcloud compute instances add-metadata ${HOSTNAME} --metadata ${1}=${2} --zone ${ZONE}
+  gcloud compute instances add-metadata ${INSTANCE_NAME} --metadata ${1}=${2} --zone ${ZONE}
 }
 
 STARTUPSCRIPT=$(GetMetadata attributes/%[1]s)

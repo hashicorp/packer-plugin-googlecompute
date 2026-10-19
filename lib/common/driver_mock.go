@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2013, 2025
+// Copyright IBM Corp. 2013, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package common
@@ -29,6 +29,7 @@ type DriverMock struct {
 	DeprecatedProjectName string
 	DeprecatedImageName   string
 	DeprecatedImageStatus *compute.DeprecationStatus
+	DeprecatedImageErr    error
 
 	DeleteProjectId  string
 	DeleteImageName  string
@@ -194,7 +195,7 @@ func (d *DriverMock) SetImageDeprecationStatus(project, name string, deprecation
 	d.DeprecatedProjectName = project
 	d.DeprecatedImageName = name
 	d.DeprecatedImageStatus = deprecationStatus
-	return nil
+	return d.DeprecatedImageErr
 }
 
 func (d *DriverMock) DeleteImage(project, name string) <-chan error {
