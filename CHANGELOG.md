@@ -3,6 +3,25 @@
 Please refer to [releases](https://github.com/hashicorp/packer-plugin-googlecompute/releases) for the latest CHANGELOG information.
 
 ---
+## 1.2.8 (October 19, 2026)
+
+## What's Changed
+
+### Improvements
+* Fit boot disk size to the source image when `disk_size` is unset [GH-356](https://github.com/hashicorp/packer-plugin-googlecompute/pull/356)
+
+### Bug Fixes
+* Fix startup script failures when the instance hostname resolves to a fully qualified domain name [GH-355](https://github.com/hashicorp/packer-plugin-googlecompute/pull/355)
+* Fix panic when setting image deprecation status fails [GH-363](https://github.com/hashicorp/packer-plugin-googlecompute/pull/363)
+* Return OS Login SSH key import errors instead of `(nil, nil)` [GH-366](https://github.com/hashicorp/packer-plugin-googlecompute/pull/366)
+
+### Other Changes
+* Suppress the false positive for GO-2026-5932 [GH-364](https://github.com/hashicorp/packer-plugin-googlecompute/pull/364)
+* Upgrade Go and module dependencies [GH-352](https://github.com/hashicorp/packer-plugin-googlecompute/pull/352), [GH-358](https://github.com/hashicorp/packer-plugin-googlecompute/pull/358), [GH-359](https://github.com/hashicorp/packer-plugin-googlecompute/pull/359), [GH-361](https://github.com/hashicorp/packer-plugin-googlecompute/pull/361), [GH-368](https://github.com/hashicorp/packer-plugin-googlecompute/pull/368)
+* Bump `github.com/hashicorp/packer-plugin-sdk` to v0.6.12 [GH-367](https://github.com/hashicorp/packer-plugin-googlecompute/pull/367)
+* Add and update copyright headers [GH-369](https://github.com/hashicorp/packer-plugin-googlecompute/pull/369)
+
+
 ## 1.2.7 (July 8, 2026)
 
 ## What's Changed
