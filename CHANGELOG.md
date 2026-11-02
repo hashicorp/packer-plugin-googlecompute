@@ -3,6 +3,13 @@
 Please refer to [releases](https://github.com/hashicorp/packer-plugin-googlecompute/releases) for the latest CHANGELOG information.
 
 ---
+## 1.2.9 (November 2, 2026)
+
+## What's Changed
+
+* Upgrade Go to 1.26.10 and update module dependencies [GH-374](https://github.com/hashicorp/packer-plugin-googlecompute/pull/374)
+
+
 ## 1.2.8 (October 19, 2026)
 
 ## What's Changed
